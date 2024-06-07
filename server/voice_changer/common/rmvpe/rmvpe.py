@@ -1,3 +1,4 @@
+import os
 from typing import List
 
 import torch.nn as nn
@@ -7,6 +8,7 @@ import numpy as np
 from safetensors import safe_open
 from voice_changer.common.SafetensorsUtils import load_model
 from librosa.filters import mel
+from const import JIT_DIR
 
 
 class BiGRU(nn.Module):
@@ -328,14 +330,29 @@ class MelSpectrogram(torch.nn.Module):
 
 class RMVPE:
     def __init__(self, model_path: str, is_half: bool, device: torch.device):
-        model = E2E(4, 1, (2, 2))
-        if model_path.endswith('.safetensors'):
-            with safe_open(model_path, 'pt', device=str(device) if device.type == 'cuda' else 'cpu') as cpt:
-                load_model(model, cpt, strict=False)
+        filename = os.path.splitext(os.path.basename(model_path))[0]
+        jit_filename = f'{filename}_{device.type}_{device.index}.torchscript' if device.index is not None else f'{filename}_{device.type}.torchscript'
+        jit_file = os.path.join(JIT_DIR, jit_filename)
+        if not os.path.exists(jit_file):
+            model = E2E(4, 1, (2, 2))
+            if model_path.endswith('.safetensors'):
+                with safe_open(model_path, 'pt', device=str(device) if device.type == 'cuda' else 'cpu') as cpt:
+                    load_model(model, cpt, strict=False)
+            else:
+                cpt = torch.load(model_path, map_location=device if device.type == 'cuda' else 'cpu')
+                model.load_state_dict(cpt, strict=False)
+            model = model.eval().to(device)
+
+            # FIXME: DirectML backend seems to have issues with JIT. Disable it for now.
+            if device.type == 'privateuseone':
+                self.use_jit = True
+            else:
+                model = torch.jit.freeze(torch.jit.script(model))
+                torch.jit.save(model, jit_file)
+                self.use_jit = False
         else:
-            cpt = torch.load(model_path, map_location=device if device.type == 'cuda' else 'cpu')
-            model.load_state_dict(cpt, strict=False)
-        model.eval().to(device)
+            model = torch.jit.load(jit_file)
+            self.use_jit = False
 
         if is_half:
             model = model.half()
