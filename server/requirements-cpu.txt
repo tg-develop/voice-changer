@@ -5,7 +5,8 @@
 
 --extra-index-url https://download.pytorch.org/whl/cpu
 # torch 2.4.0 has problems with Linux builds
-torch==2.3.1
+torch==2.3.1; sys_platform!='darwin'
+torch; sys_platform=='darwin'
 torchaudio
 faiss-cpu==1.8.0
 
