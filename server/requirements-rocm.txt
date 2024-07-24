@@ -1,7 +1,10 @@
+# # apt-get update
+# # apt-get install -y emacs mlocate wget git curl gcc g++ make unzip
+# # wget https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh
+# # bash Anaconda3-2022.10-Linux-x86_64.sh
+
 --extra-index-url https://download.pytorch.org/whl/rocm6.0
-# onnxruntime doesn't come with prebuilt binaries, so we use the ones that come with PyTorch
-# torch >=2.4.0 is compiled with cuDNN 9.x
-# onnxruntime-rocm is compiled with cuDNN 8.x
+# torch 2.4.0 has problems with Linux builds
 torch==2.3.1
 torchaudio
 faiss-cpu==1.8.0

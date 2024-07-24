@@ -1,9 +1,12 @@
-# onnxruntime doesn't come with prebuilt binaries, so we use the ones that come with PyTorch
-# Torch >=2.4.0 for CUDA 11.8 and 12.x is compiled with cuDNN 9.x
-# onnxruntime-gpu for CUDA 12.x is compiled with CUDA 12.x and cuDNN 9.x
---extra-index-url https://download.pytorch.org/whl/cu121
---extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
-torch>=2.4.0
+# # apt-get update
+# # apt-get install -y emacs mlocate wget git curl gcc g++ make unzip
+# # wget https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh
+# # bash Anaconda3-2022.10-Linux-x86_64.sh
+
+# PyPI onnxruntime-gpu is compiled with CUDA 11.x
+--extra-index-url https://download.pytorch.org/whl/cu118
+# torch 2.4.0 has problems with Linux builds
+torch==2.3.1
 torchaudio
 faiss-cpu==1.8.0; sys_platform!='linux'
 faiss-gpu; sys_platform=='linux'
