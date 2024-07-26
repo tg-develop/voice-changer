@@ -9,7 +9,7 @@ export type ConvertProps = {
 
 export const ConvertArea = (props: ConvertProps) => {
     const { setting, serverSetting, setWorkletNodeSetting, trancateBuffer } = useAppState();
-    const { isConverting } = useGuiState();
+    const { isConverting, stateControls } = useGuiState();
     const { appGuiSettingState } = useAppRoot();
     const edition = appGuiSettingState.edition;
 
@@ -35,8 +35,10 @@ export const ConvertArea = (props: ConvertProps) => {
                         <select
                             className="body-select"
                             value={serverSetting.serverSetting.gpu}
-                            onChange={(e) => {
-                                serverSetting.updateServerSettings({ ...serverSetting.serverSetting, gpu: Number(e.target.value) });
+                            onChange={async (e) => {
+                                stateControls.showWaitingCheckbox.updateState(true);
+                                await serverSetting.updateServerSettings({ ...serverSetting.serverSetting, gpu: Number(e.target.value) });
+                                stateControls.showWaitingCheckbox.updateState(false);
                             }}
                             disabled={isConverting}
                         >

@@ -11,7 +11,7 @@ export type QualityAreaProps = {
 export const QualityArea = (props: QualityAreaProps) => {
     const { setVoiceChangerClientSetting, serverSetting, setting } = useAppState();
     const { appGuiSettingState } = useAppRoot();
-    const { isConverting } = useGuiState();
+    const { isConverting, stateControls } = useGuiState();
     const edition = appGuiSettingState.edition;
 
     const qualityArea = useMemo(() => {
@@ -56,8 +56,10 @@ export const QualityArea = (props: QualityAreaProps) => {
                     <select
                         className="body-select"
                         value={serverSetting.serverSetting.f0Detector}
-                        onChange={(e) => {
-                            serverSetting.updateServerSettings({ ...serverSetting.serverSetting, f0Detector: e.target.value as F0Detector });
+                        onChange={async (e) => {
+                            stateControls.showWaitingCheckbox.updateState(true);
+                            await serverSetting.updateServerSettings({ ...serverSetting.serverSetting, f0Detector: e.target.value as F0Detector });
+                            stateControls.showWaitingCheckbox.updateState(false);
                         }}
                         disabled={isConverting}
                     >

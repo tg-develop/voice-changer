@@ -1,15 +1,7 @@
 import React, { useMemo } from "react";
-import { useMessageBuilder } from "../../hooks/useMessageBuilder";
-
 
 export const WaitingDialog = () => {
     // const guiState = useGuiState()
-    const messageBuilderState = useMessageBuilder()
-    useMemo(() => {
-        messageBuilderState.setMessage(__filename, "wait", { "ja": "しばらくお待ちください", "en": "please wait..." })
-        messageBuilderState.setMessage(__filename, "wait_sub1", { "ja": "ONNXファイルを生成しています。", "en": "generating ONNX file." })
-        messageBuilderState.setMessage(__filename, "wait_sub2", { "ja": "しばらくお待ちください(1分程度)。", "en": "please wait... (about 1 min)." })
-    }, [])
 
     const dialog = useMemo(() => {
         // const closeButtonRow = (
@@ -27,17 +19,14 @@ export const WaitingDialog = () => {
                 <div className="body-item-text">
                 </div>
                 <div className="body-item-text">
-                    {messageBuilderState.getMessage(__filename, "wait_sub1")}
-                </div>
-                <div className="body-item-text">
-                    {messageBuilderState.getMessage(__filename, "wait_sub2")}
+                    Waiting for the operation to complete...
                 </div>
             </div>
         )
 
         return (
             <div className="dialog-frame">
-                <div className="dialog-title">{messageBuilderState.getMessage(__filename, "wait")}</div>
+                <div className="dialog-title">Operation in progress</div>
                 <div className="dialog-content">
                     {content}
                     {/* {closeButtonRow} */}
