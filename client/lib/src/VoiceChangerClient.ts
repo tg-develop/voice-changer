@@ -57,24 +57,20 @@ export class VoiceChangerClient {
             }
             this.vcInNode.createSocketIO()
 
-            // const ctx44k = new AudioContext({ sampleRate: 44100 }) // これでもプチプチが残る
-            const ctx44k = new AudioContext({ sampleRate: 48000 }); // 結局これが一番まし。
-            // const ctx44k = new AudioContext({ sampleRate: 16000 });
-            console.log("audio out:", ctx44k);
             try {
-                this.vcOutNode = new VoiceChangerWorkletNode(ctx44k, voiceChangerWorkletListener); // vc node
+                this.vcOutNode = new VoiceChangerWorkletNode(this.ctx, voiceChangerWorkletListener); // vc node
             } catch (err) {
-                await ctx44k.audioWorklet.addModule(scriptUrl);
-                this.vcOutNode = new VoiceChangerWorkletNode(ctx44k, voiceChangerWorkletListener); // vc node
+                await this.ctx.audioWorklet.addModule(scriptUrl);
+                this.vcOutNode = new VoiceChangerWorkletNode(this.ctx, voiceChangerWorkletListener); // vc node
             }
-            this.currentMediaStreamAudioDestinationNode = ctx44k.createMediaStreamDestination(); // output node
-            this.outputGainNode = ctx44k.createGain();
+            this.currentMediaStreamAudioDestinationNode = this.ctx.createMediaStreamDestination(); // output node
+            this.outputGainNode = this.ctx.createGain();
             this.outputGainNode.gain.value = this.setting.outputGain;
             this.vcOutNode.connect(this.outputGainNode); // vc node -> output node
             this.outputGainNode.connect(this.currentMediaStreamAudioDestinationNode);
 
-            this.currentMediaStreamAudioDestinationMonitorNode = ctx44k.createMediaStreamDestination(); // output node
-            this.monitorGainNode = ctx44k.createGain();
+            this.currentMediaStreamAudioDestinationMonitorNode = this.ctx.createMediaStreamDestination(); // output node
+            this.monitorGainNode = this.ctx.createGain();
             this.monitorGainNode.gain.value = this.setting.monitorGain;
             this.vcOutNode.connect(this.monitorGainNode); // vc node -> monitor node
             this.monitorGainNode.connect(this.currentMediaStreamAudioDestinationMonitorNode);
@@ -143,12 +139,13 @@ export class VoiceChangerClient {
                         audio: {
                             deviceId: this.setting.audioInput,
                             channelCount: 1,
-                            sampleRate: this.setting.sampleRate,
+                            sampleRate: this.ctx.sampleRate,
                             sampleSize: 16,
                             autoGainControl: false,
                             echoCancellation: this.setting.echoCancel,
                             noiseSuppression: this.setting.noiseSuppression,
                         },
+                        video: false
                     });
                 }
             } catch (e) {

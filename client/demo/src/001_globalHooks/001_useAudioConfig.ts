@@ -10,23 +10,13 @@ export const useAudioConfig = (): AudioConfigState => {
         const createAudioContext = () => {
 
             const url = new URL(window.location.href);
-            const params = url.searchParams;
-            const sampleRate = params.get('sample_rate') || null
-            let ctx: AudioContext
-            if(sampleRate){
-                if(sampleRate == "default"){
-                    console.log(`Sample rate: default`)
-                    ctx = new AudioContext()
-                }else{
-                    console.log(`Sample rate: ${sampleRate}`)
-                    ctx = new AudioContext({ sampleRate: Number(sampleRate)})
-                }
-            }else{
-                console.log(`Sample rate: default(48000)`)
-                ctx = new AudioContext({ sampleRate: 48000})
-            }
+            // TODO: This must be a proper option in UI.
+            const sampleRate = url.searchParams.get('sample_rate')
+            const ctx: AudioContext = sampleRate
+                ? new AudioContext({ sampleRate: Number(sampleRate)})
+                : new AudioContext({ sampleRate: 48000 })
 
-            console.log(ctx)
+            console.log('Base context', ctx)
             setAudioContext(ctx)
 
             document.removeEventListener('touchstart', createAudioContext);
@@ -36,10 +26,7 @@ export const useAudioConfig = (): AudioConfigState => {
         document.addEventListener('mousedown', createAudioContext, false);
     }, [])
 
-    const ret: AudioConfigState = {
+    return {
         audioContext
     }
-
-    return ret
-
 }

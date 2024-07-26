@@ -26,10 +26,6 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
         const serverChecked = enableServerAudio == 1 ? true : false;
 
         const onDeviceModeChanged = (val: number) => {
-            if (isConverting) {
-                alert("cannot change mode when voice conversion is enabled");
-                return;
-            }
             serverSetting.updateServerSettings({ ...serverSetting.serverSetting, enableServerAudio: val });
         };
 
@@ -47,6 +43,7 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
                                 onChange={() => {
                                     onDeviceModeChanged(0);
                                 }}
+                                disabled={isConverting}
                             />{" "}
                             <label htmlFor="client-device">client</label>
                         </div>
@@ -60,6 +57,7 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
                                 onChange={() => {
                                     onDeviceModeChanged(1);
                                 }}
+                                disabled={isConverting}
                             />
                             <label htmlFor="server-device">server</label>
                         </div>

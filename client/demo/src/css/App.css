@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Chicle&family=Poppins:ital,wght@0,200;0,400;0,600;1,200;1,400;1,600&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap");
 
+@import 'react-toastify/dist/ReactToastify.css';
 @import "./101_RotatedButton.css";
 @import "./Error.css";
 :root {
@@ -50,6 +51,11 @@ body {
     /* background: linear-gradient(45deg, var(--company-color1) 0, 5%, var(--company-color2) 5% 10%, var(--company-color3) 10% 80%, var(--company-color1) 80% 85%, var(--company-color2) 85% 100%); */
     background: linear-gradient(45deg, var(--company-color1) 0, 1%, var(--company-color2) 1% 5%, var(--company-color3) 5% 90%, var(--company-color1) 90% 95%, var(--company-color2) 95% 100%);
 }
+
+.Toastify__toast-body {
+    white-space: pre-line;
+}
+
 #app {
     height: 100%;
     width: 100%;
