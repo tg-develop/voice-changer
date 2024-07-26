@@ -63,6 +63,7 @@ export const AdvancedSettingDialog = () => {
                             onChange={(e) => {
                                 serverSetting.updateServerSettings({ ...serverSetting.serverSetting, crossFadeOverlapSize: Number(e.target.value) });
                             }}
+                            disabled={guiState.isConverting}
                         ></input>
                         <span className="body-item-input-slider-val">{serverSetting.serverSetting.crossFadeOverlapSize} ms</span>
                     </div>
@@ -85,6 +86,7 @@ export const AdvancedSettingDialog = () => {
                         onChange={(e) => {
                             onSilenceFrontChanged(Number(e.target.value));
                         }}
+                        disabled={guiState.isConverting}
                     >
                         <option value="0">off</option>
                         <option value="1">on</option>
@@ -108,6 +110,7 @@ export const AdvancedSettingDialog = () => {
                         onChange={(e) => {
                             onForceFp32ModeChanged(Number(e.target.value));
                         }}
+                        disabled={guiState.isConverting}
                     >
                         <option value="0">off</option>
                         <option value="1">on</option>
@@ -174,6 +177,6 @@ export const AdvancedSettingDialog = () => {
                 </div>
             </div>
         );
-    }, [serverSetting.serverSetting, serverSetting.updateServerSettings, setting.workletNodeSetting, setWorkletNodeSetting, setting.workletSetting, setWorkletSetting]);
+    }, [serverSetting.serverSetting, serverSetting.updateServerSettings, setting.workletNodeSetting, setWorkletNodeSetting, setting.workletSetting, setWorkletSetting, guiState.isConverting]);
     return dialog;
 };

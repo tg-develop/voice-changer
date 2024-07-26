@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { useAppState } from "../../../001_provider/001_AppStateProvider";
 import { F0Detector } from "@dannadori/voice-changer-client-js";
+import { useGuiState } from "../001_GuiStateProvider";
 import { useAppRoot } from "../../../001_provider/001_AppRootProvider";
 
 export type QualityAreaProps = {
@@ -10,6 +11,7 @@ export type QualityAreaProps = {
 export const QualityArea = (props: QualityAreaProps) => {
     const { setVoiceChangerClientSetting, serverSetting, setting } = useAppState();
     const { appGuiSettingState } = useAppRoot();
+    const { isConverting } = useGuiState();
     const edition = appGuiSettingState.edition;
 
     const qualityArea = useMemo(() => {
@@ -57,6 +59,7 @@ export const QualityArea = (props: QualityAreaProps) => {
                         onChange={(e) => {
                             serverSetting.updateServerSettings({ ...serverSetting.serverSetting, f0Detector: e.target.value as F0Detector });
                         }}
+                        disabled={isConverting}
                     >
                         {f0DetOptions}
                     </select>
@@ -146,7 +149,7 @@ export const QualityArea = (props: QualityAreaProps) => {
                 {threshold}
             </div>
         );
-    }, [serverSetting.serverSetting, setting, serverSetting.updateServerSettings, setVoiceChangerClientSetting]);
+    }, [serverSetting.serverSetting, setting, serverSetting.updateServerSettings, setVoiceChangerClientSetting, isConverting]);
 
     return qualityArea;
 };

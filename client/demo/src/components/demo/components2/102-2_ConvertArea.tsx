@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { useAppState } from "../../../001_provider/001_AppStateProvider";
 import { useAppRoot } from "../../../001_provider/001_AppRootProvider";
+import { useGuiState } from "../001_GuiStateProvider";
 
 export type ConvertProps = {
     inputChunkNums: number[];
@@ -8,6 +9,7 @@ export type ConvertProps = {
 
 export const ConvertArea = (props: ConvertProps) => {
     const { setting, serverSetting, setWorkletNodeSetting, trancateBuffer } = useAppState();
+    const { isConverting } = useGuiState();
     const { appGuiSettingState } = useAppRoot();
     const edition = appGuiSettingState.edition;
 
@@ -36,6 +38,7 @@ export const ConvertArea = (props: ConvertProps) => {
                             onChange={(e) => {
                                 serverSetting.updateServerSettings({ ...serverSetting.serverSetting, gpu: Number(e.target.value) });
                             }}
+                            disabled={isConverting}
                         >
                             {gpusEntry.map((x) => {
                                 return (
@@ -62,6 +65,7 @@ export const ConvertArea = (props: ConvertProps) => {
                             max={5}
                             step={0.1}
                             value={serverSetting.serverSetting.extraConvertSize}
+                            disabled={isConverting}
                             onChange={(e) => {
                                 serverSetting.updateServerSettings({ ...serverSetting.serverSetting, extraConvertSize: Number(e.target.value) });
                             }} />
@@ -83,6 +87,7 @@ export const ConvertArea = (props: ConvertProps) => {
                                 max={1024}
                                 step={1}
                                 value={serverSetting.serverSetting.serverReadChunkSize}
+                                disabled={isConverting}
                                 onChange={(e) => {
                                     setWorkletNodeSetting({ ...setting.workletNodeSetting, inputChunkNum: Number(e.target.value) });
                                     trancateBuffer();
@@ -96,7 +101,7 @@ export const ConvertArea = (props: ConvertProps) => {
                 {gpuSelect}
             </div>
         );
-    }, [serverSetting.serverSetting, setting, serverSetting.updateServerSettings, setWorkletNodeSetting, edition]);
+    }, [serverSetting.serverSetting, setting, serverSetting.updateServerSettings, setWorkletNodeSetting, edition, isConverting]);
 
     return convertArea;
 };
