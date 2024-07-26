@@ -1,11 +1,9 @@
 import React, { useMemo } from "react";
 import { useGuiState } from "./001_GuiStateProvider";
 import { useAppState } from "../../001_provider/001_AppStateProvider";
-import { useAppRoot } from "../../001_provider/001_AppRootProvider";
 
 export const EnablePassThroughDialog = () => {
     const guiState = useGuiState();
-    const { audioContextState } = useAppRoot();
     const { serverSetting } = useAppState();
     const { setting } = useAppState();
     const dialog = useMemo(() => {
@@ -35,13 +33,12 @@ export const EnablePassThroughDialog = () => {
             </div>
         );
 
-        console.log("AUDIO_CONTEXT", audioContextState.audioContext);
         return (
             <div className="dialog-frame">
                 <div className="dialog-title">Enable Pass Through</div>
                 <div className="dialog-content">{buttonRow}</div>
             </div>
         );
-    }, [setting, audioContextState, serverSetting.serverSetting]);
+    }, [setting, serverSetting.serverSetting]);
     return dialog;
 };
