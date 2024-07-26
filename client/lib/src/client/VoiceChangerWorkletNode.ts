@@ -62,6 +62,12 @@ export class VoiceChangerWorkletNode extends AudioWorkletNode {
       setting
     );
 
+    // Realloc buffer for both input and output nodes if chunk size has changed.
+    if (setting.inputChunkNum !== this.setting.inputChunkNum) {
+      this.requestChunks = new Int16Array(setting.inputChunkNum * 128);
+      this.chunkCounter = 0;
+    }
+
     // Do not connect output worklet to server on protocol change.
     // TODO: Refactor
     if (!this.outputNode) {
@@ -74,6 +80,8 @@ export class VoiceChangerWorkletNode extends AudioWorkletNode {
       if (recreateSocketIoRequired) {
         this.createSocketIO();
       }
+    } else {
+      this.setting = setting;
     }
   };
 
