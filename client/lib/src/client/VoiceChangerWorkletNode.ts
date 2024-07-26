@@ -110,13 +110,16 @@ export class VoiceChangerWorkletNode extends AudioWorkletNode {
         console.log("message:", response);
       });
 
-      this.socket.on("error", (_: any) => {
-        // const [error_code, error_message] = response;
-        // this.listener.notifyException(error_code, error_message);
-        this.listener.notifyException(
-          "ERR_GENERIC_VOICE_CHANGER_EXCEPTION",
-          "An error occurred during voice conversion. Check command line window for more details."
-        )
+      this.socket.on("error", (response: any) => {
+        const [error_code, error_message] = response;
+        if (error_code == 'ERR_SAMPLE_RATE_NOT_SUPPORTED') {
+          this.listener.notifyException(error_code, error_message)
+        } else {
+          this.listener.notifyException(
+            "ERR_GENERIC_VOICE_CHANGER_EXCEPTION",
+            "An error occurred during voice conversion. Check command line window for more details."
+          )
+        }
       });
 
       this.socket.on("response", (response: any[]) => {
@@ -229,11 +232,15 @@ export class VoiceChangerWorkletNode extends AudioWorkletNode {
       const restClient = new ServerRestClient(this.setting.serverUrl);
       const data = await restClient.postVoice(timestamp, newBuffer);
       if (data.error) {
-        // const { code, message } = data.details
-        this.listener.notifyException(
-          "ERR_GENERIC_VOICE_CHANGER_EXCEPTION",
-          "An error occurred during voice conversion. Check command line window for more details."
-        )
+        const { code, message } = data.details
+        if (code == 'ERR_SAMPLE_RATE_NOT_SUPPORTED') {
+          this.listener.notifyException(code, message)
+        } else {
+          this.listener.notifyException(
+            "ERR_GENERIC_VOICE_CHANGER_EXCEPTION",
+            "An error occurred during voice conversion. Check command line window for more details."
+          )
+        }
         return;
       }
       const audio = data.audio
