@@ -96,7 +96,7 @@ export const AdvancedSettingDialog = () => {
         );
 
         const onForceFp32ModeChanged = (val: number) => {
-            serverSetting.updateServerSettings({
+            return serverSetting.updateServerSettings({
                 ...serverSetting.serverSetting,
                 forceFp32: val,
             });
@@ -107,8 +107,11 @@ export const AdvancedSettingDialog = () => {
                 <div className="advanced-setting-container-row-field">
                     <select
                         value={serverSetting.serverSetting.forceFp32}
-                        onChange={(e) => {
+                        onChange={async (e) => {
+                            // TODO: Need to fix CSS to show waiting dialog over all page contents. Lazy :\
+                            //guiState.stateControls.showWaitingCheckbox.updateState(true);
                             onForceFp32ModeChanged(Number(e.target.value));
+                            //guiState.stateControls.showWaitingCheckbox.updateState(false);
                         }}
                         disabled={guiState.isConverting}
                     >

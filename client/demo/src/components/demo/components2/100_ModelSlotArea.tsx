@@ -59,8 +59,9 @@ export const ModelSlotArea = (_props: ModelSlotAreaProps) => {
                     );
 
                 const clickAction = async () => {
-                    // @ts-ignore
+                    guiState.stateControls.showWaitingCheckbox.updateState(true);
                     await serverSetting.updateServerSettings({ ...serverSetting.serverSetting, modelSlotIndex: x.slotIndex });
+                    guiState.stateControls.showWaitingCheckbox.updateState(false);
                 };
 
                 return (
