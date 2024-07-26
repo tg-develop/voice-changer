@@ -61,19 +61,19 @@ export class VoiceChangerWorkletNode extends AudioWorkletNode {
       this.setting,
       setting
     );
-    let recreateSocketIoRequired = false;
-    if (
-      this.setting.serverUrl != setting.serverUrl ||
-      this.setting.protocol != setting.protocol
-    ) {
-      recreateSocketIoRequired = true;
-    }
-    this.requestChunks = new Int16Array(this.setting.inputChunkNum * 128);
-    this.chunkCounter = 0;
 
-    this.setting = setting;
-    if (recreateSocketIoRequired) {
-      this.createSocketIO();
+    // Do not connect output worklet to server on protocol change.
+    // TODO: Refactor
+    if (!this.outputNode) {
+      let recreateSocketIoRequired = (
+        this.setting.serverUrl !== setting.serverUrl ||
+        this.setting.protocol !== setting.protocol
+      );
+
+      this.setting = setting;
+      if (recreateSocketIoRequired) {
+        this.createSocketIO();
+      }
     }
   };
 
