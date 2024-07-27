@@ -23,3 +23,7 @@ settings = ServerSettings()
 voice_changer_manager = VoiceChangerManager(settings)
 fastapi = MMVC_Rest.get_instance(voice_changer_manager, settings.model_dir, settings.allowed_origins, settings.port)
 socketio = MMVC_SocketIOApp.get_instance(fastapi, voice_changer_manager, settings.allowed_origins, settings.port)
+
+# NOTE: Bundled executable overrides excepthook to pause on exception during startup.
+# Here we revert to original excepthook once all initialization is done.
+sys.excepthook = sys.__excepthook__

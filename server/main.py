@@ -145,8 +145,4 @@ if __name__ == "__main__":
     args, _ = parser.parse_known_args()
     args.launch_browser = False
 
-    try:
-        asyncio.run(main(args))
-    except Exception as e:
-        logger.exception(e)
-        input('Press Enter to continue...')
+    asyncio.run(main(args))
