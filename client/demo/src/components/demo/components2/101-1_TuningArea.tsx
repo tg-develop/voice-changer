@@ -26,7 +26,7 @@ export const TuningArea = (_props: TuningAreaProps) => {
 
         return (
             <div className="character-area-control">
-                <div className="character-area-control-title">TUNE:</div>
+                <div className="character-area-control-title">PITCH:</div>
                 <div className="character-area-control-field">
                     <div className="character-area-slider-control">
                         <span className="character-area-slider-control-kind"></span>
