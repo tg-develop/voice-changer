@@ -1,12 +1,9 @@
-import copy
 import math
 from typing import Optional, Tuple
 
-import numpy as np
-import scipy
 import torch
 from torch import nn
-from torch.nn import AvgPool1d, Conv1d, Conv2d, ConvTranspose1d
+from torch.nn import Conv1d
 from torch.nn import functional as F
 from torch.nn.utils import remove_weight_norm, weight_norm
 
@@ -331,7 +328,7 @@ class ResBlock1(torch.nn.Module):
             if x_mask is not None:
                 xt = xt * x_mask
             xt = c1(xt)
-            xt = F.leaky_relu(xt, self.lrelu_slope)
+            xt = F.leaky_relu(xt, self.lrelu_slope, inplace=True)
             if x_mask is not None:
                 xt = xt * x_mask
             xt = c2(xt)
@@ -450,10 +447,10 @@ class Flip(nn.Module):
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         x = torch.flip(x, [1])
         if not reverse:
-            logdet = torch.zeros(x.size(0)).to(dtype=x.dtype, device=x.device)
+            logdet = torch.zeros(x.size(0), dtype=x.dtype, device=x.device)
             return x, logdet
         else:
-            return x, torch.zeros([1], device=x.device)
+            return x, torch.zeros([1], dtype=x.dtype, device=x.device)
 
 
 class ElementwiseAffine(nn.Module):
@@ -562,6 +559,7 @@ class ConvFlow(nn.Module):
         super(ConvFlow, self).__init__()
         self.in_channels = in_channels
         self.filter_channels = filter_channels
+        self.filter_channels_sqrt = math.sqrt(filter_channels)
         self.kernel_size = kernel_size
         self.n_layers = n_layers
         self.num_bins = num_bins
@@ -591,10 +589,8 @@ class ConvFlow(nn.Module):
         b, c, t = x0.shape
         h = h.reshape(b, c, -1, t).permute(0, 1, 3, 2)  # [b, cx?, t] -> [b, c, t, ?]
 
-        unnormalized_widths = h[..., : self.num_bins] / math.sqrt(self.filter_channels)
-        unnormalized_heights = h[..., self.num_bins : 2 * self.num_bins] / math.sqrt(
-            self.filter_channels
-        )
+        unnormalized_widths = h[..., : self.num_bins] / self.filter_channels_sqrt
+        unnormalized_heights = h[..., self.num_bins : 2 * self.num_bins] / self.filter_channels_sqrt
         unnormalized_derivatives = h[..., 2 * self.num_bins :]
 
         x1, logabsdet = piecewise_rational_quadratic_transform(

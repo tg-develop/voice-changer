@@ -1,9 +1,7 @@
 from typing import List, Optional
 import math
 
-import numpy as np
 import torch
-from torch import nn
 from torch.nn import functional as F
 
 
@@ -66,7 +64,7 @@ def rand_slice_segments(x, x_lengths=None, segment_size=4):
     if x_lengths is None:
         x_lengths = t
     ids_str_max = x_lengths - segment_size + 1
-    ids_str = (torch.rand([b]).to(device=x.device) * ids_str_max).to(dtype=torch.long)
+    ids_str = (torch.rand([b], device=x.device) * ids_str_max).to(dtype=torch.long)
     ret = slice_segments(x, ids_str, segment_size)
     return ret, ids_str
 
@@ -99,9 +97,8 @@ def cat_timing_signal_1d(x, min_timescale=1.0, max_timescale=1.0e4, axis=1):
     return torch.cat([x, signal.to(dtype=x.dtype, device=x.device)], axis)
 
 
-def subsequent_mask(length):
-    mask = torch.tril(torch.ones(length, length)).unsqueeze(0).unsqueeze(0)
-    return mask
+def subsequent_mask(mask: torch.Tensor):
+    return torch.tril(mask, out=mask).unsqueeze(0).unsqueeze(0)
 
 
 @torch.jit.script
