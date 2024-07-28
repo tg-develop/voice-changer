@@ -1309,7 +1309,7 @@ body {
                 position: absolute;
             }
             .portrait-area-status {
-                width: 5rem;
+                width: 5.5rem;
                 background: rgba(100, 100, 100, 0.5);
                 color: white;
                 position: absolute;
@@ -1425,7 +1425,7 @@ body {
                     display: flex;
                     flex-direction: row;
                     .character-area-slider-control-kind {
-                        width: 2rem;
+                        width: 3rem;
                     }
                     .character-area-slider-control-slider {
                         width: 10rem;
