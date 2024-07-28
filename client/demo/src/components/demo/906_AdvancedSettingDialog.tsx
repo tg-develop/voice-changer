@@ -65,7 +65,7 @@ export const AdvancedSettingDialog = () => {
                             }}
                             disabled={guiState.isConverting}
                         ></input>
-                        <span className="body-item-input-slider-val">{serverSetting.serverSetting.crossFadeOverlapSize} ms</span>
+                        <span className="body-item-input-slider-val">{serverSetting.serverSetting.crossFadeOverlapSize} s</span>
                     </div>
                 </div>
             </div>
