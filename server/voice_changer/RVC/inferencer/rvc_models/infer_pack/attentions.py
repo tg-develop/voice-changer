@@ -1,13 +1,11 @@
-import copy
 import math
 from typing import Optional
 
-import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
 
-from voice_changer.RVC.inferencer.rvc_models.infer_pack import commons, modules
+from voice_changer.RVC.inferencer.rvc_models.infer_pack import commons
 from voice_changer.RVC.inferencer.rvc_models.infer_pack.modules import LayerNorm
 
 
@@ -142,8 +140,9 @@ class Decoder(nn.Module):
         x: decoder input
         h: encoder output
         """
-        self_attn_mask = commons.subsequent_mask(x_mask.size(2)).to(
-            device=x.device, dtype=x.dtype
+        m_size = x_mask.size(2)
+        self_attn_mask = commons.subsequent_mask(
+            torch.ones(m_size, m_size, device=x.device, dtype=x.dtype),
         )
         encdec_attn_mask = h_mask.unsqueeze(2) * x_mask.unsqueeze(-1)
         x = x * x_mask
@@ -191,6 +190,7 @@ class MultiHeadAttention(nn.Module):
         self.attn = None
 
         self.k_channels = channels // n_heads
+        self.k_channels_sqrt = math.sqrt(self.k_channels)
         self.conv_q = nn.Conv1d(channels, channels, 1)
         self.conv_k = nn.Conv1d(channels, channels, 1)
         self.conv_v = nn.Conv1d(channels, channels, 1)
@@ -243,22 +243,21 @@ class MultiHeadAttention(nn.Module):
         key = key.view(b, self.n_heads, self.k_channels, t_s).transpose(2, 3)
         value = value.view(b, self.n_heads, self.k_channels, t_s).transpose(2, 3)
 
-        scores = torch.matmul(query / math.sqrt(self.k_channels), key.transpose(-2, -1))
+        query /= self.k_channels_sqrt
+
+        scores = torch.matmul(query, key.transpose(-2, -1))
         if self.window_size is not None:
             assert (
                 t_s == t_t
             ), "Relative attention is only available for self-attention."
             key_relative_embeddings = self._get_relative_embeddings(self.emb_rel_k, t_s)
-            rel_logits = self._matmul_with_relative_keys(
-                query / math.sqrt(self.k_channels), key_relative_embeddings
-            )
+            rel_logits = self._matmul_with_relative_keys(query, key_relative_embeddings)
             scores_local = self._relative_position_to_absolute_position(rel_logits)
             scores = scores + scores_local
         if self.proximal_bias:
             assert t_s == t_t, "Proximal bias is only available for self-attention."
-            scores = scores + self._attention_bias_proximal(t_s).to(
-                device=scores.device, dtype=scores.dtype
-            )
+            r = torch.arange(t_s, dtype=scores.dtype, device=scores.device)
+            scores = scores + self._attention_bias_proximal(r)
         if mask is not None:
             scores = scores.masked_fill(mask == 0, -1e4)
             if self.block_length is not None:
@@ -373,14 +372,13 @@ class MultiHeadAttention(nn.Module):
         x_final = x_flat.view([batch, heads, length, 2 * length])[:, :, :, 1:]
         return x_final
 
-    def _attention_bias_proximal(self, length: int):
+    def _attention_bias_proximal(self, r: torch.Tensor):
         """Bias for self-attention to encourage attention to close positions.
         Args:
-          length: an integer scalar.
+          r: torch.Tensor
         Returns:
           a Tensor with shape [1, 1, length, length]
         """
-        r = torch.arange(length, dtype=torch.float32)
         diff = torch.unsqueeze(r, 0) - torch.unsqueeze(r, 1)
         return torch.unsqueeze(torch.unsqueeze(-torch.log1p(torch.abs(diff)), 0), 0)
 

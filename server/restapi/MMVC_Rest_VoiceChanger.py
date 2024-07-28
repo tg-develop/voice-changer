@@ -1,4 +1,5 @@
 import numpy as np
+from time import time
 from msgspec import msgpack
 
 from fastapi import APIRouter, Request
@@ -28,13 +29,14 @@ class MMVC_Rest_VoiceChanger:
 
 
     async def test(self, req: Request):
+        recv_timestamp = round(time() * 1000)
         try:
             data = await req.body()
-            timestamp, voice = msgpack.decode(data)
+            ts, voice = msgpack.decode(data)
 
             unpackedData = np.frombuffer(voice, dtype=np.int16).astype(np.float32) / 32768
 
-            out_audio, perf, err = self.voiceChangerManager.changeVoice(unpackedData)
+            out_audio, vol, perf, err = self.voiceChangerManager.changeVoice(unpackedData)
             out_audio = (out_audio * 32767).astype(np.int16).tobytes()
 
             if err is not None:
@@ -42,7 +44,6 @@ class MMVC_Rest_VoiceChanger:
                 return Response(
                     content=msgpack.encode({
                         "error": True,
-                        "timestamp": timestamp,
                         "details": {
                             "code": error_code,
                             "message": error_message,
@@ -51,12 +52,16 @@ class MMVC_Rest_VoiceChanger:
                     headers={'Content-Type': 'application/octet-stream'},
                 )
 
+            ping = recv_timestamp - ts
+            send_timestamp = round(time() * 1000)
             return Response(
                 content=msgpack.encode({
                     "error": False,
-                    "timestamp": timestamp,
                     "audio": out_audio,
                     "perf": perf,
+                    "vol": vol,
+                    "ping": ping,
+                    "sendTimestamp": send_timestamp,
                 }),
                 headers={'Content-Type': 'application/octet-stream'},
             )

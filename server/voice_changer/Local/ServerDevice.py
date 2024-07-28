@@ -26,7 +26,7 @@ class ServerDeviceCallbacks(Protocol):
     def on_request(self, unpackedData: AudioInOut) -> tuple[AudioInOut, list[Union[int, float]]]:
         ...
 
-    def emitTo(self, performance: list[float], err: tuple[str, str] | None):
+    def emitTo(self, volume: float, performance: list[float], err: tuple[str, str] | None):
         ...
 
 
@@ -38,7 +38,7 @@ class ServerDevice:
         self.serverAudioInputDevices = None
         self.serverAudioOutputDevices = None
         self.monQueue = Queue()
-        self.performance = []
+        self.performance = [0, 0, 0]
 
         self.control_loop = False
         self.stream_loop = False
@@ -69,10 +69,9 @@ class ServerDevice:
         return self.serverDeviceCallbacks.on_request(unpackedData)
 
     def _processDataWithTime(self, indata: np.ndarray):
-        out_wav, perf, err = self._processData(indata)
-        self.performance = [0] + perf
-        self.serverDeviceCallbacks.emitTo(self.performance, err)
-        self.performance = [round(x * 1000) for x in self.performance]
+        out_wav, vol, perf, err = self._processData(indata)
+        self.performance = perf
+        self.serverDeviceCallbacks.emitTo(vol, self.performance, err)
         return out_wav
 
     def audio_stream_callback(self, indata: np.ndarray, outdata: np.ndarray, frames, times, status):
@@ -81,7 +80,7 @@ class ServerDevice:
             outputChannels = outdata.shape[1]
             outdata[:] = (np.repeat(out_wav, outputChannels).reshape(-1, outputChannels) * self.settings.serverOutputAudioGain)
         except Exception as e:
-            self.serverDeviceCallbacks.emitTo(self.performance, ('ERR_GENERIC_SERVER_AUDIO_ERROR', ERR_GENERIC_SERVER_AUDIO_ERROR))
+            self.serverDeviceCallbacks.emitTo(0, self.performance, ('ERR_GENERIC_SERVER_AUDIO_ERROR', ERR_GENERIC_SERVER_AUDIO_ERROR))
             logger.exception(e)
 
     def audio_stream_callback_mon_queue(self, indata: np.ndarray, outdata: np.ndarray, frames, times, status):
@@ -91,7 +90,7 @@ class ServerDevice:
             outputChannels = outdata.shape[1]
             outdata[:] = (np.repeat(out_wav, outputChannels).reshape(-1, outputChannels) * self.settings.serverOutputAudioGain)
         except Exception as e:
-            self.serverDeviceCallbacks.emitTo(self.performance, ('ERR_GENERIC_SERVER_AUDIO_ERROR', ERR_GENERIC_SERVER_AUDIO_ERROR))
+            self.serverDeviceCallbacks.emitTo(0, self.performance, ('ERR_GENERIC_SERVER_AUDIO_ERROR', ERR_GENERIC_SERVER_AUDIO_ERROR))
             logger.exception(e)
 
     def audio_monitor_callback(self, outdata: np.ndarray, frames, times, status):
@@ -102,7 +101,7 @@ class ServerDevice:
             outputChannels = outdata.shape[1]
             outdata[:] = (np.repeat(mon_wav, outputChannels).reshape(-1, outputChannels) * self.settings.serverMonitorAudioGain)
         except Exception as e:
-            self.serverDeviceCallbacks.emitTo(self.performance, ('ERR_GENERIC_SERVER_AUDIO_ERROR', ERR_GENERIC_SERVER_AUDIO_ERROR))
+            self.serverDeviceCallbacks.emitTo(0, self.performance, ('ERR_GENERIC_SERVER_AUDIO_ERROR', ERR_GENERIC_SERVER_AUDIO_ERROR))
             logger.exception(e)
 
     ###########################################
@@ -113,7 +112,7 @@ class ServerDevice:
             sd.Stream(callback=self.audio_stream_callback, latency='low', dtype="float32", device=(self.settings.serverInputDeviceId, self.settings.serverOutputDeviceId), blocksize=block_frame, samplerate=self.settings.serverInputAudioSampleRate, channels=(inputMaxChannel, outputMaxChannel), extra_settings=(inputExtraSetting, outputExtraSetting)),
         ):
             while self.stream_loop:
-                time.sleep(2)
+                time.sleep(1)
 
     def run_with_monitor(self, block_frame: int, inputMaxChannel: int, outputMaxChannel: int, monitorMaxChannel: int, inputExtraSetting, outputExtraSetting, monitorExtraSetting):
         with (
@@ -121,7 +120,7 @@ class ServerDevice:
             sd.OutputStream(callback=self.audio_monitor_callback, dtype="float32", device=self.settings.serverMonitorDeviceId, blocksize=block_frame, samplerate=self.settings.serverMonitorAudioSampleRate, channels=monitorMaxChannel, extra_settings=monitorExtraSetting),
         ):
             while self.stream_loop:
-                time.sleep(2)
+                time.sleep(1)
 
     ###########################################
     # Start Section
@@ -129,7 +128,7 @@ class ServerDevice:
     def start(self):
         while True:
             if not self.control_loop:
-                time.sleep(2)
+                time.sleep(1)
                 continue
 
             sd._terminate()
@@ -160,7 +159,7 @@ class ServerDevice:
             # Deviceがなかったらいったんスリープ
             if serverInputAudioDevice is None or serverOutputAudioDevice is None:
                 logger.error("Input or output device is not selected.")
-                self.serverDeviceCallbacks.emitTo(self.performance, ('ERR_GENERIC_SERVER_AUDIO_ERROR', ERR_GENERIC_SERVER_AUDIO_ERROR))
+                self.serverDeviceCallbacks.emitTo(0, self.performance, ('ERR_GENERIC_SERVER_AUDIO_ERROR', ERR_GENERIC_SERVER_AUDIO_ERROR))
                 time.sleep(2)
                 continue
 
@@ -200,6 +199,7 @@ class ServerDevice:
                             availableMonitorSampleRate.append(sr)
                 err = ERR_SAMPLE_RATE_NOT_SUPPORTED % (availableInputSampleRate, availableOutputSampleRate, availableMonitorSampleRate)
                 self.serverDeviceCallbacks.emitTo(
+                    0,
                     self.performance,
                     ('ERR_SAMPLE_RATE_NOT_SUPPORTED', err)
                 )
@@ -217,7 +217,7 @@ class ServerDevice:
                 else:
                     self.run_with_monitor(block_frame, serverInputAudioDevice.maxInputChannels, serverOutputAudioDevice.maxOutputChannels, serverMonitorAudioDevice.maxOutputChannels, inputExtraSetting, outputExtraSetting, monitorExtraSetting)
             except Exception as e:
-                self.serverDeviceCallbacks.emitTo(self.performance, ('ERR_GENERIC_SERVER_AUDIO_ERROR', ERR_GENERIC_SERVER_AUDIO_ERROR))
+                self.serverDeviceCallbacks.emitTo(0, self.performance, ('ERR_GENERIC_SERVER_AUDIO_ERROR', ERR_GENERIC_SERVER_AUDIO_ERROR))
                 logger.exception(e)
                 time.sleep(2)
 
@@ -231,7 +231,7 @@ class ServerDevice:
             self.serverAudioInputDevices = audioinput
             self.serverAudioOutputDevices = audiooutput
         except Exception as e:
-            self.serverDeviceCallbacks.emitTo(self.performance, ('ERR_GENERIC_SERVER_AUDIO_ERROR', ERR_GENERIC_SERVER_AUDIO_ERROR))
+            self.serverDeviceCallbacks.emitTo(0, self.performance, ('ERR_GENERIC_SERVER_AUDIO_ERROR', ERR_GENERIC_SERVER_AUDIO_ERROR))
             logger.exception(e)
 
         data["serverAudioInputDevices"] = self.serverAudioInputDevices

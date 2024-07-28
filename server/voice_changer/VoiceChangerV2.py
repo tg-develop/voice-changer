@@ -134,11 +134,11 @@ class VoiceChangerV2(VoiceChangerIF):
         with Timer2("main-process", True) as t:
             block_size = audio_in.shape[0]
 
-            audio = self.voiceChangerModel.inference(audio_in)
+            audio, vol = self.voiceChangerModel.inference(audio_in)
 
             if audio is None:
                 # In case there's an actual silence - send full block with zeros
-                return np.zeros(block_size, dtype=np.float32), [0, 0, 0]
+                return np.zeros(block_size, dtype=np.float32), vol, [0, 0, 0]
 
             # SOLA algorithm from https://github.com/yxlllc/DDSP-SVC, https://github.com/liujing04/Retrieval-based-Voice-Conversion-WebUI
             conv_input = audio[
@@ -171,7 +171,7 @@ class VoiceChangerV2(VoiceChangerIF):
             self.ioRecorder.writeInput((audio_in * 32767).astype(np.int16).tobytes())
             self.ioRecorder.writeOutput((result * 32767).astype(np.int16).tobytes())
 
-        return result, [0, mainprocess_time, 0]
+        return result, vol, [0, mainprocess_time, 0]
 
     @torch.no_grad()
     def export2onnx(self):

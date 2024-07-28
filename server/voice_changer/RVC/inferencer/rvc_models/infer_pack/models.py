@@ -261,7 +261,7 @@ class Generator(torch.nn.Module):
             x = x + self.cond(g)
 
         for i in range(self.num_upsamples):
-            x = F.leaky_relu(x, modules.LRELU_SLOPE)
+            x = F.leaky_relu(x, modules.LRELU_SLOPE, inplace=True)
             x = self.ups[i](x)
             xs = None
             for j in range(self.num_kernels):
@@ -270,9 +270,9 @@ class Generator(torch.nn.Module):
                 else:
                     xs += self.resblocks[i * self.num_kernels + j](x)
             x = xs / self.num_kernels
-        x = F.leaky_relu(x)
+        x = F.leaky_relu(x, inplace=True)
         x = self.conv_post(x)
-        x = torch.tanh(x)
+        x = torch.tanh(x, out=x)
 
         return x
 
@@ -338,15 +338,12 @@ class SineGen(torch.nn.Module):
         self.sampling_rate = samp_rate
         self.voiced_threshold = voiced_threshold
 
-    def _f02uv(self, f0):
+    def _f02uv(self, f0: torch.Tensor):
         # generate uv signal
         uv = torch.ones_like(f0)
-        uv = uv * (f0 > self.voiced_threshold)
-        if uv.device.type == "privateuseone":  # for DirectML
-            uv = uv.float()
-        return uv
+        return uv * (f0 > self.voiced_threshold)
 
-    def forward(self, f0: torch.Tensor, upp: int):
+    def forward(self, f0: torch.Tensor, upp: float):
         """sine_tensor, uv = forward(f0)
         input F0: tensor(batchsize=1, length, dim=1)
                   f0 for unvoiced steps should be 0
@@ -376,12 +373,12 @@ class SineGen(torch.nn.Module):
             tmp_over_one *= upp
             tmp_over_one = F.interpolate(
                 tmp_over_one.transpose(2, 1),
-                scale_factor=float(upp),
+                scale_factor=upp,
                 mode="linear",
                 align_corners=True,
             ).transpose(2, 1)
             rad_values = F.interpolate(
-                rad_values.transpose(2, 1), scale_factor=float(upp), mode="nearest"
+                rad_values.transpose(2, 1), scale_factor=upp, mode="nearest"
             ).transpose(
                 2, 1
             )  #######
@@ -393,9 +390,9 @@ class SineGen(torch.nn.Module):
                 torch.cumsum(rad_values + cumsum_shift, dim=1) * 2 * torch.pi
             )
             sine_waves = sine_waves * self.sine_amp
-            uv = self._f02uv(f0)
+            uv = self._f02uv(f0).to(f0.dtype)
             uv = F.interpolate(
-                uv.transpose(2, 1), scale_factor=float(upp), mode="nearest"
+                uv.transpose(2, 1), scale_factor=upp, mode="nearest"
             ).transpose(2, 1)
             noise_amp = uv * self.noise_std + (1 - uv) * self.sine_amp / 3
             noise = noise_amp * torch.randn_like(sine_waves)
@@ -443,18 +440,9 @@ class SourceModuleHnNSF(torch.nn.Module):
         # to merge source harmonics into a single excitation
         self.l_linear = torch.nn.Linear(harmonic_num + 1, 1)
         self.l_tanh = torch.nn.Tanh()
-        # self.ddtype:int = -1
 
-    def forward(self, x: torch.Tensor, upp: int = 1):
-        # if self.ddtype ==-1:
-        #     self.ddtype = self.l_linear.weight.dtype
+    def forward(self, x: torch.Tensor, upp: float = 1.):
         sine_wavs, uv, _ = self.l_sin_gen(x, upp)
-        # print(x.dtype,sine_wavs.dtype,self.l_linear.weight.dtype)
-        # if self.is_half:
-        #     sine_wavs = sine_wavs.half()
-        # sine_merge = self.l_tanh(self.l_linear(sine_wavs.to(x)))
-        # print(sine_wavs.dtype,self.ddtype)
-        # if sine_wavs.dtype != self.l_linear.weight.dtype:
         sine_wavs = sine_wavs.to(dtype=self.l_linear.weight.dtype)
         sine_merge = self.l_tanh(self.l_linear(sine_wavs))
         return sine_merge, None, None  # noise, uv
@@ -540,7 +528,7 @@ class GeneratorNSF(torch.nn.Module):
         g: Optional[torch.Tensor] = None,
         n_res: Optional[int] = None,
     ):
-        har_source, noi_source, uv = self.m_source(f0, self.upp)
+        har_source, noi_source, uv = self.m_source(f0, float(self.upp))
         har_source = har_source.transpose(1, 2)
         if n_res is not None:
             if (n := n_res * self.upp) != har_source.shape[-1]:
@@ -554,7 +542,7 @@ class GeneratorNSF(torch.nn.Module):
         # That's why I wrote this
         for i, (ups, noise_convs) in enumerate(zip(self.ups, self.noise_convs)):
             if i < self.num_upsamples:
-                x = F.leaky_relu(x, self.lrelu_slope)
+                x = F.leaky_relu(x, self.lrelu_slope, inplace=True)
                 x = ups(x)
                 x_source = noise_convs(har_source)
                 x = x + x_source
@@ -570,9 +558,9 @@ class GeneratorNSF(torch.nn.Module):
                 # If ignored, it will cause torch.jit.script() compilation errors
                 assert isinstance(xs, torch.Tensor)
                 x = xs / self.num_kernels
-        x = F.leaky_relu(x)
+        x = F.leaky_relu(x, inplace=True)
         x = self.conv_post(x)
-        x = torch.tanh(x)
+        x = torch.tanh(x, out=x)
         return x
 
     def remove_weight_norm(self):
@@ -1121,7 +1109,7 @@ class DiscriminatorS(torch.nn.Module):
 
         for l in self.convs:
             x = l(x)
-            x = F.leaky_relu(x, modules.LRELU_SLOPE)
+            x = F.leaky_relu(x, modules.LRELU_SLOPE, inplace=True)
             fmap.append(x)
         x = self.conv_post(x)
         fmap.append(x)
@@ -1205,7 +1193,7 @@ class DiscriminatorP(torch.nn.Module):
 
         for l in self.convs:
             x = l(x)
-            x = F.leaky_relu(x, modules.LRELU_SLOPE)
+            x = F.leaky_relu(x, modules.LRELU_SLOPE, inplace=True)
             fmap.append(x)
         x = self.conv_post(x)
         fmap.append(x)

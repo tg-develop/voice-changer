@@ -163,9 +163,19 @@ export const CharacterArea = (_props: CharacterAreaProps) => {
                       await serverSetting.updateServerSettings({ ...serverSetting.serverSetting, serverOutputAudioGain: val });
                   };
 
+        const currentMonitorGain = serverSetting.serverSetting.enableServerAudio == 0 ? setting.voiceChangerClientSetting.monitorGain : serverSetting.serverSetting.serverMonitorAudioGain;
+        const monitorValueUpdatedAction =
+            serverSetting.serverSetting.enableServerAudio == 0
+                ? async (val: number) => {
+                    await setVoiceChangerClientSetting({ ...setting.voiceChangerClientSetting, monitorGain: val });
+                }
+                : async (val: number) => {
+                    await serverSetting.updateServerSettings({ ...serverSetting.serverSetting, serverMonitorAudioGain: val });
+                };
+
         return (
             <div className="character-area-control">
-                <div className="character-area-control-title">GAIN:</div>
+                <div className="character-area-control-title">VOL:</div>
                 <div className="character-area-control-field">
                     <div className="character-area-slider-control">
                         <span className="character-area-slider-control-kind">in</span>
@@ -173,15 +183,15 @@ export const CharacterArea = (_props: CharacterAreaProps) => {
                             <input
                                 type="range"
                                 min="0.1"
-                                max="10.0"
-                                step="0.1"
+                                max="1.0"
+                                step="0.01"
                                 value={currentInputGain}
                                 onChange={(e) => {
                                     inputValueUpdatedAction(Number(e.target.value));
                                 }}
                             ></input>
                         </span>
-                        <span className="character-area-slider-control-val">{currentInputGain}</span>
+                        <span className="character-area-slider-control-val">{Math.round(currentInputGain * 100)}%</span>
                     </div>
 
                     <div className="character-area-slider-control">
@@ -190,15 +200,32 @@ export const CharacterArea = (_props: CharacterAreaProps) => {
                             <input
                                 type="range"
                                 min="0.1"
-                                max="10.0"
-                                step="0.1"
+                                max="2.0"
+                                step="0.01"
                                 value={currentOutputGain}
                                 onChange={(e) => {
                                     outputValueUpdatedAction(Number(e.target.value));
                                 }}
                             ></input>
                         </span>
-                        <span className="character-area-slider-control-val">{currentOutputGain}</span>
+                        <span className="character-area-slider-control-val">{Math.round(currentOutputGain * 100)}%</span>
+                    </div>
+
+                    <div className="character-area-slider-control">
+                        <span className="character-area-slider-control-kind">mon</span>
+                        <span className="character-area-slider-control-slider">
+                            <input
+                                type="range"
+                                min="0.1"
+                                max="2.0"
+                                step="0.01"
+                                value={currentMonitorGain}
+                                onChange={(e) => {
+                                    monitorValueUpdatedAction(Number(e.target.value));
+                                }}
+                            ></input>
+                        </span>
+                        <span className="character-area-slider-control-val">{Math.round(currentMonitorGain * 100)}%</span>
                     </div>
                 </div>
             </div>
