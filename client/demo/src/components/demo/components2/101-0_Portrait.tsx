@@ -37,6 +37,9 @@ export const Portrait = (_props: PortraitProps) => {
             <></>
         );
 
+        const volumeDb = Math.max(Math.round(20 * Math.log10(volume)), -90)
+        const chunkTime = ((serverSetting.serverSetting.serverReadChunkSize * 128 * 1000) / 48000)
+        const totalLatencyTime = Math.ceil(chunkTime + performance.responseTime + serverSetting.serverSetting.crossFadeOverlapSize * 1000)
         return (
             <div className="portrait-area">
                 <div className="portrait-container">
@@ -46,16 +49,19 @@ export const Portrait = (_props: PortraitProps) => {
                             <span className="portrait-area-status-vctype">{selected.voiceChangerType}</span>
                         </p>
                         <p>
-                            vol: <span id="status-vol">{volume.toFixed(4)}</span>
+                            vol(in): {volumeDb} dB
                         </p>
                         <p>
-                            buf: <span id="status-buf">{bufferingTime}</span> ms
+                            buf: {chunkTime.toFixed(1)} ms
                         </p>
                         <p>
-                            res: <span id="status-res">{performance.responseTime}</span> ms
+                            ping: {performance.responseTime} ms
                         </p>
                         <p>
-                            perf: <span id="status-perf">{performance.mainprocessTime}</span> ms
+                            total: {totalLatencyTime} ms
+                        </p>
+                        <p>
+                            perf: {performance.mainprocessTime} ms
                         </p>
                     </div>
                     <div className="portrait-area-terms-of-use">{selectedTermOfUseUrlLink}</div>
@@ -65,7 +71,7 @@ export const Portrait = (_props: PortraitProps) => {
         // FIXME: Volume notifications cause too frequent updates which harm the performance.
         // This way, volume update depends on bufferingTime and performance that are always reported.
         // However, this might be a problem if this becomes no longer the case.
-    }, [selected, bufferingTime, performance]);
+    }, [selected, bufferingTime, performance, serverSetting.serverSetting.crossFadeOverlapSize, serverSetting.serverSetting.serverReadChunkSize]);
 
     return portrait;
 };

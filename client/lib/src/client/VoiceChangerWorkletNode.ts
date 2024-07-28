@@ -14,7 +14,7 @@ import * as msgpackrParser from "./sio/msgpackr";
 export type VoiceChangerWorkletListener = {
   notifyVolume: (vol: number) => void;
   notifySendBufferingTime: (time: number) => void;
-  notifyResponseTime: (time: number, perf?: number[]) => void;
+  notifyResponseTime: (time: number, perf: number[]) => void;
   notifyException: (
     code: VOICE_CHANGER_CLIENT_EXCEPTION,
     message: string
@@ -130,20 +130,18 @@ export class VoiceChangerWorkletNode extends AudioWorkletNode {
         }
       });
 
-      this.socket.on("response", (response: any[]) => {
-        const cur = Date.now();
-        const responseTime = cur - response[0];
-        const audio = response[1] as Uint8Array;
-        const perf = response[2];
+      // Dedicated message for server mode
+      this.socket.on("server_stats", (response: any[]) => {
+        const [vol, perf] = response;
+        this.listener.notifyVolume(vol);
+        // There is no response delay in server mode.
+        this.listener.notifyResponseTime(0, perf);
+      });
 
-        // Quick hack for server device mode
-        if (response[0] == 0) {
-          this.listener.notifyResponseTime(
-            Math.round(perf[0] * 1000),
-            perf.slice(1, 4)
-          );
-          return;
-        }
+      this.socket.on("response", (response: any[]) => {
+        const [sendTimestamp, audio, ping, vol, perf] = response
+        // NOTE: Large integers are packed as BigInt
+        const totalPing = Date.now() - Number(sendTimestamp) + ping;
 
         if (audio.byteLength < 128 * 2) {
           this.listener.notifyException(
@@ -156,7 +154,8 @@ export class VoiceChangerWorkletNode extends AudioWorkletNode {
           } else {
             this.postReceivedVoice(audio);
           }
-          this.listener.notifyResponseTime(responseTime, perf);
+          this.listener.notifyVolume(vol);
+          this.listener.notifyResponseTime(totalPing, perf);
         }
       });
     }
@@ -239,6 +238,7 @@ export class VoiceChangerWorkletNode extends AudioWorkletNode {
     } else if (this.setting.protocol === "rest") {
       const restClient = new ServerRestClient(this.setting.serverUrl);
       const data = await restClient.postVoice(timestamp, newBuffer);
+      const totalPing = Date.now() - Number(data.sendTimestamp) + data.ping;
       if (data.error) {
         const { code, message } = data.details
         if (code == 'ERR_SAMPLE_RATE_NOT_SUPPORTED') {
@@ -265,7 +265,8 @@ export class VoiceChangerWorkletNode extends AudioWorkletNode {
           this.postReceivedVoice(audio);
         }
       }
-      this.listener.notifyResponseTime(Date.now() - timestamp, data.perf);
+      this.listener.notifyVolume(data.vol);
+      this.listener.notifyResponseTime(totalPing, data.perf);
     } else {
       throw "unknown protocol";
     }

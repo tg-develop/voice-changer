@@ -71,23 +71,23 @@ export const QualityArea = (props: QualityAreaProps) => {
 
         const threshold = (
             <div className="config-sub-area-control">
-                <div className="config-sub-area-control-title">S.Thresh.:</div>
+                <div className="config-sub-area-control-title">In. Sens.:</div>
                 <div className="config-sub-area-control-field">
                     <div className="config-sub-area-slider-control">
                         <span className="config-sub-area-slider-control-slider">
                             <input
                                 type="range"
                                 className="config-sub-area-slider-control-slider"
-                                min="0.00000"
-                                max="0.001"
-                                step="0.00001"
-                                value={serverSetting.serverSetting.silentThreshold || 0}
+                                min="-90"
+                                max="-60"
+                                step="1"
+                                value={serverSetting.serverSetting.silentThreshold}
                                 onChange={(e) => {
                                     serverSetting.updateServerSettings({ ...serverSetting.serverSetting, silentThreshold: Number(e.target.value) });
                                 }}
                             ></input>
                         </span>
-                        <span className="config-sub-area-slider-control-val">{serverSetting.serverSetting.silentThreshold}</span>
+                        <span className="config-sub-area-slider-control-val">{serverSetting.serverSetting.silentThreshold} dB</span>
                     </div>
                 </div>
             </div>

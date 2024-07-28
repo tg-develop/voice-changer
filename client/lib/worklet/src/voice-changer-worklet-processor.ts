@@ -30,7 +30,6 @@ export type VoiceChangerWorkletProcessorResponse = {
 class VoiceChangerWorkletProcessor extends AudioWorkletProcessor {
     private BLOCK_SIZE = 128;
     private initialized = false;
-    private volume = 0;
 
     private isRecording = false;
 
@@ -44,15 +43,6 @@ class VoiceChangerWorkletProcessor extends AudioWorkletProcessor {
         this.initialized = true;
         this.port.onmessage = this.handleMessage.bind(this);
     }
-
-    calcVol = (data: Float32Array, prevVol: number) => {
-        let sum = 0;
-        for (let i = 0; i < data.length; i++) {
-            sum += data[i]
-        }
-        const rms = Math.sqrt((sum * sum) / data.length);
-        return Math.max(rms, prevVol * 0.95);
-    };
 
     trancateBuffer = (start: number, end?: number) => {
         this.playBuffer = this.playBuffer.slice(start, end)
@@ -126,12 +116,6 @@ class VoiceChangerWorkletProcessor extends AudioWorkletProcessor {
 
         const voice = this.playBuffer.shift();
         if (voice) {
-            this.volume = this.calcVol(voice, this.volume);
-            const volumeResponse: VoiceChangerWorkletProcessorResponse = {
-                responseType: ResponseType.volume,
-                volume: this.volume,
-            };
-            this.port.postMessage(volumeResponse);
             outputs[0][0].set(voice);
             if (outputs[0].length == 2) {
                 outputs[0][1].set(voice);

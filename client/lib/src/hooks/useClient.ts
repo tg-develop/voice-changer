@@ -164,12 +164,15 @@ export const useClient = (props: UseClientProps): ClientState => {
                 notifySendBufferingTime: (val: number) => {
                     setBufferingTime(val);
                 },
-                notifyResponseTime: (val: number, perf?: number[]) => {
+                notifyResponseTime: (val: number, perf: number[]) => {
                     const responseTime = val;
-                    const preprocessTime = perf ? Math.ceil(perf[0] * 1000) : 0;
-                    const mainprocessTime = perf ? Math.ceil(perf[1] * 1000) : 0;
-                    const postprocessTime = perf ? Math.ceil(perf[2] * 1000) : 0;
-                    setPerformance({ responseTime, preprocessTime, mainprocessTime, postprocessTime });
+                    const [preprocessTime, mainprocessTime, postprocessTime] = perf;
+                    setPerformance({
+                        responseTime,
+                        preprocessTime: Math.ceil(preprocessTime * 1000),
+                        mainprocessTime: Math.ceil(mainprocessTime * 1000),
+                        postprocessTime: Math.ceil(postprocessTime * 1000),
+                    });
                 },
                 notifyException: (_: string, mes: string) => {
                     // TODO: Refactor
@@ -178,6 +181,7 @@ export const useClient = (props: UseClientProps): ClientState => {
                     setErrorMessage(mes);
                 },
                 notifyVolume: (vol: number) => {
+                    // Volume is reported in RMS
                     setVolume(vol);
                 },
             });

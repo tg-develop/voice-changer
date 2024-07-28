@@ -56,6 +56,9 @@ class RVCr2(VoiceChangerModel):
         self.input_sample_rate = self.settings.inputSampleRate
         self.output_sample_rate = self.settings.outputSampleRate
 
+        # Convert dB to RMS
+        self.inputSensitivity = 10 ** (self.settings.silentThreshold / 20)
+
         self.is_half = False
 
         self.initialize()
@@ -125,6 +128,9 @@ class RVCr2(VoiceChangerModel):
                 self.settings.f0Detector, self.settings.gpu
             )
             self.pipeline.setPitchExtractor(pitchExtractor)
+        elif key == 'silentThreshold':
+            # Convert dB to RMS
+            self.inputSensitivity = 10 ** (self.settings.silentThreshold / 20)
 
     def set_slot_info(self, slotInfo: RVCModelSlot):
         self.slotInfo = slotInfo
@@ -232,8 +238,8 @@ class RVCr2(VoiceChangerModel):
         )
         vol = max(vol_t.item(), 0)
 
-        if vol < self.settings.silentThreshold:
-            return None
+        if vol < self.inputSensitivity:
+            return None, vol
 
         circular_write(audio_in_16k, self.convert_buffer)
 
@@ -257,7 +263,7 @@ class RVCr2(VoiceChangerModel):
         # FIXME: Why the heck does it require another sqrt to amplify the volume?
         audio_out: torch.Tensor = self.resampler_out(audio_model * torch.sqrt(vol_t))
 
-        return audio_out
+        return audio_out, vol
 
     def __del__(self):
         del self.pipeline
