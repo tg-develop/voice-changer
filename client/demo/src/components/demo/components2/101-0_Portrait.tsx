@@ -6,7 +6,7 @@ export type PortraitProps = {};
 // @ts-ignore
 import MyIcon from "./female-clickable.svg";
 export const Portrait = (_props: PortraitProps) => {
-    const { serverSetting, volume, bufferingTime, performance } = useAppState();
+    const { serverSetting, volume, performance } = useAppState();
     const messageBuilderState = useMessageBuilder();
 
     useMemo(() => {
@@ -69,9 +69,9 @@ export const Portrait = (_props: PortraitProps) => {
             </div>
         );
         // FIXME: Volume notifications cause too frequent updates which harm the performance.
-        // This way, volume update depends on bufferingTime and performance that are always reported.
+        // This way, volume update depends on performance that are always reported.
         // However, this might be a problem if this becomes no longer the case.
-    }, [selected, bufferingTime, performance, serverSetting.serverSetting.crossFadeOverlapSize, serverSetting.serverSetting.serverReadChunkSize]);
+    }, [selected, performance, serverSetting.serverSetting.crossFadeOverlapSize, serverSetting.serverSetting.serverReadChunkSize]);
 
     return portrait;
 };
