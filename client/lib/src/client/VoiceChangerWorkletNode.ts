@@ -12,9 +12,8 @@ import { ServerRestClient } from "./ServerRestClient";
 import * as msgpackrParser from "./sio/msgpackr";
 
 export type VoiceChangerWorkletListener = {
-  notifyVolume: (vol: number) => void;
   notifySendBufferingTime: (time: number) => void;
-  notifyResponseTime: (time: number, perf: number[]) => void;
+  notifyPerformanceStats: (ping: number, vol: number, perf: number[]) => void;
   notifyException: (
     code: VOICE_CHANGER_CLIENT_EXCEPTION,
     message: string
@@ -133,9 +132,8 @@ export class VoiceChangerWorkletNode extends AudioWorkletNode {
       // Dedicated message for server mode
       this.socket.on("server_stats", (response: any[]) => {
         const [vol, perf] = response;
-        this.listener.notifyVolume(vol);
         // There is no response delay in server mode.
-        this.listener.notifyResponseTime(0, perf);
+        this.listener.notifyPerformanceStats(0, vol, perf);
       });
 
       this.socket.on("response", (response: any[]) => {
@@ -154,8 +152,7 @@ export class VoiceChangerWorkletNode extends AudioWorkletNode {
           } else {
             this.postReceivedVoice(audio);
           }
-          this.listener.notifyVolume(vol);
-          this.listener.notifyResponseTime(totalPing, perf);
+          this.listener.notifyPerformanceStats(totalPing, vol, perf);
         }
       });
     }
@@ -194,8 +191,6 @@ export class VoiceChangerWorkletNode extends AudioWorkletNode {
         this.stopPromiseResolve();
         this.stopPromiseResolve = null;
       }
-    } else if (event.data.responseType === "volume") {
-      this.listener.notifyVolume(event.data.volume as number);
     } else if (event.data.responseType === "inputData") {
       const inputData = event.data.inputData as Float32Array;
       // console.log("receive input data", inputData);
@@ -265,8 +260,7 @@ export class VoiceChangerWorkletNode extends AudioWorkletNode {
           this.postReceivedVoice(audio);
         }
       }
-      this.listener.notifyVolume(data.vol);
-      this.listener.notifyResponseTime(totalPing, data.perf);
+      this.listener.notifyPerformanceStats(totalPing, data.vol, data.perf);
     } else {
       throw "unknown protocol";
     }

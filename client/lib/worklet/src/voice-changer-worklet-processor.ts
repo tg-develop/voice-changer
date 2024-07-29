@@ -8,7 +8,6 @@ export const RequestType = {
 export type RequestType = (typeof RequestType)[keyof typeof RequestType];
 
 export const ResponseType = {
-    volume: "volume",
     inputData: "inputData",
     start_ok: "start_ok",
     stop_ok: "stop_ok",
@@ -22,7 +21,6 @@ export type VoiceChangerWorkletProcessorRequest = {
 
 export type VoiceChangerWorkletProcessorResponse = {
     responseType: ResponseType;
-    volume?: number;
     recordData?: Float32Array[];
     inputData?: Float32Array;
 };
