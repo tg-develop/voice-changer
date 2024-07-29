@@ -270,6 +270,8 @@ Find and delete the mentioned files from the voice changer folder and restart th
 
 In the voice changer, make sure **passthru** is not on (indicated by blinking red color). Click it to switch it off (indicated by solid green color).
 
+![unpassthru](https://github.com/user-attachments/assets/014fd740-d8cb-48f6-8b5c-d53258a34b95)
+
 ### Hearing audio crackles
 
 1. Make sure you are using **VAC by Muzychenko** (indicated by the **Line 1** audio device name).
