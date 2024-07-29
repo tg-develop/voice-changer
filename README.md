@@ -1,5 +1,44 @@
 # Voice Changer
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Supported operated systems](#supported-operated-systems)
+- [System requirements](#system-requirements)
+  - [For CPU-only voice conversion](#for-cpu-only-voice-conversion)
+  - [For GPU voice conversion](#for-gpu-voice-conversion)
+- [Known issues](#known-issues)
+  - [General](#general)
+  - [DirectML (dml) version](#directml-dml-version)
+  - [Nvidia version](#nvidia-version)
+  - [All versions](#all-versions)
+- [How to use](#how-to-use)
+  - [Running locally on Windows](#running-locally-on-windows)
+    - [Before you start](#before-you-start)
+    - [Check your hardware](#check-your-hardware)
+    - [For AMD/Intel/CPU users](#for-amdintelcpu-users)
+    - [For Nvidia users](#for-nvidia-users)
+    - [Running the voice changer](#running-the-voice-changer)
+  - [Running locally on macOS](#running-locally-on-macos)
+    - [For Apple Silicon (Apple M1, etc.) users](#for-apple-silicon-apple-m1-etc-users)
+    - [For Intel users](#for-intel-users)
+    - [Removing Apple quarantine attribute](#removing-apple-quarantine-attribute)
+    - [Running the voice changer](#running-the-voice-changer-1)
+  - [Running on Colab/Kaggle](#running-on-colabkaggle)
+- [Troubleshooting](#troubleshooting)
+  - [Exceptions.WeightDownloadException: 'Failed to download weight.'](#exceptionsweightdownloadexception-failed-to-download-weight)
+  - [Audio devices are not displayed](#audio-devices-are-not-displayed)
+  - [No sound after start](#no-sound-after-start)
+  - [Hearing non-converted voice](#hearing-non-converted-voice)
+  - [Hearing audio crackles](#hearing-audio-crackles)
+  - [Audio is stuttery](#audio-is-stuttery)
+- [Contribution](#contribution)
+- [Working with the source](#working-with-the-source)
+  - [Prerequisites](#prerequisites)
+  - [Setting up the environment](#setting-up-the-environment)
+  - [Running the server](#running-the-server)
+  - [Building a package](#building-a-package)
+
 ## Overview
 
 This is a fork of [w-okada voice changer](https://github.com/w-okada/voice-changer) that performs real-time voice conversion
