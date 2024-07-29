@@ -125,9 +125,7 @@ A dedicated graphics card Nvidia GeForce RTX 20 Series or later, or AMD Radeon R
 
 ### All versions
 
-* Bad voice quality may be observed when changing Chunk with voice conversion started. The workaround is to stop and start conversion again.
-
-* Errors may occur when switching to different device with voice conversion enabled.
+* Only "perf" metric is reported in server audio mode with `rest` protocol.
 
 ## How to use
 
