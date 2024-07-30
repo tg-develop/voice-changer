@@ -272,8 +272,8 @@ class RVCr2(VoiceChangerModel):
         modelSlot = self.slotInfo
 
         if modelSlot.isONNX:
-            logger.error("Model is already in ONNX format.")
-            return {"status": "ng", "path": ""}
+            logger.error(f"{modelSlot.modelFile} is already in ONNX format.")
+            return {"status": "ALREADY_CONVERTED"}
 
         if self.pipeline is not None:
             del self.pipeline
@@ -282,7 +282,7 @@ class RVCr2(VoiceChangerModel):
         output_file_simple = export2onnx(modelSlot)
 
         return {
-            "status": "ok",
+            "status": "OK",
             "path": f"/tmp/{output_file_simple}",
             "filename": output_file_simple,
         }

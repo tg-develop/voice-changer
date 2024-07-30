@@ -249,6 +249,11 @@ export const CharacterArea = (_props: CharacterAreaProps) => {
             document.getElementById("dialog")?.classList.add("dialog-container-show");
             guiState.stateControls.showWaitingCheckbox.updateState(true);
             const res = (await serverSetting.getOnnx()) as OnnxExporterInfo;
+            if (res.status === 'ALREADY_CONVERTED') {
+                guiState.stateControls.showWaitingCheckbox.updateState(false);
+                toast.error('Model is already in ONNX. Try switching to another slot, then back to this model.')
+                return
+            }
             const a = document.createElement("a");
             a.href = res.path;
             a.download = res.filename;
