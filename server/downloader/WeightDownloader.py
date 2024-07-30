@@ -3,7 +3,7 @@ import asyncio
 from downloader.Downloader import download
 import logging
 from settings import ServerSettings
-from Exceptions import WeightDownloadException
+from Exceptions import PretrainDownloadException
 
 logger = logging.getLogger(__name__)
 
@@ -79,11 +79,12 @@ async def downloadWeight(params: ServerSettings):
     for file in files_to_download:
         tasks.append(asyncio.ensure_future(download(file)))
     fail = False
-    for res in await asyncio.gather(*tasks, return_exceptions=True):
+    for i, res in enumerate(await asyncio.gather(*tasks, return_exceptions=True)):
         if isinstance(res, Exception):
+            logger.error(f'Failed to download or verify {files_to_download[i]["saveTo"]}')
             fail = True
             logger.exception(res)
     if fail:
-        raise WeightDownloadException()
+        raise PretrainDownloadException()
 
     logger.info('All weights are loaded!')
