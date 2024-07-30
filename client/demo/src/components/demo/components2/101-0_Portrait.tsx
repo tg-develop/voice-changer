@@ -49,9 +49,6 @@ export const Portrait = (_props: PortraitProps) => {
         elPingRef.current.innerHTML = performance.responseTime.toString();
         elTotalRef.current.innerHTML = totalLatencyTime.toString();
         elPerfRef.current.innerHTML = performance.mainprocessTime.toString();
-        // FIXME: Volume notifications cause too frequent updates which harm the performance.
-        // This way, volume update depends on performance that are always reported.
-        // However, this might be a problem if this becomes no longer the case.
     }, [performance, serverSetting.serverSetting.crossFadeOverlapSize, serverSetting.serverSetting.serverReadChunkSize])
 
     const portrait = useMemo(() => {
