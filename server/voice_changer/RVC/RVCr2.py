@@ -272,7 +272,8 @@ class RVCr2(VoiceChangerModel):
         modelSlot = self.slotInfo
 
         if modelSlot.isONNX:
-            raise Exception("Model is already in ONNX format.")
+            logger.error("Model is already in ONNX format.")
+            return {"status": "ng", "path": ""}
 
         if self.pipeline is not None:
             del self.pipeline
