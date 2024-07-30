@@ -294,7 +294,7 @@ class VoiceChangerSettings:
 
     _indexRatio: float = 0
     _protect: float = 0.5
-    _silenceFront: int = True
+    _silenceFront: int = 1
 
     @property
     def dstId(self):
