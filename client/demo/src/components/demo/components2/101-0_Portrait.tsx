@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useAppState } from "../../../001_provider/001_AppStateProvider";
 import { useMessageBuilder } from "../../../hooks/useMessageBuilder";
 export type PortraitProps = {};
@@ -6,8 +6,16 @@ export type PortraitProps = {};
 // @ts-ignore
 import MyIcon from "./female-clickable.svg";
 export const Portrait = (_props: PortraitProps) => {
-    const { serverSetting, volume, performance } = useAppState();
+    const { serverSetting, performance } = useAppState();
     const messageBuilderState = useMessageBuilder();
+
+    const elVolRef = useRef<HTMLElement | null>(null);
+    const elChunkTimeRef = useRef<HTMLElement | null>(null);
+    const elPingRef = useRef<HTMLElement | null>(null);
+    const elTotalRef = useRef<HTMLElement | null>(null);
+    const elPerfRef = useRef<HTMLElement | null>(null);
+
+    const [lastReport, setLastReport] = useState(Date.now())
 
     useMemo(() => {
         messageBuilderState.setMessage(__filename, "terms_of_use", { ja: "利用規約", en: "terms of use" });
@@ -20,6 +28,28 @@ export const Portrait = (_props: PortraitProps) => {
             return serverSetting.serverSetting.modelSlots[serverSetting.serverSetting.modelSlotIndex];
         }
     }, [serverSetting.serverSetting.modelSlotIndex, serverSetting.serverSetting.modelSlots]);
+
+    useEffect(() => {
+        if (!elVolRef.current || !elChunkTimeRef.current || !elPingRef.current || !elTotalRef.current || !elPerfRef.current) {
+            return;
+        }
+
+        const now = Date.now()
+        if (now - lastReport <= 100) {
+            return
+        }
+        setLastReport(now)
+
+        const volumeDb = Math.max(Math.round(20 * Math.log10(performance.vol)), -90);
+        const chunkTime = ((serverSetting.serverSetting.serverReadChunkSize * 128 * 1000) / 48000);
+        const totalLatencyTime = Math.ceil(chunkTime + performance.responseTime + serverSetting.serverSetting.crossFadeOverlapSize * 1000);
+
+        elVolRef.current.innerHTML = volumeDb.toString();
+        elChunkTimeRef.current.innerHTML = chunkTime.toFixed(1);
+        elPingRef.current.innerHTML = performance.responseTime.toString();
+        elTotalRef.current.innerHTML = totalLatencyTime.toString();
+        elPerfRef.current.innerHTML = performance.mainprocessTime.toString();
+    }, [performance, serverSetting.serverSetting.crossFadeOverlapSize, serverSetting.serverSetting.serverReadChunkSize])
 
     const portrait = useMemo(() => {
         if (!selected) {
@@ -37,9 +67,6 @@ export const Portrait = (_props: PortraitProps) => {
             <></>
         );
 
-        const volumeDb = Math.max(Math.round(20 * Math.log10(volume)), -90)
-        const chunkTime = ((serverSetting.serverSetting.serverReadChunkSize * 128 * 1000) / 48000)
-        const totalLatencyTime = Math.ceil(chunkTime + performance.responseTime + serverSetting.serverSetting.crossFadeOverlapSize * 1000)
         return (
             <div className="portrait-area">
                 <div className="portrait-container">
@@ -49,29 +76,26 @@ export const Portrait = (_props: PortraitProps) => {
                             <span className="portrait-area-status-vctype">{selected.voiceChangerType}</span>
                         </p>
                         <p>
-                            vol(in): {volumeDb} dB
+                            vol(in): <span ref={elVolRef}>-90</span> dB
                         </p>
                         <p>
-                            buf: {chunkTime.toFixed(1)} ms
+                            buf: <span ref={elChunkTimeRef}>0</span> ms
                         </p>
                         <p>
-                            ping: {performance.responseTime} ms
+                            ping: <span ref={elPingRef}>0</span> ms
                         </p>
                         <p>
-                            total: {totalLatencyTime} ms
+                            total: <span ref={elTotalRef}>0</span> ms
                         </p>
                         <p>
-                            perf: {performance.mainprocessTime} ms
+                            perf: <span ref={elPerfRef}>0</span> ms
                         </p>
                     </div>
                     <div className="portrait-area-terms-of-use">{selectedTermOfUseUrlLink}</div>
                 </div>
             </div>
         );
-        // FIXME: Volume notifications cause too frequent updates which harm the performance.
-        // This way, volume update depends on performance that are always reported.
-        // However, this might be a problem if this becomes no longer the case.
-    }, [selected, performance, serverSetting.serverSetting.crossFadeOverlapSize, serverSetting.serverSetting.serverReadChunkSize]);
+    }, [selected]);
 
     return portrait;
 };
