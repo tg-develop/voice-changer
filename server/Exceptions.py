@@ -3,9 +3,9 @@ class VoiceChangerIsNotSelectedException(Exception):
         return repr("Voice Changer is not selected.")
 
 
-class WeightDownloadException(Exception):
+class PretrainDownloadException(Exception):
     def __str__(self):
-        return repr("Failed to download weight.")
+        return repr("Failed to download pretrain models.")
 
 class DownloadVerificationException(Exception):
     def __init__(self, filename: str, got_hash: str, expected_hash: str) -> None:
