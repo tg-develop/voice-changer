@@ -44,6 +44,14 @@ export const Portrait = (_props: PortraitProps) => {
         const chunkTime = ((serverSetting.serverSetting.serverReadChunkSize * 128 * 1000) / 48000);
         const totalLatencyTime = Math.ceil(chunkTime + performance.responseTime + serverSetting.serverSetting.crossFadeOverlapSize * 1000);
 
+        if (performance.mainprocessTime > chunkTime) {
+            elPerfRef.current.style.color = '#ff4a4a';
+        } else if (performance.mainprocessTime * 1.2 > chunkTime) {
+            elPerfRef.current.style.color = '#ffff00';
+        } else {
+            elPerfRef.current.style.color = '#00ff00';
+        }
+
         elVolRef.current.innerHTML = volumeDb.toString();
         elChunkTimeRef.current.innerHTML = chunkTime.toFixed(1);
         elPingRef.current.innerHTML = performance.responseTime.toString();
@@ -79,16 +87,13 @@ export const Portrait = (_props: PortraitProps) => {
                             vol(in): <span ref={elVolRef}>-90</span> dB
                         </p>
                         <p>
-                            buf: <span ref={elChunkTimeRef}>0</span> ms
-                        </p>
-                        <p>
                             ping: <span ref={elPingRef}>0</span> ms
                         </p>
                         <p>
                             total: <span ref={elTotalRef}>0</span> ms
                         </p>
                         <p>
-                            perf: <span ref={elPerfRef}>0</span> ms
+                            perf: <span ref={elPerfRef}>0</span> of <span style={{ display: 'inline-block' }}><span ref={elChunkTimeRef}>0</span> ms</span>
                         </p>
                     </div>
                     <div className="portrait-area-terms-of-use">{selectedTermOfUseUrlLink}</div>
