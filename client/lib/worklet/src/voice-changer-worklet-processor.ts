@@ -43,8 +43,8 @@ class VoiceChangerWorkletProcessor extends AudioWorkletProcessor {
     }
 
     trancateBuffer = (start: number, end?: number) => {
+        console.log(`[worklet] Play buffer size ${this.playBuffer.length}. Truncating with offset ${start}`);
         this.playBuffer = this.playBuffer.slice(start, end)
-        console.log("[worklet] Buffer truncated");
     };
     handleMessage(event: any) {
         const request = event.data as VoiceChangerWorkletProcessorRequest;
@@ -80,10 +80,9 @@ class VoiceChangerWorkletProcessor extends AudioWorkletProcessor {
 
         const f32Data = request.voice;
         const chunkSize = Math.floor(f32Data.length / this.BLOCK_SIZE);
-        const bufferCutoff = chunkSize * 1.25;
-        if (this.playBuffer.length > bufferCutoff) {
-            console.log(`[worklet] Truncate ${this.playBuffer.length} > ${bufferCutoff}`);
-            this.trancateBuffer(this.playBuffer.length - bufferCutoff);
+        if (this.playBuffer.length > chunkSize) {
+            console.log(`[worklet] Truncate ${this.playBuffer.length} > ${chunkSize}`);
+            this.trancateBuffer(this.playBuffer.length - chunkSize);
         }
 
         for (let i = 0; i < chunkSize; i++) {
