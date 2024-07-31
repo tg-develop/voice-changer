@@ -1,6 +1,7 @@
 import torch
 import json
 import os
+import logging
 from safetensors import safe_open
 from const import EnumInferenceTypes, JIT_DIR
 from voice_changer.common.deviceManager.DeviceManager import DeviceManager
@@ -8,6 +9,7 @@ from voice_changer.RVC.inferencer.Inferencer import Inferencer
 from .rvc_models.infer_pack.models import SynthesizerTrnMs768NSFsid
 from voice_changer.common.SafetensorsUtils import load_model
 
+logger = logging.getLogger(__name__)
 
 class RVCInferencerv2(Inferencer):
     def load_model(self, file: str):
@@ -17,7 +19,8 @@ class RVCInferencerv2(Inferencer):
         self.set_props(EnumInferenceTypes.pyTorchRVCv2, file)
 
         filename = os.path.splitext(os.path.basename(file))[0]
-        jit_filename = f'{filename}_{dev.type}_{dev.index}.torchscript' if dev.index is not None else f'{filename}_{dev.type}.torchscript'
+        fp_prefix = 'fp16' if is_half else 'fp32'
+        jit_filename = f'{filename}_{dev.type}_{dev.index}_{fp_prefix}.torchscript' if dev.index is not None else f'{filename}_{dev.type}_{fp_prefix}.torchscript'
         jit_file = os.path.join(JIT_DIR, jit_filename)
         if not os.path.exists(jit_file):
             # Keep torch.load for backward compatibility, but discourage the use of this loading method
@@ -33,19 +36,21 @@ class RVCInferencerv2(Inferencer):
             model = model.eval()
 
             model.remove_weight_norm()
+
+            if is_half:
+                model = model.half()
+
             # FIXME: DirectML backend seems to have issues with JIT. Disable it for now.
             if dev.type == 'privateuseone':
                 self.use_jit = True
             else:
+                logger.info('Compiling JIT model...')
                 model = torch.jit.optimize_for_inference(torch.jit.script(model), other_methods=['infer'])
                 torch.jit.save(model, jit_file)
                 self.use_jit = False
         else:
             model = torch.jit.load(jit_file)
             self.use_jit = False
-
-        if is_half:
-            model = model.half()
 
         self.model = model
         return self

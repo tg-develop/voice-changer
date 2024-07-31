@@ -14,6 +14,7 @@ class FcpePitchExtractor(PitchExtractor):
         device_manager = DeviceManager.get_instance()
         # self.is_half = device_manager.use_fp16()
         # NOTE: FCPE doesn't seem to be behave correctly in FP16 mode.
+        # NOTE: FCPE doesn't work with torch JIT. Need to debug and find the issue.
         self.is_half = False
 
         model = spawn_infer_model_from_pt(file, self.is_half, device_manager.device, bundled_model=True)

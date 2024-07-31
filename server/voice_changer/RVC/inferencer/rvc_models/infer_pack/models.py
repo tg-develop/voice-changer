@@ -531,7 +531,8 @@ class GeneratorNSF(torch.nn.Module):
         har_source, noi_source, uv = self.m_source(f0, float(self.upp))
         har_source = har_source.transpose(1, 2)
         if n_res is not None:
-            if (n := n_res * self.upp) != har_source.shape[-1]:
+            n = n_res * self.upp
+            if n != har_source.shape[-1]:
                 har_source = F.interpolate(har_source, size=n, mode="linear")
             if n_res != x.shape[-1]:
                 x = F.interpolate(x, size=n_res, mode="linear")
