@@ -183,7 +183,7 @@ export const CharacterArea = (_props: CharacterAreaProps) => {
                             <input
                                 type="range"
                                 min="0.1"
-                                max="1.0"
+                                max="2.5"
                                 step="0.01"
                                 value={currentInputGain}
                                 onChange={(e) => {
