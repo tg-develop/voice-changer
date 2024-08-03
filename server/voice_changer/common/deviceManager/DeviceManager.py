@@ -71,6 +71,10 @@ class DeviceManager(object):
     def use_fp16(self):
         return self.fp16_available and not self.force_fp32
 
+    def use_jit_compile(self):
+        # FIXME: DirectML backend seems to have issues with JIT. Disable it for now.
+        return self.device_metadata['backend'] != 'directml'
+
     # TODO: This function should also accept backend type
     def _get_device(self, dev_id: int) -> tuple[torch.device, DevicePresentation]:
         if dev_id == -1:

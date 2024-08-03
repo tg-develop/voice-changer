@@ -1,5 +1,5 @@
 from typing import List
-
+import logging
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
@@ -8,6 +8,7 @@ from safetensors import safe_open
 from voice_changer.common.SafetensorsUtils import load_model
 from librosa.filters import mel
 
+logger = logging.getLogger(__file__)
 
 class BiGRU(nn.Module):
     def __init__(self, input_features, hidden_features, num_layers):
@@ -327,7 +328,7 @@ class MelSpectrogram(torch.nn.Module):
 
 
 class RMVPE:
-    def __init__(self, model_path: str, is_half: bool, device: torch.device):
+    def __init__(self, model_path: str, is_half: bool, use_jit_compile: bool, device: torch.device):
         model = E2E(4, 1, (2, 2))
         if model_path.endswith('.safetensors'):
             with safe_open(model_path, 'pt', device=str(device) if device.type == 'cuda' else 'cpu') as cpt:
@@ -335,10 +336,16 @@ class RMVPE:
         else:
             cpt = torch.load(model_path, map_location=device if device.type == 'cuda' else 'cpu')
             model.load_state_dict(cpt, strict=False)
-        model.eval().to(device)
+        model = model.eval().to(device)
 
         if is_half:
             model = model.half()
+
+        self.use_jit_eager = not use_jit_compile
+        if use_jit_compile:
+            logger.info('Compiling JIT model...')
+            model = torch.jit.optimize_for_inference(torch.jit.script(model))
+
         self.model = model
 
         self.mel_extractor = MelSpectrogram(
@@ -350,7 +357,8 @@ class RMVPE:
     def mel2hidden(self, mel: torch.Tensor) -> torch.Tensor:
         n_frames = mel.shape[-1]
         mel = F.pad(mel, (0, 32 * ((n_frames - 1) // 32 + 1) - n_frames), mode='reflect')
-        return self.model(mel)[:, :n_frames]
+        with torch.jit.optimized_execution(self.use_jit_eager):
+            return self.model(mel)[:, :n_frames]
 
     def decode(self, hidden: torch.Tensor, threshold: float):
         center = torch.argmax(hidden, dim=2, keepdim=True)  # [B, T, 1]

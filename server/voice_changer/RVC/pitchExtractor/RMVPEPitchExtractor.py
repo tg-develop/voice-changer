@@ -12,7 +12,7 @@ class RMVPEPitchExtractor(PitchExtractor):
         self.type: PitchExtractorType = "rmvpe"
 
         device_manager = DeviceManager.get_instance()
-        self.rmvpe = RMVPE(model_path=file, is_half=device_manager.use_fp16(), device=device_manager.device)
+        self.rmvpe = RMVPE(model_path=file, is_half=device_manager.use_fp16(), use_jit_compile=device_manager.use_jit_compile(), device=device_manager.device)
 
     def extract(
         self,
