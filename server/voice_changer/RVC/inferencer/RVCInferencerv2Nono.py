@@ -16,7 +16,7 @@ class RVCInferencerv2Nono(Inferencer):
         dev = device_manager.device
         is_half = device_manager.use_fp16()
         use_jit_compile = device_manager.use_jit_compile()
-        self.set_props(EnumInferenceTypes.pyTorchRVCv2Nono, file, is_half)
+        self.set_props(EnumInferenceTypes.pyTorchRVCv2Nono, file)
 
         # Keep torch.load for backward compatibility, but discourage the use of this loading method
         if file.endswith('.safetensors'):

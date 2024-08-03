@@ -57,10 +57,11 @@ type GuiStateAndMethod = {
     stateControls: StateControls;
     isConverting: boolean;
     isAnalyzing: boolean;
-    showPyTorchModelUpload: boolean;
     setIsConverting: (val: boolean) => void;
     setIsAnalyzing: (val: boolean) => void;
-    setShowPyTorchModelUpload: (val: boolean) => void;
+
+    voiceChangerSettingsChanged: boolean,
+    setVoiceChangerSettingsChanged: (val: boolean) => void;
 
     reloadDeviceInfo: () => Promise<void>;
     inputAudioDeviceInfo: MediaDeviceInfo[];
@@ -102,12 +103,10 @@ type TextInputResolveType = {
 
 export const GuiStateProvider = ({ children }: Props) => {
     const { appGuiSettingState } = useAppRoot();
-    const { serverSetting } = useAppState();
+    const [voiceChangerSettingsChanged, setVoiceChangerSettingsChanged] = useState<boolean>(false);
     const [isConverting, setIsConverting] = useState<boolean>(false);
     const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
     const [modelSlotNum, setModelSlotNum] = useState<number>(0);
-
-    const [showPyTorchModelUpload, setShowPyTorchModelUpload] = useState<boolean>(false);
 
     const [inputAudioDeviceInfo, setInputAudioDeviceInfo] = useState<MediaDeviceInfo[]>([]);
     const [outputAudioDeviceInfo, setOutputAudioDeviceInfo] = useState<MediaDeviceInfo[]>([]);
@@ -331,8 +330,9 @@ export const GuiStateProvider = ({ children }: Props) => {
         setIsConverting,
         isAnalyzing,
         setIsAnalyzing,
-        showPyTorchModelUpload,
-        setShowPyTorchModelUpload,
+
+        voiceChangerSettingsChanged,
+        setVoiceChangerSettingsChanged,
 
         reloadDeviceInfo,
         inputAudioDeviceInfo,

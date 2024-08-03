@@ -2,6 +2,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap");
 
 @import 'react-toastify/dist/ReactToastify.css';
+@import 'react-tooltip/dist/react-tooltip.css';
 @import "./101_RotatedButton.css";
 @import "./Error.css";
 :root {
@@ -54,6 +55,12 @@ body {
 
 .Toastify__toast-body {
     white-space: pre-line;
+}
+
+a.hint-text {
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 4px;
 }
 
 #app {
@@ -1313,7 +1320,7 @@ body {
                 background: var(--company-color2);
                 color: white;
                 position: absolute;
-                padding: 0px 0px 0px 3px;
+                padding: 3px;
                 font-size: 0.7rem;
                 left: 5px;
                 top: 5px;

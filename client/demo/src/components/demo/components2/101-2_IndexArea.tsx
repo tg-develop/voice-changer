@@ -29,7 +29,7 @@ export const IndexArea = (_props: IndexAreaProps) => {
 
         return (
             <div className="character-area-control">
-                <div className="character-area-control-title">INDEX:</div>
+                <div className="character-area-control-title"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Index embeds accent of the model's voice into your voice. Disabled when set to 0. Note that this setting increases CPU usage.">INDEX</a>:</div>
                 <div className="character-area-control-field">
                     <div className="character-area-slider-control">
                         <span className="character-area-slider-control-kind"></span>

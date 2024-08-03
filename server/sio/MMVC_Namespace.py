@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class MMVC_Namespace(socketio.AsyncNamespace):
-    sid: int = 0
+    sid: str | None = None
 
     async def emitTo(self, vol, perf, err):
         if err is not None:
@@ -19,7 +19,8 @@ class MMVC_Namespace(socketio.AsyncNamespace):
             await self.emit("server_stats", [vol, perf], to=self.sid)
 
     def emit_coroutine(self, vol, perf, err):
-        asyncio.run(self.emitTo(vol, perf, err))
+        if self.sid:
+            asyncio.run(self.emitTo(vol, perf, err))
 
     def __init__(self, namespace: str, voiceChangerManager: VoiceChangerManager):
         super().__init__(namespace)
@@ -55,4 +56,5 @@ class MMVC_Namespace(socketio.AsyncNamespace):
             await self.emit("response", [send_timestamp, out_audio, ping, vol, perf], to=sid)
 
     def on_disconnect(self, sid):
+        self.sid = None
         logger.info(f"Disconnected SID: {sid}")

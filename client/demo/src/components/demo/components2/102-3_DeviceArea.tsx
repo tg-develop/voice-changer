@@ -9,7 +9,7 @@ export type DeviceAreaProps = {};
 
 export const DeviceArea = (_props: DeviceAreaProps) => {
     const { setting, serverSetting, audioContext, setAudioOutputElementId, setAudioMonitorElementId, initializedRef, setVoiceChangerClientSetting, startOutputRecording, stopOutputRecording } = useAppState();
-    const { isConverting, audioInputForGUI, inputAudioDeviceInfo, setAudioInputForGUI, fileInputEchoback, setFileInputEchoback, setAudioOutputForGUI, setAudioMonitorForGUI, audioOutputForGUI, audioMonitorForGUI, outputAudioDeviceInfo, shareScreenEnabled, setShareScreenEnabled, reloadDeviceInfo } = useGuiState();
+    const { isConverting, audioInputForGUI, inputAudioDeviceInfo, setAudioInputForGUI, fileInputEchoback, setFileInputEchoback, setAudioOutputForGUI, setAudioMonitorForGUI, audioOutputForGUI, audioMonitorForGUI, outputAudioDeviceInfo, shareScreenEnabled, setShareScreenEnabled, reloadDeviceInfo, setVoiceChangerSettingsChanged } = useGuiState();
     const [inputHostApi, setInputHostApi] = useState<string>("ALL");
     const [outputHostApi, setOutputHostApi] = useState<string>("ALL");
     const [monitorHostApi, setMonitorHostApi] = useState<string>("ALL");
@@ -42,6 +42,7 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
                                 checked={clientChecked}
                                 onChange={() => {
                                     onDeviceModeChanged(0);
+                                    setVoiceChangerSettingsChanged(true);
                                 }}
                                 disabled={isConverting}
                             />{" "}
@@ -56,6 +57,7 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
                                 checked={serverChecked}
                                 onChange={() => {
                                     onDeviceModeChanged(1);
+                                    setVoiceChangerSettingsChanged(true);
                                 }}
                                 disabled={isConverting}
                             />
@@ -585,7 +587,7 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
 
         return (
             <div className="config-sub-area-control">
-                <div className="config-sub-area-control-title left-padding-1">S.R.</div>
+                <div className="config-sub-area-control-title left-padding-1"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Sample rate of audio devices.">S.R.</a></div>
                 <div className="config-sub-area-control-field">
                     <div className="config-sub-area-control-field-auido-io">
                         <select
@@ -593,6 +595,7 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
                             value={serverSetting.serverSetting.serverAudioSampleRate}
                             onChange={(e) => {
                                 serverSetting.updateServerSettings({ ...serverSetting.serverSetting, serverAudioSampleRate: Number(e.target.value) });
+                                setVoiceChangerSettingsChanged(true);
                             }}
                         >
                             {[16000, 32000, 44100, 48000, 96000, 192000].map((x) => {

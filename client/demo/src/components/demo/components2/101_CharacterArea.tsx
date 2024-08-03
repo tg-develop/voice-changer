@@ -178,12 +178,12 @@ export const CharacterArea = (_props: CharacterAreaProps) => {
                 <div className="character-area-control-title">VOL:</div>
                 <div className="character-area-control-field">
                     <div className="character-area-slider-control">
-                        <span className="character-area-slider-control-kind">in</span>
+                        <span className="character-area-slider-control-kind"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Input volume.">in</a></span>
                         <span className="character-area-slider-control-slider">
                             <input
                                 type="range"
                                 min="0.1"
-                                max="1.0"
+                                max="2.5"
                                 step="0.01"
                                 value={currentInputGain}
                                 onChange={(e) => {
@@ -195,7 +195,7 @@ export const CharacterArea = (_props: CharacterAreaProps) => {
                     </div>
 
                     <div className="character-area-slider-control">
-                        <span className="character-area-slider-control-kind">out</span>
+                        <span className="character-area-slider-control-kind"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Output volume.">out</a></span>
                         <span className="character-area-slider-control-slider">
                             <input
                                 type="range"
@@ -212,7 +212,7 @@ export const CharacterArea = (_props: CharacterAreaProps) => {
                     </div>
 
                     <div className="character-area-slider-control">
-                        <span className="character-area-slider-control-kind">mon</span>
+                        <span className="character-area-slider-control-kind"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Monitor volume.">mon</a></span>
                         <span className="character-area-slider-control-slider">
                             <input
                                 type="range"
