@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { useAppState } from "../../../001_provider/001_AppStateProvider";
 import { useAppRoot } from "../../../001_provider/001_AppRootProvider";
 import { useGuiState } from "../001_GuiStateProvider";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export type ConvertProps = {
     inputChunkNums: number[];
@@ -9,7 +10,7 @@ export type ConvertProps = {
 
 export const ConvertArea = (props: ConvertProps) => {
     const { setting, serverSetting, setWorkletNodeSetting, trancateBuffer } = useAppState();
-    const { isConverting, stateControls } = useGuiState();
+    const { isConverting, stateControls, voiceChangerSettingsChanged, setVoiceChangerSettingsChanged } = useGuiState();
     const { appGuiSettingState } = useAppRoot();
     const edition = appGuiSettingState.edition;
 
@@ -30,7 +31,9 @@ export const ConvertArea = (props: ConvertProps) => {
 
         const gpuSelect = (
                 <div className="config-sub-area-control">
-                    <div className="config-sub-area-control-title">GPU:</div>
+                    <div className="config-sub-area-control-title">
+                        <a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Change to CPU then back to GPU." style={{ display: edition === "DirectML" && serverSetting.serverSetting.gpu !== -1 && voiceChangerSettingsChanged ? undefined : "none" }}><FontAwesomeIcon icon="warning" style={{ fontSize: "1rem" }} /></a> GPU:
+                    </div>
                     <div className="config-sub-area-control-field">
                         <select
                             className="body-select"
@@ -38,6 +41,7 @@ export const ConvertArea = (props: ConvertProps) => {
                             onChange={async (e) => {
                                 stateControls.showWaitingCheckbox.updateState(true);
                                 await serverSetting.updateServerSettings({ ...serverSetting.serverSetting, gpu: Number(e.target.value) });
+                                setVoiceChangerSettingsChanged(false);
                                 stateControls.showWaitingCheckbox.updateState(false);
                             }}
                             disabled={isConverting}
@@ -70,6 +74,7 @@ export const ConvertArea = (props: ConvertProps) => {
                             disabled={isConverting}
                             onChange={(e) => {
                                 serverSetting.updateServerSettings({ ...serverSetting.serverSetting, extraConvertSize: Number(e.target.value) });
+                                setVoiceChangerSettingsChanged(true);
                             }} />
                         <span className="config-sub-area-slider-control-val">{serverSetting.serverSetting.extraConvertSize} s</span>
                     </div>
@@ -94,6 +99,7 @@ export const ConvertArea = (props: ConvertProps) => {
                                     setWorkletNodeSetting({ ...setting.workletNodeSetting, inputChunkNum: Number(e.target.value) });
                                     trancateBuffer();
                                     serverSetting.updateServerSettings({ ...serverSetting.serverSetting, serverReadChunkSize: Number(e.target.value) });
+                                    setVoiceChangerSettingsChanged(true);
                                 }} />
                             <span className="config-sub-area-slider-control-val">{((serverSetting.serverSetting.serverReadChunkSize * 128 * 1000) / 48000).toFixed(1)} ms</span>
                         </div>
@@ -103,7 +109,7 @@ export const ConvertArea = (props: ConvertProps) => {
                 {gpuSelect}
             </div>
         );
-    }, [serverSetting.serverSetting, setting, serverSetting.updateServerSettings, setWorkletNodeSetting, edition, isConverting]);
+    }, [serverSetting.serverSetting, setting, serverSetting.updateServerSettings, setWorkletNodeSetting, edition, isConverting, voiceChangerSettingsChanged]);
 
     return convertArea;
 };

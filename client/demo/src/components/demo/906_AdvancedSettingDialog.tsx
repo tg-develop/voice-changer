@@ -62,6 +62,7 @@ export const AdvancedSettingDialog = () => {
                             value={serverSetting.serverSetting.crossFadeOverlapSize}
                             onChange={(e) => {
                                 serverSetting.updateServerSettings({ ...serverSetting.serverSetting, crossFadeOverlapSize: Number(e.target.value) });
+                                guiState.setVoiceChangerSettingsChanged(true);
                             }}
                             disabled={guiState.isConverting}
                         ></input>
@@ -111,6 +112,8 @@ export const AdvancedSettingDialog = () => {
                             // TODO: Need to fix CSS to show waiting dialog over all page contents. Lazy :\
                             //guiState.stateControls.showWaitingCheckbox.updateState(true);
                             onForceFp32ModeChanged(Number(e.target.value));
+                            // Switching between FP16-FP32 reloads models and buffers.
+                            guiState.setVoiceChangerSettingsChanged(false);
                             //guiState.stateControls.showWaitingCheckbox.updateState(false);
                         }}
                         disabled={guiState.isConverting}
