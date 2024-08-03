@@ -73,7 +73,7 @@ class DeviceManager(object):
             if self.device.type != 'cuda':
                 return
             device_id = self.device.index
-        logger.info(f"Resetting core/memory frequencies for cuda:{device_id}...")
+        logger.info(f"Resetting core/memory clocks for cuda:{device_id}...")
         subprocess.call(shlex.split(NVSMI_RESET_GPU_CLOCKS % self.device.index), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
         subprocess.call(shlex.split(NVSMI_RESET_MEMORY_CLOCKS % self.device.index), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
@@ -83,7 +83,7 @@ class DeviceManager(object):
         output = subprocess.check_output(shlex.split(NVSMI_QUERY_DEVICE_CLOCKS % device.index))
         lines = output.decode("utf-8").split(os.linesep)
         gpu_clock, memory_clock = lines[0].split(', ')
-        logger.info(f"Using core/memory clocks: {gpu_clock} MHz / {memory_clock} MHz")
+        logger.info(f"Setting core/memory clocks for cuda:{device.index}: {gpu_clock} MHz / {memory_clock} MHz")
         subprocess.call(shlex.split(NVSMI_LOCK_GPU_CLOCKS % (device.index, int(gpu_clock))), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
         subprocess.call(shlex.split(NVSMI_LOCK_MEMORY_CLOCKS % (device.index, int(memory_clock))), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
