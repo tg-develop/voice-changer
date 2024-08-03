@@ -34,7 +34,7 @@ NVSMI_QUERY_DEVICE_CLOCKS = "nvidia-smi --query-supported-clocks=graphics,memory
 NVSMI_LOCK_GPU_CLOCKS = "nvidia-smi -i=%d --lock-gpu-clocks=%d"
 NVSMI_LOCK_MEMORY_CLOCKS = "nvidia-smi -i=%d --lock-memory-clocks=%d"
 NVSMI_RESET_GPU_CLOCKS = "nvidia-smi -i=%d --reset-gpu-clocks"
-NVSMI_RESET_MEMORY_CLOCKS = "nvidia-smi -i=%d --reset-memory-clock"
+NVSMI_RESET_MEMORY_CLOCKS = "nvidia-smi -i=%d --reset-memory-clocks"
 
 class DeviceManager(object):
     _instance = None
