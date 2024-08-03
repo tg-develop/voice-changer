@@ -51,7 +51,7 @@ export const QualityArea = (props: QualityAreaProps) => {
 
         const f0Det = (
             <div className="config-sub-area-control">
-                <div className="config-sub-area-control-title">F0 Det.:</div>
+                <div className="config-sub-area-control-title"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="F0 Detector. A pitch extraction algorithm.">F0 Det.</a>:</div>
                 <div className="config-sub-area-control-field">
                     <select
                         className="body-select"
@@ -71,7 +71,7 @@ export const QualityArea = (props: QualityAreaProps) => {
 
         const threshold = (
             <div className="config-sub-area-control">
-                <div className="config-sub-area-control-title">In. Sens.:</div>
+                <div className="config-sub-area-control-title"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Input sensitivity. The input volume required to activate the voice changer.">In. Sens.</a>:</div>
                 <div className="config-sub-area-control-field">
                     <div className="config-sub-area-slider-control">
                         <span className="config-sub-area-slider-control-slider">

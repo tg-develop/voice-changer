@@ -26,7 +26,7 @@ export const FormantShiftArea = (_props: FormantShiftAreaProps) => {
 
         return (
             <div className="character-area-control">
-                <div className="character-area-control-title">FORMANT SHIFT:</div>
+                <div className="character-area-control-title"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Formant shift alters harmonic frequencies and changes the voice timbre without affecting the pitch.">FORMANT SHIFT</a>:</div>
                 <div className="character-area-control-field">
                     <div className="character-area-slider-control">
                         <span className="character-area-slider-control-kind"></span>

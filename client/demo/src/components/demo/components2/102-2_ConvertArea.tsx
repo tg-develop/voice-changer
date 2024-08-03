@@ -57,7 +57,7 @@ export const ConvertArea = (props: ConvertProps) => {
 
         const extraArea = (
             <div className="config-sub-area-control">
-                <div className="config-sub-area-control-title">EXTRA:</div>
+                <div className="config-sub-area-control-title"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Extra is an extra audio history that will be used for voice conversion. Does not affect the delay. More extra - better voice quality, more GPU usage. Less extra - vice versa.">EXTRA</a>:</div>
                 <div className="config-sub-area-control-field">
                     <div className="config-sub-area-slider-control">
                         <input
@@ -79,7 +79,7 @@ export const ConvertArea = (props: ConvertProps) => {
         return (
             <div className="config-sub-area">
                 <div className="config-sub-area-control">
-                    <div className="config-sub-area-control-title">CHUNK:</div>
+                    <div className="config-sub-area-control-title"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Chunk size is an audio buffer. Controls the delay and GPU usage. More chunk - more delay, less GPU usage. Less chunk - vice versa.">CHUNK</a>:</div>
                     <div className="config-sub-area-control-field">
                         <div className="config-sub-area-slider-control">
                             <input
