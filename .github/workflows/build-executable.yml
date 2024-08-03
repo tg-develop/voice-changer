@@ -17,7 +17,6 @@ jobs:
           reqs: cuda
           backend: cuda
           python-version: '3.11'
-          pyinstaller-args: --uac-admin
         - os: windows-latest
           os_suffix: windows-amd64
           reqs: dml
@@ -78,7 +77,7 @@ jobs:
       run: python -m pip install --no-cache-dir -r requirements-common.txt -r requirements-${{ matrix.reqs }}.txt
       working-directory: ./server
     - name: Building executable
-      run: pyinstaller ${{matrix.pyinstaller-args}} --clean -y --dist ./dist --workpath /tmp MMVCServerSIO.spec
+      run: pyinstaller --clean -y --dist ./dist --workpath /tmp MMVCServerSIO.spec
       working-directory: ./server
     - name: Pack artifact
       shell: bash
