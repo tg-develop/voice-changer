@@ -1,6 +1,10 @@
 import torch
 import onnxruntime
 import re
+import shutil
+import subprocess
+import shlex
+import os
 from typing import TypedDict, Literal
 from enum import IntFlag
 from threading import Lock
@@ -25,6 +29,12 @@ class DevicePresentation(TypedDict):
     name: str
     memory: int
     backend: Literal['cpu', 'cuda', 'directml', 'mps']
+
+NVSMI_QUERY_DEVICE_CLOCKS = "nvidia-smi --query-supported-clocks=graphics,memory -i=%d --format=csv,noheader,nounits"
+NVSMI_LOCK_GPU_CLOCKS = "nvidia-smi -i=%d --lock-gpu-clocks=%d"
+NVSMI_LOCK_MEMORY_CLOCKS = "nvidia-smi -i=%d --lock-memory-clocks=%d"
+NVSMI_RESET_GPU_CLOCKS = "nvidia-smi -i=%d --reset-gpu-clocks"
+NVSMI_RESET_MEMORY_CLOCKS = "nvidia-smi -i=%d --reset-memory-clock"
 
 class DeviceManager(object):
     _instance = None
@@ -56,13 +66,39 @@ class DeviceManager(object):
         self.set_device(device_id)
         self.set_force_fp32(force_fp32)
 
+    def reset_nvidia_clocks(self, device_id: int | None = None):
+        if not self.is_nvidia_smi_on_path():
+            return
+        if device_id is None:
+            if self.device.type != 'cuda':
+                return
+            device_id = self.device.index
+        logger.info(f"Resetting core/memory frequencies for cuda:{device_id}...")
+        subprocess.call(shlex.split(NVSMI_RESET_GPU_CLOCKS % self.device.index), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        subprocess.call(shlex.split(NVSMI_RESET_MEMORY_CLOCKS % self.device.index), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+
+    def force_nvidia_clocks(self, device: torch.device):
+        if device.type != 'cuda' or not self.is_nvidia_smi_on_path():
+            return
+        output = subprocess.check_output(shlex.split(NVSMI_QUERY_DEVICE_CLOCKS % device.index))
+        lines = output.decode("utf-8").split(os.linesep)
+        gpu_clock, memory_clock = lines[0].split(', ')
+        logger.info(f"Using core/memory clocks: {gpu_clock} MHz / {memory_clock} MHz")
+        subprocess.call(shlex.split(NVSMI_LOCK_GPU_CLOCKS % (device.index, int(gpu_clock))), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        subprocess.call(shlex.split(NVSMI_LOCK_MEMORY_CLOCKS % (device.index, int(memory_clock))), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+
     def set_device(self, id: int):
         if self.mps_enabled:
             torch.mps.empty_cache()
         elif self.cuda_enabled:
             torch.cuda.empty_cache()
 
+        self.reset_nvidia_clocks()
+
         device, metadata = self._get_device(id)
+
+        self.force_nvidia_clocks(device)
+
         self.device = device
         self.device_metadata = metadata
         self.fp16_available = self.is_fp16_available()
@@ -170,3 +206,6 @@ class DeviceManager(object):
                 return False
 
         return True
+
+    def is_nvidia_smi_on_path(self):
+        return shutil.which("nvidia-smi")

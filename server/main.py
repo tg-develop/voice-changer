@@ -22,6 +22,7 @@ from downloader.SampleDownloader import downloadInitialSamples
 from mods.ssl import create_self_signed_cert
 from webbrowser import open_new_tab
 from settings import ServerSettings
+from utils.check_user_admin import is_user_admin
 
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.INFO)
@@ -141,6 +142,9 @@ async def main(args):
 
 
 if __name__ == "__main__":
+    if not is_user_admin():
+        logger.warning("Voice changer is running with user rights. If you are using NVIDIA version, restart the voice changer with administrator rights. Otherwise, performance issues may be observed.")
+
     parser = setupArgParser()
     args, _ = parser.parse_known_args()
     args.launch_browser = False
