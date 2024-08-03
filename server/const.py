@@ -16,10 +16,6 @@ LOG_FILE = os.path.join(ROOT_PATH, 'vcclient.log')
 DOTENV_FILE = os.path.join(ROOT_PATH, '.env')
 STORED_SETTING_FILE = os.path.join(ROOT_PATH, 'stored_setting.json')
 ASSETS_FILE = os.path.join(ROOT_PATH, 'assets.json')
-# TODO: Need JIT cache invalidation strategy
-JIT_DIR = os.path.join(ROOT_PATH, '.jit')
-
-os.makedirs(JIT_DIR, exist_ok=True)
 
 SERVER_DEVICE_SAMPLE_RATES = [16000, 32000, 44100, 48000, 96000, 192000]
 
