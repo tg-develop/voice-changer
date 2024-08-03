@@ -33,13 +33,23 @@ socketio = MMVC_SocketIOApp.get_instance(fastapi, voice_changer_manager, setting
 # Here we revert to original excepthook once all initialization is done.
 sys.excepthook = sys.__excepthook__
 
-def on_exit():
-    DeviceManager.get_instance().reset_nvidia_clocks()
+# https://pyinstaller.org/en/stable/feature-notes.html#signal-handling-in-console-windows-applications-and-onefile-application-cleanup
+if sys.platform == 'win32':
+    import win32api
 
-def on_kill(*args):
-    DeviceManager.get_instance().reset_nvidia_clocks()
-    sys.exit()
+    def on_exit(signal):
+        DeviceManager.get_instance().reset_nvidia_clocks()
+        return False
 
-atexit.register(on_exit)
-signal.signal(signal.SIGINT, on_kill)
-signal.signal(signal.SIGTERM, on_kill)
+    win32api.SetConsoleCtrlHandler(on_exit, 1)
+else:
+    def on_exit():
+        DeviceManager.get_instance().reset_nvidia_clocks()
+
+    def on_kill(*args):
+        DeviceManager.get_instance().reset_nvidia_clocks()
+        sys.exit()
+
+    atexit.register(on_exit)
+    signal.signal(signal.SIGINT, on_kill)
+    signal.signal(signal.SIGTERM, on_kill)

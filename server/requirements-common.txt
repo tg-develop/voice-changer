@@ -5,6 +5,7 @@
 
 # At least 14.38 is required by onnxruntime
 msvc-runtime>=14.38; sys_platform=='win32'
+pywin32; sys_platform=='win32'
 uvicorn
 pyOpenSSL
 numpy<2 # Not all modules have migrated to NumPy 2 yet. Using latest NumPy 1 version
