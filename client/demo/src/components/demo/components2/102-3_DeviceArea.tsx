@@ -585,7 +585,7 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
 
         return (
             <div className="config-sub-area-control">
-                <div className="config-sub-area-control-title left-padding-1">S.R.</div>
+                <div className="config-sub-area-control-title left-padding-1"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Sample rate of audio devices.">S.R.</a></div>
                 <div className="config-sub-area-control-field">
                     <div className="config-sub-area-control-field-auido-io">
                         <select

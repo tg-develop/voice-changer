@@ -15,7 +15,7 @@ export const Demo = () => {
                 <ModelSlotControl></ModelSlotControl>
             </div>
             <ToastContainer />
-            <Tooltip id="hint" style={{ maxWidth: "250px" }} />
+            <Tooltip id="hint" style={{ maxWidth: "250px", zIndex: 9999 }} />
         </GuiStateProvider>
     )
 }

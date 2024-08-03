@@ -29,7 +29,7 @@ export const AdvancedSettingDialog = () => {
         };
         const protocolRow = (
             <div className="advanced-setting-container-row">
-                <div className="advanced-setting-container-row-title">protocol</div>
+                <div className="advanced-setting-container-row-title"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Communication protocol between the user interface and server. 'sio' is the recommended.">Protocol</a></div>
                 <div className="advanced-setting-container-row-field">
                     <select
                         value={setting.workletNodeSetting.protocol}
@@ -79,7 +79,7 @@ export const AdvancedSettingDialog = () => {
         };
         const silenceFrontRow = (
             <div className="advanced-setting-container-row">
-                <div className="advanced-setting-container-row-title">SilenceFront</div>
+                <div className="advanced-setting-container-row-title"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="An optimization option that removes 'Extra' part during pitch extraction. Recommended to keep it 'on'.">SilenceFront</a></div>
                 <div className="advanced-setting-container-row-field">
                     <select
                         value={serverSetting.serverSetting.silenceFront}
@@ -103,7 +103,7 @@ export const AdvancedSettingDialog = () => {
         };
         const forceFp32ModeRow = (
             <div className="advanced-setting-container-row">
-                <div className="advanced-setting-container-row-title">Force FP32 mode</div>
+                <div className="advanced-setting-container-row-title"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="A debugging option that forces inference with full precision instead of half precision. Has no effect if GPU does not support FP16 (indicated in the command line logs). Set to 'off' only if you experience issues in FP16 mode.">Force FP32 mode</a></div>
                 <div className="advanced-setting-container-row-field">
                     <select
                         value={serverSetting.serverSetting.forceFp32}
@@ -124,7 +124,7 @@ export const AdvancedSettingDialog = () => {
 
         const protectRow = (
             <div className="advanced-setting-container-row">
-                <div className="advanced-setting-container-row-title">Protect</div>
+                <div className="advanced-setting-container-row-title"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Voiceless consonants protection. Has no effect when set to 0.5 or when 'Index' is inactive.">Protect</a></div>
                 <div className="advanced-setting-container-row-field">
                     <div>
                         <input
