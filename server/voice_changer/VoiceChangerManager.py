@@ -65,7 +65,7 @@ class VoiceChangerManager(ServerDeviceCallbacks):
 
         self.device_manager = DeviceManager.get_instance()
         self.devices = self.device_manager.list_devices()
-        self.device_manager.initialize(self.settings.gpu, self.settings.forceFp32)
+        self.device_manager.initialize(self.settings.gpu, self.settings.forceFp32, self.settings.disableJit)
 
         self.serverDevice = ServerDevice(self, self.settings)
 
@@ -185,6 +185,8 @@ class VoiceChangerManager(ServerDeviceCallbacks):
             self.device_manager.set_device(val)
         elif key == 'forceFp32':
             self.device_manager.set_force_fp32(val)
+        elif key == 'disableJit':
+            self.device_manager.set_disable_jit(val)
         # FIXME: This is a very counter-intuitive handling of audio modes...
         # Map "serverAudioSampleRate" to "inputSampleRate" and "outputSampleRate"
         # since server audio can have its sample rate configured.

@@ -1,9 +1,9 @@
 import torch
 import onnxruntime
 import re
+import threading
 from typing import TypedDict, Literal
 from enum import IntFlag
-from threading import Lock
 
 try:
     import torch_directml
@@ -26,6 +26,7 @@ class DevicePresentation(TypedDict):
     memory: int
     backend: Literal['cpu', 'cuda', 'directml', 'mps']
 
+
 class DeviceManager(object):
     _instance = None
 
@@ -46,15 +47,17 @@ class DeviceManager(object):
         self.dml_enabled: bool = torch_directml.is_available()
         self.fp16_available = False
         self.force_fp32 = False
-        self.lock = Lock()
+        self.disable_jit = False
+        self.lock = threading.Lock()
         logger.info('Initialized DeviceManager. Backend statuses:')
         logger.info(f'* DirectML: {self.dml_enabled}, device count: {torch_directml.device_count()}')
         logger.info(f'* CUDA: {self.cuda_enabled}, device count: {torch.cuda.device_count()}')
         logger.info(f'* MPS: {self.mps_enabled}')
 
-    def initialize(self, device_id: int, force_fp32: bool):
+    def initialize(self, device_id: int, force_fp32: bool, disable_jit: bool):
         self.set_device(device_id)
-        self.set_force_fp32(force_fp32)
+        self.force_fp32 = force_fp32
+        self.disable_jit = disable_jit
 
     def set_device(self, id: int):
         if self.mps_enabled:
@@ -73,7 +76,7 @@ class DeviceManager(object):
 
     def use_jit_compile(self):
         # FIXME: DirectML backend seems to have issues with JIT. Disable it for now.
-        return self.device_metadata['backend'] != 'directml'
+        return self.device_metadata['backend'] != 'directml' and not self.disable_jit
 
     # TODO: This function should also accept backend type
     def _get_device(self, dev_id: int) -> tuple[torch.device, DevicePresentation]:
@@ -129,6 +132,13 @@ class DeviceManager(object):
             return ["CoreMLExecutionProvider", "CPUExecutionProvider"], [{'coreml_flags': coreml_flags}, cpu_settings]
         else:
             return ["CPUExecutionProvider"], [cpu_settings]
+
+    def set_disable_jit(self, disable_jit: bool):
+        if self.mps_enabled:
+            torch.mps.empty_cache()
+        elif self.cuda_enabled:
+            torch.cuda.empty_cache()
+        self.disable_jit = disable_jit
 
     def set_force_fp32(self, force_fp32: bool):
         if self.mps_enabled:

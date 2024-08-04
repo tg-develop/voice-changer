@@ -78,6 +78,7 @@ class VoiceChangerSettings:
     _extraConvertSize: float = 0.5
     _gpu: int = -1
     _forceFp32: int = 0
+    _disableJit: int = 0
 
     _passThrough: bool = False
     _recordIO: int = 0
@@ -161,6 +162,14 @@ class VoiceChangerSettings:
     @forceFp32.setter
     def forceFp32(self, enable: str):
         self._forceFp32 = int(enable)
+
+    @property
+    def disableJit(self):
+        return self._disableJit
+
+    @disableJit.setter
+    def disableJit(self, enable: str):
+        self._disableJit = int(enable)
 
     # Server Audio settings
     _serverAudioStated: int = 0
