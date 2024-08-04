@@ -68,7 +68,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    uac_admin=True,
+    uac_admin=backend == 'cuda', # Use UAC only for CUDA backend
 )
 coll = COLLECT(
     exe,
