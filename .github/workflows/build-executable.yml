@@ -79,6 +79,10 @@ jobs:
     - name: Building executable
       run: pyinstaller --clean -y --dist ./dist --workpath /tmp MMVCServerSIO.spec
       working-directory: ./server
+    - name: Copy utils
+      run: cp ./server/{force_gpu_clocks.bat,reset_gpu_clocks.bat} ./server/dist/
+      shell: bash
+      if: matrix.os == 'windows-latest' && matrix.backend == 'cuda'
     - name: Pack artifact
       shell: bash
       run: |
