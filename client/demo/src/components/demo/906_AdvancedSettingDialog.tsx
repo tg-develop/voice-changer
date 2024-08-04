@@ -125,6 +125,34 @@ export const AdvancedSettingDialog = () => {
             </div>
         );
 
+        const onDisableJitChanged = (val: number) => {
+            return serverSetting.updateServerSettings({
+                ...serverSetting.serverSetting,
+                disableJit: val,
+            });
+        };
+        const disableJitRow = (
+            <div className="advanced-setting-container-row">
+                <div className="advanced-setting-container-row-title"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="A debugging option that disables Just-in-Time (JIT) compilation for PyTorch models. Disabling this option will reduce model loading time, but may decrease performance. Has no effect on DirectML devices.">Disable JIT compilation</a></div>
+                <div className="advanced-setting-container-row-field">
+                    <select
+                        value={serverSetting.serverSetting.disableJit}
+                        onChange={async (e) => {
+                            // TODO: Need to fix CSS to show waiting dialog over all page contents. Lazy :\
+                            //guiState.stateControls.showWaitingCheckbox.updateState(true);
+                            onDisableJitChanged(Number(e.target.value));
+                            guiState.setVoiceChangerSettingsChanged(false);
+                            //guiState.stateControls.showWaitingCheckbox.updateState(false);
+                        }}
+                        disabled={guiState.isConverting}
+                    >
+                        <option value="0">off</option>
+                        <option value="1">on</option>
+                    </select>
+                </div>
+            </div>
+        );
+
         const protectRow = (
             <div className="advanced-setting-container-row">
                 <div className="advanced-setting-container-row-title"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Voiceless consonants protection. Has no effect when set to 0.5 or when 'Index' is inactive.">Protect</a></div>
@@ -169,6 +197,7 @@ export const AdvancedSettingDialog = () => {
                 {crossfaceRow}
                 {silenceFrontRow}
                 {forceFp32ModeRow}
+                {disableJitRow}
                 {protectRow}
                 {skipPassThroughConfirmationRow}
             </div>

@@ -56,7 +56,7 @@ class DeviceManager(object):
         self.dml_enabled: bool = torch_directml.is_available()
         self.fp16_available = False
         self.force_fp32 = False
-        self.lock = Lock()
+        self.disable_jit = False
         logger.info('Initialized DeviceManager. Backend statuses:')
         logger.info(f'* DirectML: {self.dml_enabled}, device count: {torch_directml.device_count()}')
         logger.info(f'* CUDA: {self.cuda_enabled}, device count: {torch.cuda.device_count()}')
@@ -109,7 +109,7 @@ class DeviceManager(object):
 
     def use_jit_compile(self):
         # FIXME: DirectML backend seems to have issues with JIT. Disable it for now.
-        return self.device_metadata['backend'] != 'directml'
+        return self.device_metadata['backend'] != 'directml' and not self.disable_jit
 
     # TODO: This function should also accept backend type
     def _get_device(self, dev_id: int) -> tuple[torch.device, DevicePresentation]:
@@ -165,6 +165,13 @@ class DeviceManager(object):
             return ["CoreMLExecutionProvider", "CPUExecutionProvider"], [{'coreml_flags': coreml_flags}, cpu_settings]
         else:
             return ["CPUExecutionProvider"], [cpu_settings]
+
+    def set_disable_jit(self, disable_jit: bool):
+        if self.mps_enabled:
+            torch.mps.empty_cache()
+        elif self.cuda_enabled:
+            torch.cuda.empty_cache()
+        self.disable_jit = disable_jit
 
     def set_force_fp32(self, force_fp32: bool):
         if self.mps_enabled:

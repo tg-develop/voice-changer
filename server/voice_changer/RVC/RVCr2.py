@@ -121,7 +121,7 @@ class RVCr2(VoiceChangerModel):
             ).to(self.device_manager.device)
 
     def update_settings(self, key: str, val, old_val):
-        if key in {"gpu", "forceFp32"}:
+        if key in {"gpu", "forceFp32", "disableJit"}:
             self.initialize(True)
         elif key == "f0Detector" and self.pipeline is not None:
             pitchExtractor = PitchExtractorManager.getPitchExtractor(
