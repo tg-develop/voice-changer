@@ -126,43 +126,46 @@ class VoiceChangerV2(VoiceChangerIF):
             return 0
         return self.voiceChangerModel.get_processing_sampling_rate()
 
+    def process_audio(self, audio_in: AudioInOutFloat) -> tuple[AudioInOutFloat, float]:
+        block_size = audio_in.shape[0]
+
+        audio, vol = self.voiceChangerModel.inference(audio_in)
+
+        if audio is None:
+            # In case there's an actual silence - send full block with zeros
+            return np.zeros(block_size, dtype=np.float32), vol
+
+        # SOLA algorithm from https://github.com/yxlllc/DDSP-SVC, https://github.com/liujing04/Retrieval-based-Voice-Conversion-WebUI
+        conv_input = audio[
+            None, None, : self.crossfade_frame + self.sola_search_frame
+        ]
+        cor_nom = F.conv1d(conv_input, self.sola_buffer[None, None, :])
+        cor_den = torch.sqrt(
+            F.conv1d(
+                conv_input ** 2,
+                torch.ones(1, 1, self.crossfade_frame, device=self.device_manager.device),
+            )
+            + 1e-8
+        )
+        sola_offset = torch.argmax(cor_nom[0, 0] / cor_den[0, 0])
+
+        audio = audio[sola_offset:]
+        audio[: self.crossfade_frame] *= self.fade_in_window
+        audio[: self.crossfade_frame] += (
+            self.sola_buffer * self.fade_out_window
+        )
+
+        self.sola_buffer[:] = audio[block_size : block_size + self.crossfade_frame]
+
+        return audio[: block_size].detach().cpu().numpy(), vol
+
     @torch.no_grad()
     def on_request(self, audio_in: AudioInOutFloat) -> tuple[AudioInOutFloat, list[Union[int, float]]]:
         if self.voiceChangerModel is None:
             raise VoiceChangerIsNotSelectedException("Voice Changer is not selected.")
 
         with Timer2("main-process", True) as t:
-            block_size = audio_in.shape[0]
-
-            audio, vol = self.voiceChangerModel.inference(audio_in)
-
-            if audio is None:
-                # In case there's an actual silence - send full block with zeros
-                return np.zeros(block_size, dtype=np.float32), vol, [0, 0, 0]
-
-            # SOLA algorithm from https://github.com/yxlllc/DDSP-SVC, https://github.com/liujing04/Retrieval-based-Voice-Conversion-WebUI
-            conv_input = audio[
-                None, None, : self.crossfade_frame + self.sola_search_frame
-            ]
-            cor_nom = F.conv1d(conv_input, self.sola_buffer[None, None, :])
-            cor_den = torch.sqrt(
-                F.conv1d(
-                    conv_input ** 2,
-                    torch.ones(1, 1, self.crossfade_frame, device=self.device_manager.device),
-                )
-                + 1e-8
-            )
-            sola_offset = torch.argmax(cor_nom[0, 0] / cor_den[0, 0])
-
-            audio = audio[sola_offset:]
-            audio[: self.crossfade_frame] *= self.fade_in_window
-            audio[: self.crossfade_frame] += (
-                self.sola_buffer * self.fade_out_window
-            )
-
-            self.sola_buffer[:] = audio[block_size : block_size + self.crossfade_frame]
-
-            result: np.ndarray = audio[: block_size].detach().cpu().numpy()
+            result, vol = self.process_audio(audio_in)
 
         mainprocess_time = t.secs
 

@@ -142,9 +142,6 @@ async def main(args):
 
 
 if __name__ == "__main__":
-    if not is_user_admin():
-        logger.warning("Voice changer is running with user rights. If you are using NVIDIA version, restart the voice changer with administrator rights. Otherwise, performance issues may be observed.")
-
     parser = setupArgParser()
     args, _ = parser.parse_known_args()
     args.launch_browser = False

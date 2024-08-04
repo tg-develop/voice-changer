@@ -43,7 +43,7 @@ class RVCr2(VoiceChangerModel):
         self.pitchf_buffer: torch.Tensor | None = None
         self.return_length = 0
         self.skip_head = 0
-        self.silence_front = 0.0
+        self.silence_front = 0
         self.slotInfo = slotInfo
 
         # 処理は16Kで実施(Pitch, embed, (infer))
@@ -120,14 +120,17 @@ class RVCr2(VoiceChangerModel):
                 dtype=torch.float32
             ).to(self.device_manager.device)
 
+    def change_pitch_extractor(self):
+        pitchExtractor = PitchExtractorManager.getPitchExtractor(
+            self.settings.f0Detector, self.settings.gpu
+        )
+        self.pipeline.setPitchExtractor(pitchExtractor)
+
     def update_settings(self, key: str, val, old_val):
         if key in {"gpu", "forceFp32", "disableJit"}:
             self.initialize(True)
         elif key == "f0Detector" and self.pipeline is not None:
-            pitchExtractor = PitchExtractorManager.getPitchExtractor(
-                self.settings.f0Detector, self.settings.gpu
-            )
-            self.pipeline.setPitchExtractor(pitchExtractor)
+            self.change_pitch_extractor()
         elif key == 'silentThreshold':
             # Convert dB to RMS
             self.inputSensitivity = 10 ** (self.settings.silentThreshold / 20)
@@ -239,6 +242,25 @@ class RVCr2(VoiceChangerModel):
         vol = max(vol_t.item(), 0)
 
         if vol < self.inputSensitivity:
+            # Busy wait to keep power manager happy and clocks stable. Running pipeline on-demand seems to lag when the delay between
+            # voice changer activation is too high.
+            # https://forums.developer.nvidia.com/t/why-kernel-calculate-speed-got-slower-after-waiting-for-a-while/221059/9
+            self.pipeline.exec(
+                self.settings.dstId,
+                self.convert_buffer,
+                self.pitch_buffer,
+                self.pitchf_buffer,
+                self.settings.tran,
+                self.settings.formantShift,
+                self.settings.indexRatio,
+                self.convert_feature_size_16k,
+                self.silence_front,
+                self.slotInfo.embOutputLayer,
+                self.slotInfo.useFinalProj,
+                self.skip_head,
+                self.return_length,
+                self.settings.protect,
+            )
             return None, vol
 
         circular_write(audio_in_16k, self.convert_buffer)

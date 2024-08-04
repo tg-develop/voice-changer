@@ -14,14 +14,9 @@ os.environ['CUDA_PATH'] = ''
 os.environ['OMP_WAIT_POLICY'] = 'PASSIVE'
 
 from voice_changer.VoiceChangerManager import VoiceChangerManager
-from voice_changer.common.deviceManager.DeviceManager import DeviceManager
 from sio.MMVC_SocketIOApp import MMVC_SocketIOApp
 from restapi.MMVC_Rest import MMVC_Rest
 from settings import ServerSettings
-
-import sys
-import atexit
-import signal
 
 settings = ServerSettings()
 
@@ -32,24 +27,3 @@ socketio = MMVC_SocketIOApp.get_instance(fastapi, voice_changer_manager, setting
 # NOTE: Bundled executable overrides excepthook to pause on exception during startup.
 # Here we revert to original excepthook once all initialization is done.
 sys.excepthook = sys.__excepthook__
-
-# https://pyinstaller.org/en/stable/feature-notes.html#signal-handling-in-console-windows-applications-and-onefile-application-cleanup
-if sys.platform == 'win32':
-    import win32api
-
-    def on_exit(signal):
-        DeviceManager.get_instance().reset_nvidia_clocks()
-        return False
-
-    win32api.SetConsoleCtrlHandler(on_exit, 1)
-else:
-    def on_exit():
-        DeviceManager.get_instance().reset_nvidia_clocks()
-
-    def on_kill(*args):
-        DeviceManager.get_instance().reset_nvidia_clocks()
-        sys.exit()
-
-    atexit.register(on_exit)
-    signal.signal(signal.SIGINT, on_kill)
-    signal.signal(signal.SIGTERM, on_kill)
