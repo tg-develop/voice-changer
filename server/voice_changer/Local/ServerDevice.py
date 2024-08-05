@@ -141,11 +141,16 @@ class ServerDevice:
 
             # Generate ExtraSetting
             inputExtraSetting = None
-            outputExtraSetting = None
             if serverInputAudioDevice and "WASAPI" in serverInputAudioDevice.hostAPI:
                 inputExtraSetting = sd.WasapiSettings(exclusive=bool(self.settings.exclusiveMode))
+            elif serverInputAudioDevice and "ASIO" in serverInputAudioDevice.hostAPI and self.settings.asioInputChannel != -1:
+                inputExtraSetting = sd.AsioSettings(channel_selectors=[self.settings.asioInputChannel])
+
+            outputExtraSetting = None
             if serverOutputAudioDevice and "WASAPI" in serverOutputAudioDevice.hostAPI:
                 outputExtraSetting = sd.WasapiSettings(exclusive=bool(self.settings.exclusiveMode))
+            elif serverInputAudioDevice and "ASIO" in serverInputAudioDevice.hostAPI and self.settings.asioOutputChannel != -1:
+                outputExtraSetting = sd.AsioSettings(channel_selectors=[self.settings.asioOutputChannel])
 
             monitorExtraSetting = None
             if serverMonitorAudioDevice and "WASAPI" in serverMonitorAudioDevice.hostAPI:
@@ -242,6 +247,6 @@ class ServerDevice:
         if key == 'serverAudioStated':
             # Toggle control loop
             self.control_loop = val
-        if key in { 'serverAudioStated', 'serverInputDeviceId', 'serverOutputDeviceId', 'serverMonitorDeviceId', 'serverReadChunkSize', 'serverAudioSampleRate' }:
+        if key in { 'serverAudioStated', 'serverInputDeviceId', 'serverOutputDeviceId', 'serverMonitorDeviceId', 'serverReadChunkSize', 'serverAudioSampleRate', 'asioInputChannel', 'asioOutputChannel' }:
             # Break stream loop to reconfigure or turn server audio off
             self.stream_loop = False

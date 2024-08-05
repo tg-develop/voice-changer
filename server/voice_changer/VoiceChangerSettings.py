@@ -188,6 +188,8 @@ class VoiceChangerSettings:
     _serverMonitorAudioGain: float = 1.0
 
     _exclusiveMode: int = 0
+    _asioInputChannel: int = -1
+    _asioOutputChannel: int = -1
 
     @property
     def serverAudioStated(self):
@@ -292,6 +294,22 @@ class VoiceChangerSettings:
     @exclusiveMode.setter
     def exclusiveMode(self, enabled: str):
         self._exclusiveMode = int(enabled)
+
+    @property
+    def asioInputChannel(self):
+        return self._asioInputChannel
+
+    @asioInputChannel.setter
+    def asioInputChannel(self, id: str):
+        self._asioInputChannel = int(id)
+
+    @property
+    def asioOutputChannel(self):
+        return self._asioOutputChannel
+
+    @asioOutputChannel.setter
+    def asioOutputChannel(self, id: str):
+        self._asioOutputChannel = int(id)
 
     # RVCv2 settings
     _dstId: int = 0

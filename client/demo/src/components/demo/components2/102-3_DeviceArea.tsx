@@ -50,7 +50,7 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
                         </div>
                         <div className="config-sub-area-noise-checkbox-container">
                             <input
-                                className="left-padding-1"
+                                className="left-padding-05"
                                 type="radio"
                                 id="server-device"
                                 name="device-mode"
@@ -98,7 +98,7 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
 
         return (
             <div className="config-sub-area-control">
-                <div className="config-sub-area-control-title left-padding-1">input</div>
+                <div className="config-sub-area-control-title left-padding-05">Input</div>
                 <div className="config-sub-area-control-field">
                     <select
                         className="body-select"
@@ -163,42 +163,70 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
         const currentValue = devices.find((x) => {
             return (x.hostAPI == inputHostApi || inputHostApi == "ALL") && x.index == serverSetting.serverSetting.serverInputDeviceId;
         })
-            ? serverSetting.serverSetting.serverInputDeviceId
-            : -1;
-
-        return (
-            <div className="config-sub-area-control">
-                <div className="config-sub-area-control-title left-padding-1">input</div>
+        const channelSelector = currentValue?.hostAPI !== 'ASIO'
+            ? <></>
+            : <div className="config-sub-area-control">
+                <div className="config-sub-area-control-title left-padding-05">Ch.</div>
                 <div className="config-sub-area-control-field">
                     <div className="config-sub-area-control-field-auido-io">
                         <select
-                            className="config-sub-area-control-field-auido-io-filter"
-                            name="kinds"
-                            id="kinds"
-                            value={inputHostApi}
+                            className="config-sub-area-control-field-sample-rate-select"
+                            value={serverSetting.serverSetting.asioInputChannel}
                             onChange={(e) => {
-                                setInputHostApi(e.target.value);
+                                serverSetting.updateServerSettings({ ...serverSetting.serverSetting, asioInputChannel: Number(e.target.value) });
                             }}
                         >
-                            <option value="ALL" key="ALL">
-                                ALL
+                            <option key="default" value="-1">
+                                default
                             </option>
-                            {hostAPIOptions}
-                        </select>
-                        <select
-                            className="config-sub-area-control-field-auido-io-select"
-                            value={currentValue}
-                            onChange={(e) => {
-                                serverSetting.updateServerSettings({ ...serverSetting.serverSetting, serverInputDeviceId: Number(e.target.value) });
-                            }}
-                        >
-                            {filteredDevice}
-                            <option value="-1" key="none">
-                                none
-                            </option>
+                            {Array.from(Array(currentValue.maxInputChannels).keys()).map((x) => {
+                                return (
+                                    <option key={x} value={x}>
+                                        {x}
+                                    </option>
+                                );
+                            })}
                         </select>
                     </div>
                 </div>
+            </div>
+
+        return (
+            <div>
+                <div className="config-sub-area-control">
+                    <div className="config-sub-area-control-title left-padding-05">Input</div>
+                    <div className="config-sub-area-control-field">
+                        <div className="config-sub-area-control-field-auido-io">
+                            <select
+                                className="config-sub-area-control-field-auido-io-filter"
+                                name="kinds"
+                                id="kinds"
+                                value={inputHostApi}
+                                onChange={(e) => {
+                                    setInputHostApi(e.target.value);
+                                }}
+                            >
+                                <option value="ALL" key="ALL">
+                                    ALL
+                                </option>
+                                {hostAPIOptions}
+                            </select>
+                            <select
+                                className="config-sub-area-control-field-auido-io-select"
+                                value={currentValue ? currentValue.index : -1}
+                                onChange={(e) => {
+                                    serverSetting.updateServerSettings({ ...serverSetting.serverSetting, serverInputDeviceId: Number(e.target.value) });
+                                }}
+                            >
+                                {filteredDevice}
+                                <option value="-1" key="none">
+                                    none
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                {channelSelector}
             </div>
         );
     }, [inputHostApi, serverSetting.serverSetting, serverSetting.updateServerSettings, serverSetting.serverSetting.enableServerAudio]);
@@ -258,7 +286,7 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
         return (
             <div className="config-sub-area-control">
                 <div className="config-sub-area-control-field">
-                    <div className="config-sub-area-control-field-wav-file left-padding-1">
+                    <div className="config-sub-area-control-field-wav-file left-padding-05">
                         <div className="config-sub-area-control-field-wav-file-audio-container">
                             {/* <audio id={AUDIO_ELEMENT_FOR_TEST_ORIGINAL} controls hidden></audio> */}
                             <audio className="config-sub-area-control-field-wav-file-audio" id={AUDIO_ELEMENT_FOR_TEST_CONVERTED} controls controlsList="nodownload noplaybackrate"></audio>
@@ -353,7 +381,7 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
         const echobackClass = shareScreenEnabled ? "config-sub-area-control-field-screen-select-button-active" : "config-sub-area-control-field-screen-select-button";
         return (
             <div className="config-sub-area-control">
-                <div className="config-sub-area-control-title left-padding-1"></div>
+                <div className="config-sub-area-control-title left-padding-05"></div>
                 <div className="config-sub-area-control-field">
                     <div className="config-sub-area-control-field-screen-select">
                         <div
@@ -442,7 +470,7 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
 
         return (
             <div className="config-sub-area-control">
-                <div className="config-sub-area-control-title left-padding-1">output</div>
+                <div className="config-sub-area-control-title left-padding-05">Output</div>
                 <div className="config-sub-area-control-field">
                     <select
                         className="body-select"
@@ -505,42 +533,70 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
         const currentValue = devices.find((x) => {
             return (x.hostAPI == outputHostApi || outputHostApi == "ALL") && x.index == serverSetting.serverSetting.serverOutputDeviceId;
         })
-            ? serverSetting.serverSetting.serverOutputDeviceId
-            : -1;
-
-        return (
-            <div className="config-sub-area-control">
-                <div className="config-sub-area-control-title left-padding-1">output</div>
+        const channelSelector = currentValue?.hostAPI !== 'ASIO'
+            ? <></>
+            : <div className="config-sub-area-control">
+                <div className="config-sub-area-control-title left-padding-05">Ch.</div>
                 <div className="config-sub-area-control-field">
                     <div className="config-sub-area-control-field-auido-io">
                         <select
-                            className="config-sub-area-control-field-auido-io-filter"
-                            name="kinds"
-                            id="kinds"
-                            value={outputHostApi}
+                            className="config-sub-area-control-field-sample-rate-select"
+                            value={serverSetting.serverSetting.asioOutputChannel}
                             onChange={(e) => {
-                                setOutputHostApi(e.target.value);
+                                serverSetting.updateServerSettings({ ...serverSetting.serverSetting, asioOutputChannel: Number(e.target.value) });
                             }}
                         >
-                            <option value="ALL" key="ALL">
-                                ALL
+                            <option key="default" value="-1">
+                                default
                             </option>
-                            {hostAPIOptions}
-                        </select>
-                        <select
-                            className="config-sub-area-control-field-auido-io-select"
-                            value={currentValue}
-                            onChange={(e) => {
-                                serverSetting.updateServerSettings({ ...serverSetting.serverSetting, serverOutputDeviceId: Number(e.target.value) });
-                            }}
-                        >
-                            {filteredDevice}
-                            <option value="-1" key="none">
-                                none
-                            </option>
+                            {Array.from(Array(currentValue.maxOutputChannels).keys()).map((x) => {
+                                return (
+                                    <option key={x} value={x}>
+                                        {x}
+                                    </option>
+                                );
+                            })}
                         </select>
                     </div>
                 </div>
+            </div>
+
+        return (
+            <div>
+                <div className="config-sub-area-control">
+                    <div className="config-sub-area-control-title left-padding-05">Output</div>
+                    <div className="config-sub-area-control-field">
+                        <div className="config-sub-area-control-field-auido-io">
+                            <select
+                                className="config-sub-area-control-field-auido-io-filter"
+                                name="kinds"
+                                id="kinds"
+                                value={outputHostApi}
+                                onChange={(e) => {
+                                    setOutputHostApi(e.target.value);
+                                }}
+                            >
+                                <option value="ALL" key="ALL">
+                                    ALL
+                                </option>
+                                {hostAPIOptions}
+                            </select>
+                            <select
+                                className="config-sub-area-control-field-auido-io-select"
+                                value={currentValue ? currentValue.index : -1}
+                                onChange={(e) => {
+                                    serverSetting.updateServerSettings({ ...serverSetting.serverSetting, serverOutputDeviceId: Number(e.target.value) });
+                                }}
+                            >
+                                {filteredDevice}
+                                <option value="-1" key="none">
+                                    none
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                {channelSelector}
             </div>
         );
     }, [outputHostApi, serverSetting.serverSetting, serverSetting.updateServerSettings, serverSetting.serverSetting.enableServerAudio]);
@@ -587,7 +643,7 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
 
         return (
             <div className="config-sub-area-control">
-                <div className="config-sub-area-control-title left-padding-1"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Sample rate of audio devices.">S.R.</a></div>
+                <div className="config-sub-area-control-title left-padding-05"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Sample rate of audio devices.">S.R.</a></div>
                 <div className="config-sub-area-control-field">
                     <div className="config-sub-area-control-field-auido-io">
                         <select
@@ -673,7 +729,7 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
 
         return (
             <div className="config-sub-area-control">
-                <div className="config-sub-area-control-title left-padding-1">monitor</div>
+                <div className="config-sub-area-control-title left-padding-05">Monitor</div>
                 <div className="config-sub-area-control-field">
                     <select
                         className="body-select"
@@ -746,7 +802,7 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
 
         return (
             <div className="config-sub-area-control">
-                <div className="config-sub-area-control-title left-padding-1">monitor</div>
+                <div className="config-sub-area-control-title left-padding-05">Monitor</div>
                 <div className="config-sub-area-control-field">
                     <div className="config-sub-area-control-field-auido-io">
                         <select
