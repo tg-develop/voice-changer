@@ -76,7 +76,7 @@ def merge_model(params: ServerSettings, request: ModelMergerRequest):
     merged["params"] = state_dict["params"] if "params" in state_dict else None
     merged["version"] = state_dict["version"] if "version" in state_dict else None
     merged["sr"] = state_dict["sr"]
-    merged["f0"] = int(state_dict["f0"])
+    merged["f0"] = int(state_dict["f0"] == "1" or state_dict["f0"] == "True")
     try:
         # Some forks do not include info apparently (?)
         merged["info"] = state_dict["info"]
