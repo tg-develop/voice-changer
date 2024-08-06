@@ -280,7 +280,11 @@ In the voice changer, make sure **passthru** is not on (indicated by blinking re
 
    ![image](https://github.com/user-attachments/assets/0e7ae533-3ba5-4308-895e-54254c2a67e0)
 
-1. If nothing helped, in **Task Manager** > **Details**, try setting the priority for the `audiodg.exe` process to **High**.
+1. If nothing helped, in **Task Manager** > **Details**, find "audiodg.exe" process and do the folowing:
+
+   1. Right-click "audiodg.exe" > **Set priority** > **High**.
+  
+   1. Right-click "audiodg.exe" > **Set affinity**. Uncheck every option, then only select CPU 2.
 
 ### Audio is stuttery
 
