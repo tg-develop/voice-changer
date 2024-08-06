@@ -13,14 +13,13 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ServerAudioDevice:
-    kind: ServerAudioDeviceType = "audioinput"
     index: int = 0
     name: str = ""
     hostAPI: str = ""
     maxInputChannels: int = 0
     maxOutputChannels: int = 0
     default_samplerate: int = 0
-    available_samplerates: list[int] = field(default_factory=lambda: [])
+    # available_samplerates: list[int] = field(default_factory=lambda: [])
 
 
 def dummy_callback(data: np.ndarray, frames, times, status):
@@ -71,7 +70,6 @@ def list_audio_device():
     serverAudioOutputDevices: list[ServerAudioDevice] = []
     for d in inputAudioDeviceList:
         serverInputAudioDevice: ServerAudioDevice = ServerAudioDevice(
-            kind="audioinput",
             index=d["index"],
             name=d["name"],
             hostAPI=hostapis[d["hostapi"]]["name"],
@@ -82,7 +80,6 @@ def list_audio_device():
         serverAudioInputDevices.append(serverInputAudioDevice)
     for d in outputAudioDeviceList:
         serverOutputAudioDevice: ServerAudioDevice = ServerAudioDevice(
-            kind="audiooutput",
             index=d["index"],
             name=d["name"],
             hostAPI=hostapis[d["hostapi"]]["name"],

@@ -87,6 +87,8 @@ export const ServerSettingKey = {
     serverInputAudioGain: "serverInputAudioGain",
     serverOutputAudioGain: "serverOutputAudioGain",
     serverMonitorAudioGain: "serverMonitorAudioGain",
+    asioInputChannel: "asioInputChannel",
+    asioOutputChannel: "asioOutputChannel",
 
     tran: "tran",
     formantShift: "formantShift",
@@ -132,6 +134,8 @@ export type VoiceChangerServerSetting = {
     serverInputAudioGain: number;
     serverOutputAudioGain: number;
     serverMonitorAudioGain: number;
+    asioInputChannel: number;
+    asioOutputChannel: number;
 
     tran: number;
     formantShift: number;
@@ -178,10 +182,12 @@ export type RVCModelSlot = ModelSlot & {
 export type ModelSlotUnion = RVCModelSlot;
 
 type ServerAudioDevice = {
-    kind: "audioinput" | "audiooutput";
     index: number;
     name: string;
     hostAPI: string;
+    maxInputChannels: number;
+    maxOutputChannels: number;
+    default_samplerate: number;
 };
 
 export type ServerInfo = VoiceChangerServerSetting & {
@@ -247,6 +253,8 @@ export const DefaultServerSetting: ServerInfo = {
     serverInputAudioGain: 1.0,
     serverOutputAudioGain: 1.0,
     serverMonitorAudioGain: 1.0,
+    asioInputChannel: -1,
+    asioOutputChannel: -1,
 
     // VC Specific
     srcId: 0,
