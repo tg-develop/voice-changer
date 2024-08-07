@@ -26,7 +26,7 @@ def load_cached_fp16_model(fpath: str) -> ModelProto:
         original_hash = None
     fname, _ = os.path.splitext(os.path.basename(fpath))
     fp16_fpath = os.path.join(os.path.dirname(fpath), f'{fname}.fp16.onnx')
-    if original_hash is None:
+    if original_hash is None or not os.path.exists(fp16_fpath):
         logger.info('Converting model to FP16...')
         model = convert_fp16(onnx.load(fpath))
         onnx.save(model, fp16_fpath)
