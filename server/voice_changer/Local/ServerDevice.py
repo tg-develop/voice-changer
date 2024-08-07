@@ -140,21 +140,23 @@ class ServerDevice:
             serverMonitorAudioDevice = self.getServerOutputAudioDevice(self.settings.serverMonitorDeviceId)
 
             # Generate ExtraSetting
+            wasapiExclusiveMode = bool(self.settings.exclusiveMode)
+
             inputExtraSetting = None
             if serverInputAudioDevice and "WASAPI" in serverInputAudioDevice.hostAPI:
-                inputExtraSetting = sd.WasapiSettings(exclusive=bool(self.settings.exclusiveMode))
+                inputExtraSetting = sd.WasapiSettings(exclusive=wasapiExclusiveMode, auto_convert=not wasapiExclusiveMode)
             elif serverInputAudioDevice and "ASIO" in serverInputAudioDevice.hostAPI and self.settings.asioInputChannel != -1:
                 inputExtraSetting = sd.AsioSettings(channel_selectors=[self.settings.asioInputChannel])
 
             outputExtraSetting = None
             if serverOutputAudioDevice and "WASAPI" in serverOutputAudioDevice.hostAPI:
-                outputExtraSetting = sd.WasapiSettings(exclusive=bool(self.settings.exclusiveMode))
+                outputExtraSetting = sd.WasapiSettings(exclusive=wasapiExclusiveMode, auto_convert=not wasapiExclusiveMode)
             elif serverInputAudioDevice and "ASIO" in serverInputAudioDevice.hostAPI and self.settings.asioOutputChannel != -1:
                 outputExtraSetting = sd.AsioSettings(channel_selectors=[self.settings.asioOutputChannel])
 
             monitorExtraSetting = None
             if serverMonitorAudioDevice and "WASAPI" in serverMonitorAudioDevice.hostAPI:
-                monitorExtraSetting = sd.WasapiSettings(exclusive=bool(self.settings.exclusiveMode))
+                monitorExtraSetting = sd.WasapiSettings(exclusive=wasapiExclusiveMode, auto_convert=not wasapiExclusiveMode)
 
             logger.info("Devices:")
             logger.info(f"  [Input]: {serverInputAudioDevice} {inputExtraSetting}")
@@ -175,42 +177,43 @@ class ServerDevice:
             self.settings.serverMonitorAudioSampleRate = self.settings.serverAudioSampleRate
 
             # Sample Rate Check
-            inputAudioSampleRateAvailable = checkSamplingRate(self.settings.serverInputDeviceId, self.settings.serverInputAudioSampleRate, "input")
-            outputAudioSampleRateAvailable = checkSamplingRate(self.settings.serverOutputDeviceId, self.settings.serverOutputAudioSampleRate, "output")
-            monitorAudioSampleRateAvailable = checkSamplingRate(self.settings.serverMonitorDeviceId, self.settings.serverMonitorAudioSampleRate, "output") if serverMonitorAudioDevice else True
+            if "WASAPI" not in serverInputAudioDevice.hostAPI and not wasapiExclusiveMode:
+                inputAudioSampleRateAvailable = checkSamplingRate(self.settings.serverInputDeviceId, self.settings.serverInputAudioSampleRate, "input")
+                outputAudioSampleRateAvailable = checkSamplingRate(self.settings.serverOutputDeviceId, self.settings.serverOutputAudioSampleRate, "output")
+                monitorAudioSampleRateAvailable = checkSamplingRate(self.settings.serverMonitorDeviceId, self.settings.serverMonitorAudioSampleRate, "output") if serverMonitorAudioDevice else True
 
-            logger.info("Sample Rate:")
-            logger.info(f"  [Input]: {self.settings.serverInputAudioSampleRate} -> {inputAudioSampleRateAvailable}")
-            logger.info(f"  [Output]: {self.settings.serverOutputAudioSampleRate} -> {outputAudioSampleRateAvailable}")
-            if serverMonitorAudioDevice is not None:
-                logger.info(f"  [Monitor]: {self.settings.serverMonitorAudioSampleRate} -> {monitorAudioSampleRateAvailable}")
+                logger.info("Sample Rate:")
+                logger.info(f"  [Input]: {self.settings.serverInputAudioSampleRate} -> {inputAudioSampleRateAvailable}")
+                logger.info(f"  [Output]: {self.settings.serverOutputAudioSampleRate} -> {outputAudioSampleRateAvailable}")
+                if serverMonitorAudioDevice is not None:
+                    logger.info(f"  [Monitor]: {self.settings.serverMonitorAudioSampleRate} -> {monitorAudioSampleRateAvailable}")
 
-            # FIXME: Ideally, there are two options:
-            # 1. UI must be provided with all sample rates and select only valid combinations of sample rates.
-            # 2. Server must pick the default device sample rate automatically so UI doesn't have to bother.
-            # This must be removed once it's done.
-            if not inputAudioSampleRateAvailable or not outputAudioSampleRateAvailable or not monitorAudioSampleRateAvailable:
-                logger.info("Checking Available Sample Rate:")
-                availableInputSampleRate = []
-                availableOutputSampleRate = []
-                availableMonitorSampleRate = []
-                for sr in SERVER_DEVICE_SAMPLE_RATES:
-                    if checkSamplingRate(self.settings.serverInputDeviceId, sr, "input"):
-                        availableInputSampleRate.append(sr)
-                    if checkSamplingRate(self.settings.serverOutputDeviceId, sr, "output"):
-                        availableOutputSampleRate.append(sr)
-                    if serverMonitorAudioDevice is not None:
-                        if checkSamplingRate(self.settings.serverMonitorDeviceId, sr, "output"):
-                            availableMonitorSampleRate.append(sr)
-                err = ERR_SAMPLE_RATE_NOT_SUPPORTED % (availableInputSampleRate, availableOutputSampleRate, availableMonitorSampleRate)
-                self.serverDeviceCallbacks.emitTo(
-                    0,
-                    self.performance,
-                    ('ERR_SAMPLE_RATE_NOT_SUPPORTED', err)
-                )
-                logger.error(err)
-                time.sleep(2)
-                continue
+                # FIXME: Ideally, there are two options:
+                # 1. UI must be provided with all sample rates and select only valid combinations of sample rates.
+                # 2. Server must pick the default device sample rate automatically so UI doesn't have to bother.
+                # This must be removed once it's done.
+                if not inputAudioSampleRateAvailable or not outputAudioSampleRateAvailable or not monitorAudioSampleRateAvailable:
+                    logger.info("Checking Available Sample Rate:")
+                    availableInputSampleRate = []
+                    availableOutputSampleRate = []
+                    availableMonitorSampleRate = []
+                    for sr in SERVER_DEVICE_SAMPLE_RATES:
+                        if checkSamplingRate(self.settings.serverInputDeviceId, sr, "input"):
+                            availableInputSampleRate.append(sr)
+                        if checkSamplingRate(self.settings.serverOutputDeviceId, sr, "output"):
+                            availableOutputSampleRate.append(sr)
+                        if serverMonitorAudioDevice is not None:
+                            if checkSamplingRate(self.settings.serverMonitorDeviceId, sr, "output"):
+                                availableMonitorSampleRate.append(sr)
+                    err = ERR_SAMPLE_RATE_NOT_SUPPORTED % (availableInputSampleRate, availableOutputSampleRate, availableMonitorSampleRate)
+                    self.serverDeviceCallbacks.emitTo(
+                        0,
+                        self.performance,
+                        ('ERR_SAMPLE_RATE_NOT_SUPPORTED', err)
+                    )
+                    logger.error(err)
+                    time.sleep(2)
+                    continue
 
             # FIXME: In UI, block size is calculated based on 48kHz so we convert from 48kHz to input device sample rate.
             block_frame = int((self.settings.serverReadChunkSize * 128 / 48000) * self.settings.serverInputAudioSampleRate)
