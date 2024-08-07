@@ -15,7 +15,7 @@ class OnnxContentvec(Embedder):
             onnxProviderOptions,
         ) = device_manager.get_onnx_execution_provider()
 
-        model = load_onnx_model(file, self.is_half)
+        model = load_onnx_model(file, self.is_half, device_manager.is_int8_avalable())
 
         so = onnxruntime.SessionOptions()
         # so.log_severity_level = 3
