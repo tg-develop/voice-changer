@@ -80,15 +80,6 @@ class RVCr2(VoiceChangerModel):
 
         self.dtype = torch.float16 if self.is_half else torch.float32
 
-        # Settings update works and is reflected correctly
-        # because RVCr2.initialize() is called during modelSlotIndex update.
-        self.settings.set_properties({
-            'tran': self.slotInfo.defaultTune,
-            'formantShift': self.slotInfo.defaultFormantShift,
-            'indexRatio': self.slotInfo.defaultIndexRatio,
-            'protect': self.slotInfo.defaultProtect
-        })
-
         # 処理は16Kで実施(Pitch, embed, (infer))
         self.resampler_in = tat.Resample(
             orig_freq=self.input_sample_rate,
