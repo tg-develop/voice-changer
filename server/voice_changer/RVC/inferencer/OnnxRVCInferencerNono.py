@@ -6,8 +6,8 @@ from voice_changer.RVC.inferencer.OnnxRVCInferencer import OnnxRVCInferencer
 
 
 class OnnxRVCInferencerNono(OnnxRVCInferencer):
-    def load_model(self, file: str, inferencerTypeVersion: str | None = None):
-        super().load_model(file, inferencerTypeVersion)
+    def load_model(self, file: str):
+        super().load_model(file)
         self.set_props(EnumInferenceTypes.onnxRVCNono, file)
         return self
 

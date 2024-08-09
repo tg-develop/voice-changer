@@ -199,7 +199,7 @@ export const Portrait = (_props: PortraitProps) => {
                     {portrait}
                     <div className="portrait-area-status">
                         <p>
-                            <span className="portrait-area-status-vctype">{selected.voiceChangerType}</span>
+                            <span className="portrait-area-status-vctype">{serverSetting.serverSetting.useONNX ? selected.modelTypeOnnx : selected.modelType}</span>
                         </p>
                         <p>
                             vol(in): <span ref={elVolRef}>-90</span> dB
@@ -221,7 +221,7 @@ export const Portrait = (_props: PortraitProps) => {
                 </div>
             </div>
         );
-    }, [selected]);
+    }, [selected, serverSetting.serverSetting.useONNX]);
 
     return portrait;
 };

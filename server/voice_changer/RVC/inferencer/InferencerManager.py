@@ -8,7 +8,6 @@ from voice_changer.RVC.inferencer.RVCInferencerv2 import RVCInferencerv2
 from voice_changer.RVC.inferencer.RVCInferencerv2Nono import RVCInferencerv2Nono
 from voice_changer.RVC.inferencer.WebUIInferencer import WebUIInferencer
 from voice_changer.RVC.inferencer.WebUIInferencerNono import WebUIInferencerNono
-import sys
 
 
 class InferencerManager:
@@ -19,9 +18,8 @@ class InferencerManager:
         cls,
         inferencerType: str,
         file: str,
-        inferencerTypeVersion: str | None = None,
     ) -> Inferencer:
-        cls.currentInferencer = cls.loadInferencer(EnumInferenceTypes(inferencerType), file, inferencerTypeVersion)
+        cls.currentInferencer = cls.loadInferencer(EnumInferenceTypes(inferencerType), file)
         return cls.currentInferencer
 
     @classmethod
@@ -29,7 +27,6 @@ class InferencerManager:
         cls,
         inferencerType: EnumInferenceTypes,
         file: str,
-        inferencerTypeVersion: str | None = None,
     ) -> Inferencer:
         if inferencerType is EnumInferenceTypes.pyTorchRVC:
             return RVCInferencer().load_model(file)
@@ -44,8 +41,8 @@ class InferencerManager:
         elif inferencerType is EnumInferenceTypes.pyTorchWebUINono:
             return WebUIInferencerNono().load_model(file)
         elif inferencerType is EnumInferenceTypes.onnxRVC:
-            return OnnxRVCInferencer().load_model(file, inferencerTypeVersion)
+            return OnnxRVCInferencer().load_model(file)
         elif inferencerType is EnumInferenceTypes.onnxRVCNono:
-            return OnnxRVCInferencerNono().load_model(file, inferencerTypeVersion)
+            return OnnxRVCInferencerNono().load_model(file)
         else:
             raise RuntimeError("Inferencer not found", inferencerType)

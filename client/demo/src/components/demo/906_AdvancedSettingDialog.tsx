@@ -153,6 +153,24 @@ export const AdvancedSettingDialog = () => {
             </div>
         );
 
+        const convertToOnnx = (
+            <div className="advanced-setting-container-row">
+                <div className="advanced-setting-container-row-title"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Automatically converts models into ONNX format. Note that model conversion is performed once and may take 1-2 minutes. Recommended for DirectML version and inference on CPU.">Convert to ONNX</a></div>
+                <div className="advanced-setting-container-row-field">
+                    <input
+                        type="checkbox"
+                        checked={Boolean(serverSetting.serverSetting.useONNX)}
+                        onChange={async (e) => {
+                            guiState.stateControls.showWaitingCheckbox.updateState(true);
+                            await serverSetting.updateServerSettings({ ...serverSetting.serverSetting, useONNX: Number(e.target.checked) });
+                            guiState.stateControls.showWaitingCheckbox.updateState(false);
+                        }}
+                        disabled={guiState.isConverting}
+                    />
+                </div>
+            </div>
+        );
+
         const protectRow = (
             <div className="advanced-setting-container-row">
                 <div className="advanced-setting-container-row-title"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Voiceless consonants protection. Has no effect when set to 0.5 or when 'Index' is inactive.">Protect</a></div>
@@ -198,6 +216,7 @@ export const AdvancedSettingDialog = () => {
                 {silenceFrontRow}
                 {forceFp32ModeRow}
                 {disableJitRow}
+                {convertToOnnx}
                 {protectRow}
                 {skipPassThroughConfirmationRow}
             </div>

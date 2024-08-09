@@ -24,6 +24,7 @@ class ModelSlot:
 class RVCModelSlot(ModelSlot):
     voiceChangerType: VoiceChangerType = "RVC"
     modelFile: str = ""
+    modelFileOnnx: str = ""
     indexFile: str = ""
     defaultTune: int = 0
     defaultFormantShift: float = 0
@@ -31,6 +32,7 @@ class RVCModelSlot(ModelSlot):
     defaultProtect: float = 0.5
     isONNX: bool = False
     modelType: str = EnumInferenceTypes.pyTorchRVC.value
+    modelTypeOnnx: str = EnumInferenceTypes.onnxRVC.value
     samplingRate: int = -1
     f0: bool = True
     embChannels: int = 256
