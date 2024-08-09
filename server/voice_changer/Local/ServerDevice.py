@@ -142,17 +142,21 @@ class ServerDevice:
             # Generate ExtraSetting
             wasapiExclusiveMode = bool(self.settings.exclusiveMode)
 
+            inputChannels = serverInputAudioDevice.maxInputChannels
             inputExtraSetting = None
             if serverInputAudioDevice and "WASAPI" in serverInputAudioDevice.hostAPI:
                 inputExtraSetting = sd.WasapiSettings(exclusive=wasapiExclusiveMode, auto_convert=not wasapiExclusiveMode)
             elif serverInputAudioDevice and "ASIO" in serverInputAudioDevice.hostAPI and self.settings.asioInputChannel != -1:
                 inputExtraSetting = sd.AsioSettings(channel_selectors=[self.settings.asioInputChannel])
+                inputChannels = None
 
+            outputChannels = serverOutputAudioDevice.maxOutputChannels
             outputExtraSetting = None
             if serverOutputAudioDevice and "WASAPI" in serverOutputAudioDevice.hostAPI:
                 outputExtraSetting = sd.WasapiSettings(exclusive=wasapiExclusiveMode, auto_convert=not wasapiExclusiveMode)
             elif serverInputAudioDevice and "ASIO" in serverInputAudioDevice.hostAPI and self.settings.asioOutputChannel != -1:
                 outputExtraSetting = sd.AsioSettings(channel_selectors=[self.settings.asioOutputChannel])
+                outputChannels = None
 
             monitorExtraSetting = None
             if serverMonitorAudioDevice and "WASAPI" in serverMonitorAudioDevice.hostAPI:
@@ -221,9 +225,9 @@ class ServerDevice:
             try:
                 self.stream_loop = True
                 if serverMonitorAudioDevice is None:
-                    self.run_no_monitor(block_frame, serverInputAudioDevice.maxInputChannels, serverOutputAudioDevice.maxOutputChannels, inputExtraSetting, outputExtraSetting)
+                    self.run_no_monitor(block_frame, inputChannels, outputChannels, inputExtraSetting, outputExtraSetting)
                 else:
-                    self.run_with_monitor(block_frame, serverInputAudioDevice.maxInputChannels, serverOutputAudioDevice.maxOutputChannels, serverMonitorAudioDevice.maxOutputChannels, inputExtraSetting, outputExtraSetting, monitorExtraSetting)
+                    self.run_with_monitor(block_frame, inputChannels, outputChannels, serverMonitorAudioDevice.maxOutputChannels, inputExtraSetting, outputExtraSetting, monitorExtraSetting)
             except Exception as e:
                 self.serverDeviceCallbacks.emitTo(0, self.performance, ('ERR_GENERIC_SERVER_AUDIO_ERROR', ERR_GENERIC_SERVER_AUDIO_ERROR))
                 logger.exception(e)
