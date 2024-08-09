@@ -21,5 +21,7 @@ def create_self_signed_cert(certfile, keyfile, certargs, cert_dir="."):
         cert.set_issuer(cert.get_subject())
         cert.set_pubkey(k)
         cert.sign(k, 'sha1')
-        open(C_F, "wb").write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-        open(K_F, "wb").write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
+        with open(C_F, "wb") as f:
+            f.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+        with open(K_F, "wb") as f:
+            f.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
