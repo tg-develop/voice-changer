@@ -109,12 +109,11 @@ export const AdvancedSettingDialog = () => {
                     <select
                         value={serverSetting.serverSetting.forceFp32}
                         onChange={async (e) => {
-                            // TODO: Need to fix CSS to show waiting dialog over all page contents. Lazy :\
-                            //guiState.stateControls.showWaitingCheckbox.updateState(true);
+                            guiState.stateControls.showWaitingCheckbox.updateState(true);
                             onForceFp32ModeChanged(Number(e.target.value));
                             // Switching between FP16-FP32 reloads models and buffers.
                             guiState.setVoiceChangerSettingsChanged(false);
-                            //guiState.stateControls.showWaitingCheckbox.updateState(false);
+                            guiState.stateControls.showWaitingCheckbox.updateState(false);
                         }}
                         disabled={guiState.isConverting}
                     >
@@ -138,11 +137,10 @@ export const AdvancedSettingDialog = () => {
                     <select
                         value={serverSetting.serverSetting.disableJit}
                         onChange={async (e) => {
-                            // TODO: Need to fix CSS to show waiting dialog over all page contents. Lazy :\
-                            //guiState.stateControls.showWaitingCheckbox.updateState(true);
+                            guiState.stateControls.showWaitingCheckbox.updateState(true);
                             onDisableJitChanged(Number(e.target.value));
                             guiState.setVoiceChangerSettingsChanged(false);
-                            //guiState.stateControls.showWaitingCheckbox.updateState(false);
+                            guiState.stateControls.showWaitingCheckbox.updateState(false);
                         }}
                         disabled={guiState.isConverting}
                     >
