@@ -54,7 +54,7 @@
         "webpack-dev-server": "^4.15.1"
     },
     "dependencies": {
-        "@dannadori/voice-changer-client-js": "^1.0.180",
+        "@dannadori/voice-changer-client-js": "1.0.180",
         "@dannadori/worker-manager": "^1.0.20",
         "@fortawesome/fontawesome-svg-core": "^6.5.1",
         "@fortawesome/free-brands-svg-icons": "^6.5.1",
