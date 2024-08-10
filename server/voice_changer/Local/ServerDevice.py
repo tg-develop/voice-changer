@@ -148,7 +148,7 @@ class ServerDevice:
                 inputExtraSetting = sd.WasapiSettings(exclusive=wasapiExclusiveMode, auto_convert=not wasapiExclusiveMode)
             elif serverInputAudioDevice and "ASIO" in serverInputAudioDevice.hostAPI and self.settings.asioInputChannel != -1:
                 inputExtraSetting = sd.AsioSettings(channel_selectors=[self.settings.asioInputChannel])
-                inputChannels = None
+                inputChannels = 1
 
             outputChannels = serverOutputAudioDevice.maxOutputChannels
             outputExtraSetting = None
@@ -156,7 +156,7 @@ class ServerDevice:
                 outputExtraSetting = sd.WasapiSettings(exclusive=wasapiExclusiveMode, auto_convert=not wasapiExclusiveMode)
             elif serverInputAudioDevice and "ASIO" in serverInputAudioDevice.hostAPI and self.settings.asioOutputChannel != -1:
                 outputExtraSetting = sd.AsioSettings(channel_selectors=[self.settings.asioOutputChannel])
-                outputChannels = None
+                outputChannels = 1
 
             monitorExtraSetting = None
             if serverMonitorAudioDevice and "WASAPI" in serverMonitorAudioDevice.hostAPI:
