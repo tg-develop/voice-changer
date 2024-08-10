@@ -96,7 +96,7 @@ export const AdvancedSettingDialog = () => {
             </div>
         );
 
-        const onForceFp32ModeChanged = (val: number) => {
+        const onForceFp32ModeChanged = async (val: number) => {
             return serverSetting.updateServerSettings({
                 ...serverSetting.serverSetting,
                 forceFp32: val,
@@ -110,7 +110,7 @@ export const AdvancedSettingDialog = () => {
                         value={serverSetting.serverSetting.forceFp32}
                         onChange={async (e) => {
                             guiState.stateControls.showWaitingCheckbox.updateState(true);
-                            onForceFp32ModeChanged(Number(e.target.value));
+                            await onForceFp32ModeChanged(Number(e.target.value));
                             // Switching between FP16-FP32 reloads models and buffers.
                             guiState.setVoiceChangerSettingsChanged(false);
                             guiState.stateControls.showWaitingCheckbox.updateState(false);
@@ -124,7 +124,7 @@ export const AdvancedSettingDialog = () => {
             </div>
         );
 
-        const onDisableJitChanged = (val: number) => {
+        const onDisableJitChanged = async (val: number) => {
             return serverSetting.updateServerSettings({
                 ...serverSetting.serverSetting,
                 disableJit: val,
@@ -138,7 +138,7 @@ export const AdvancedSettingDialog = () => {
                         value={serverSetting.serverSetting.disableJit}
                         onChange={async (e) => {
                             guiState.stateControls.showWaitingCheckbox.updateState(true);
-                            onDisableJitChanged(Number(e.target.value));
+                            await onDisableJitChanged(Number(e.target.value));
                             guiState.setVoiceChangerSettingsChanged(false);
                             guiState.stateControls.showWaitingCheckbox.updateState(false);
                         }}
