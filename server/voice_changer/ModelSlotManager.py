@@ -35,6 +35,8 @@ class ModelSlotManager:
         return self.modelSlots
 
     def get_slot_info(self, slotIndex: int):
+        if slotIndex == -1:
+            return
         return self._load_model_slot(slotIndex)
 
     def save_model_slot(self, slotIndex: int, slotInfo: ModelSlots):
