@@ -41,7 +41,7 @@ def load_cached_quantized_model(fpath: str) -> ModelProto:
         with open(fpath, 'rb') as f:
             computed_hash = compute_hash(f, xxh128())
         if computed_hash != original_hash:
-            logger.info('Original model has changed. Regenerating FP16 model...')
+            logger.info('Original model has changed. Regenerating quantized model...')
             _quantize(fpath, q8_fpath)
             with open(hashfile, 'w', encoding='utf-8') as f:
                 f.write(computed_hash)
