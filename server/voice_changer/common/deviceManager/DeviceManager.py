@@ -164,7 +164,7 @@ class DeviceManager(object):
         # All Radeon GPUs starting from GCN 1 (Radeon HD 7000 series and later) reportedly have 2:1 FP16 performance
         # Intel UHD Graphics 600 and later reportedly have 2:1 FP16 performance
         # All Intel Arc GPUs reportedly have 2:1 FP16 performance or better
-        ignored_nvidia_gpu = re.search(r'((GTX|RTX|TESLA|QUADRO) (V100|[789]\d{2}|1[06]\d{2}|P40|TITAN)|MX\d{3})', device_name_uppercase)
+        ignored_nvidia_gpu = re.search(r'((GTX|RTX|TESLA|QUADRO) (V100|[789]\d{2}|1[06]\d{2}|P40|TITAN)|MX\d{3}|\d{3}MX)', device_name_uppercase)
         if ignored_nvidia_gpu is not None:
             return False
 
@@ -174,7 +174,7 @@ class DeviceManager(object):
         if ignored_intel_gpu:
             return False
 
-        if self.device == 'cuda':
+        if self.device.type == 'cuda':
             major, _ = torch.cuda.get_device_capability(self.device)
             if major < 7:  # コンピューティング機能が7以上の場合half precisionが使えるとされている（が例外がある？T500とか）
                 return False
