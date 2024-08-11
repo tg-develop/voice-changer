@@ -92,6 +92,8 @@ export const ServerSettingKey = {
 
     tran: "tran",
     formantShift: "formantShift",
+    useONNX: "useONNX",
+
     silentThreshold: "silentThreshold",
     extraConvertSize: "extraConvertSize",
 
@@ -139,6 +141,8 @@ export type VoiceChangerServerSetting = {
 
     tran: number;
     formantShift: number;
+    useONNX: number;
+
     silentThreshold: number;
     extraConvertSize: number;
 
@@ -162,16 +166,19 @@ type ModelSlot = {
     termsOfUseUrl: string;
     iconFile: string;
     speakers: { [key: number]: string };
+    isONNX: boolean;
 };
 
 export type RVCModelSlot = ModelSlot & {
     modelFile: string;
+    modelFileOnnx: string;
     indexFile: string;
     defaultIndexRatio: number;
     defaultProtect: number;
     defaultTune: number;
     defaultFormantShift: number;
     modelType: RVCModelType;
+    modelTypeOnnx: string;
 
     embChannels: number;
     f0: boolean;
@@ -266,6 +273,8 @@ export const DefaultServerSetting: ServerInfo = {
 
     tran: 0,
     formantShift: 0,
+    useONNX: 0,
+
     silentThreshold: 0,
     extraConvertSize: 0,
 

@@ -1,5 +1,6 @@
 import torch
 import onnxruntime
+import json
 from const import EnumInferenceTypes
 from voice_changer.common.OnnxLoader import load_onnx_model
 from voice_changer.common.deviceManager.DeviceManager import DeviceManager
@@ -7,8 +8,7 @@ from voice_changer.RVC.inferencer.Inferencer import Inferencer
 import numpy as np
 
 class OnnxRVCInferencer(Inferencer):
-    def load_model(self, file: str, inferencerTypeVersion: str | None = None):
-        self.inferencerTypeVersion = inferencerTypeVersion
+    def load_model(self, file: str):
         device_manager = DeviceManager.get_instance()
         (
             onnxProviders,
@@ -27,6 +27,9 @@ class OnnxRVCInferencer(Inferencer):
         # so.log_severity_level = 3
         # so.enable_profiling = True
         self.model = onnxruntime.InferenceSession(model.SerializeToString(), sess_options=so, providers=onnxProviders, provider_options=onnxProviderOptions)
+
+        metadata = json.loads(self.model.get_modelmeta().custom_metadata_map["metadata"])
+        self.inferencerTypeVersion = metadata['version']
 
         return self
 
@@ -78,7 +81,7 @@ class OnnxRVCInferencer(Inferencer):
 
         res = torch.as_tensor(output[0], dtype=self.fp_dtype_t, device=feats.device)
 
-        if self.inferencerTypeVersion == "v2.1" or self.inferencerTypeVersion == "v2.2" or self.inferencerTypeVersion == "v1.1":
+        if self.inferencerTypeVersion == "2.1" or self.inferencerTypeVersion == "2.2" or self.inferencerTypeVersion == "1.1":
             return res
         return torch.clip(res[0, 0], -1.0, 1.0)
 

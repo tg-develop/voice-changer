@@ -33,7 +33,7 @@ export const MergeLabDialog = () => {
                 if (!cur.modelFile || cur.modelFile.length == 0) {
                     return prev;
                 }
-                if (curRVC.modelType == "onnxRVC" || curRVC.modelType == "onnxRVCNono") {
+                if (curRVC.isONNX) {
                     return prev;
                 }
                 if (!existKeys.includes(key)) {

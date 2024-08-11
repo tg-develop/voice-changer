@@ -147,9 +147,16 @@ class VoiceChangerManager(ServerDeviceCallbacks):
 
     def initialize(self, val: int):
         slotInfo = self.modelSlotManager.get_slot_info(val)
-        if slotInfo is None:
+        if slotInfo is None or slotInfo.voiceChangerType is None:
             logger.warn(f"Model slot is not found {val}")
             return
+
+        self.settings.set_properties({
+            'tran': slotInfo.defaultTune,
+            'formantShift': slotInfo.defaultFormantShift,
+            'indexRatio': slotInfo.defaultIndexRatio,
+            'protect': slotInfo.defaultProtect
+        })
 
         if self.voiceChangerModel is not None and slotInfo.voiceChangerType == self.voiceChangerModel.voiceChangerType:
             self.voiceChangerModel.set_slot_info(slotInfo)

@@ -96,7 +96,7 @@ export const AdvancedSettingDialog = () => {
             </div>
         );
 
-        const onForceFp32ModeChanged = (val: number) => {
+        const onForceFp32ModeChanged = async (val: number) => {
             return serverSetting.updateServerSettings({
                 ...serverSetting.serverSetting,
                 forceFp32: val,
@@ -109,12 +109,11 @@ export const AdvancedSettingDialog = () => {
                     <select
                         value={serverSetting.serverSetting.forceFp32}
                         onChange={async (e) => {
-                            // TODO: Need to fix CSS to show waiting dialog over all page contents. Lazy :\
-                            //guiState.stateControls.showWaitingCheckbox.updateState(true);
-                            onForceFp32ModeChanged(Number(e.target.value));
+                            guiState.stateControls.showWaitingCheckbox.updateState(true);
+                            await onForceFp32ModeChanged(Number(e.target.value));
                             // Switching between FP16-FP32 reloads models and buffers.
                             guiState.setVoiceChangerSettingsChanged(false);
-                            //guiState.stateControls.showWaitingCheckbox.updateState(false);
+                            guiState.stateControls.showWaitingCheckbox.updateState(false);
                         }}
                         disabled={guiState.isConverting}
                     >
@@ -125,7 +124,7 @@ export const AdvancedSettingDialog = () => {
             </div>
         );
 
-        const onDisableJitChanged = (val: number) => {
+        const onDisableJitChanged = async (val: number) => {
             return serverSetting.updateServerSettings({
                 ...serverSetting.serverSetting,
                 disableJit: val,
@@ -138,17 +137,34 @@ export const AdvancedSettingDialog = () => {
                     <select
                         value={serverSetting.serverSetting.disableJit}
                         onChange={async (e) => {
-                            // TODO: Need to fix CSS to show waiting dialog over all page contents. Lazy :\
-                            //guiState.stateControls.showWaitingCheckbox.updateState(true);
-                            onDisableJitChanged(Number(e.target.value));
+                            guiState.stateControls.showWaitingCheckbox.updateState(true);
+                            await onDisableJitChanged(Number(e.target.value));
                             guiState.setVoiceChangerSettingsChanged(false);
-                            //guiState.stateControls.showWaitingCheckbox.updateState(false);
+                            guiState.stateControls.showWaitingCheckbox.updateState(false);
                         }}
                         disabled={guiState.isConverting}
                     >
                         <option value="0">off</option>
                         <option value="1">on</option>
                     </select>
+                </div>
+            </div>
+        );
+
+        const convertToOnnx = (
+            <div className="advanced-setting-container-row">
+                <div className="advanced-setting-container-row-title"><a className="hint-text" data-tooltip-id="hint" data-tooltip-content="Automatically converts models into ONNX format. Note that model conversion is performed once and may take 1-2 minutes. Recommended for DirectML version and inference on CPU.">Convert to ONNX</a></div>
+                <div className="advanced-setting-container-row-field">
+                    <input
+                        type="checkbox"
+                        checked={Boolean(serverSetting.serverSetting.useONNX)}
+                        onChange={async (e) => {
+                            guiState.stateControls.showWaitingCheckbox.updateState(true);
+                            await serverSetting.updateServerSettings({ ...serverSetting.serverSetting, useONNX: Number(e.target.checked) });
+                            guiState.stateControls.showWaitingCheckbox.updateState(false);
+                        }}
+                        disabled={guiState.isConverting}
+                    />
                 </div>
             </div>
         );
@@ -198,6 +214,7 @@ export const AdvancedSettingDialog = () => {
                 {silenceFrontRow}
                 {forceFp32ModeRow}
                 {disableJitRow}
+                {convertToOnnx}
                 {protectRow}
                 {skipPassThroughConfirmationRow}
             </div>

@@ -4,7 +4,7 @@ import torch
 from onnxsim import simplify
 import onnx
 import safetensors
-from const import TMP_DIR, EnumInferenceTypes
+from const import EnumInferenceTypes
 from data.ModelSlot import RVCModelSlot
 from voice_changer.common.SafetensorsUtils import load_model
 from voice_changer.common.deviceManager.DeviceManager import DeviceManager
@@ -14,12 +14,13 @@ from io import BytesIO
 import logging
 logger = logging.getLogger(__name__)
 
-def export2onnx(modelSlot: RVCModelSlot):
+def export2onnx(modelSlot: RVCModelSlot) -> str:
     model_dir = ServerSettings().model_dir
-    modelFile = os.path.join(model_dir, str(modelSlot.slotIndex), os.path.basename(modelSlot.modelFile))
+    model_path = os.path.join(model_dir, str(modelSlot.slotIndex))
+    modelFile = os.path.join(model_path, modelSlot.modelFile)
 
-    output_file_simple = os.path.splitext(os.path.basename(modelFile))[0] + "_simple.onnx"
-    output_path_simple = os.path.join(TMP_DIR, output_file_simple)
+    output_file = os.path.splitext(modelSlot.modelFile)[0] + ".onnx"
+    output_path = os.path.join(model_path, output_file)
     metadata = {
         "application": "VC_CLIENT",
         "version": "2.1",
@@ -33,9 +34,9 @@ def export2onnx(modelSlot: RVCModelSlot):
     }
 
     logger.info("Exporting onnx...")
-    _export2onnx(modelFile, output_path_simple, metadata)
+    _export2onnx(modelFile, output_path, metadata)
 
-    return output_file_simple
+    return output_path
 
 
 def _export2onnx(input_model: str, output_model_simple: str, metadata: dict):

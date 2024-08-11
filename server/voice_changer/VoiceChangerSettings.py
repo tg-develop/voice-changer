@@ -317,6 +317,8 @@ class VoiceChangerSettings:
     _f0Detector: str = "rmvpe_onnx"
     _tran: int = 0
     _formantShift: float = 0
+    _useONNX: int = 0
+
     _silentThreshold: int = -90
 
     _indexRatio: float = 0
@@ -354,6 +356,14 @@ class VoiceChangerSettings:
     @formantShift.setter
     def formantShift(self, shift_size: str):
         self._formantShift = float(shift_size)
+
+    @property
+    def useONNX(self):
+        return self._useONNX
+
+    @useONNX.setter
+    def useONNX(self, enabled: str):
+        self._useONNX = int(enabled)
 
     @property
     def silentThreshold(self):

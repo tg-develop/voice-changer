@@ -2,9 +2,10 @@
 VoiceChangerV2向け
 """
 import torch
-from data.ModelSlot import RVCModelSlot
+from data.ModelSlot import RVCModelSlot, saveSlotInfo
+from const import EnumInferenceTypes
 import logging
-
+import os
 from voice_changer.RVC.embedder.EmbedderManager import EmbedderManager
 from voice_changer.utils.VoiceChangerModel import (
     AudioInOutFloat,
@@ -66,12 +67,15 @@ class RVCr2(VoiceChangerModel):
     def initialize(self, force_reload: bool = False):
         logger.info("Initializing...")
 
+        if self.settings.useONNX and not self.slotInfo.modelFileOnnx:
+            self.export2onnx()
+
         self.is_half = self.device_manager.use_fp16()
 
         # pipelineの生成
         try:
             self.pipeline = createPipeline(
-                self.params, self.slotInfo, self.settings.f0Detector, force_reload
+                self.params, self.slotInfo, self.settings.f0Detector, self.settings.useONNX, force_reload
             )
         except Exception as e:  # NOQA
             logger.error("Failed to create pipeline.")
@@ -79,15 +83,6 @@ class RVCr2(VoiceChangerModel):
             return
 
         self.dtype = torch.float16 if self.is_half else torch.float32
-
-        # Settings update works and is reflected correctly
-        # because RVCr2.initialize() is called during modelSlotIndex update.
-        self.settings.set_properties({
-            'tran': self.slotInfo.defaultTune,
-            'formantShift': self.slotInfo.defaultFormantShift,
-            'indexRatio': self.slotInfo.defaultIndexRatio,
-            'protect': self.slotInfo.defaultProtect
-        })
 
         # 処理は16Kで実施(Pitch, embed, (infer))
         self.resampler_in = tat.Resample(
@@ -129,6 +124,8 @@ class RVCr2(VoiceChangerModel):
     def update_settings(self, key: str, val, old_val):
         if key in {"gpu", "forceFp32", "disableJit"}:
             self.initialize(True)
+        elif key == 'useONNX':
+            self.initialize()
         elif key == "f0Detector" and self.pipeline is not None:
             self.change_pitch_extractor()
         elif key == 'silentThreshold':
@@ -295,19 +292,13 @@ class RVCr2(VoiceChangerModel):
 
         if modelSlot.isONNX:
             logger.error(f"{modelSlot.modelFile} is already in ONNX format.")
-            return {"status": "ALREADY_CONVERTED"}
+            return
 
-        if self.pipeline is not None:
-            del self.pipeline
-            self.pipeline = None
+        output_path = export2onnx(modelSlot)
 
-        output_file_simple = export2onnx(modelSlot)
-
-        return {
-            "status": "OK",
-            "path": f"/tmp/{output_file_simple}",
-            "filename": output_file_simple,
-        }
+        self.slotInfo.modelFileOnnx = os.path.basename(output_path)
+        self.slotInfo.modelTypeOnnx = EnumInferenceTypes.onnxRVC.value if self.slotInfo.f0 else EnumInferenceTypes.onnxRVCNono.value
+        saveSlotInfo(self.params.model_dir, self.slotInfo.slotIndex, self.slotInfo)
 
     def get_model_current(self):
         return [

@@ -34,7 +34,7 @@ export const SpeakerArea = (_props: SpeakerAreaProps) => {
 
         return (
             <div className="character-area-control">
-                <div className="character-area-control-title">{selected.voiceChangerType == "RVC" ? "Voice:" : ""}</div>
+                <div className="character-area-control-title">{selected.voiceChangerType == "RVC" ? "SPEAKER:" : ""}</div>
                 <div className="character-area-control-field">
                     <div className="character-area-slider-control">
                         <span className="character-area-slider-control-kind"></span>
@@ -54,9 +54,5 @@ export const SpeakerArea = (_props: SpeakerAreaProps) => {
         );
     }, [serverSetting.serverSetting, serverSetting.updateServerSettings, selected]);
 
-    return (
-        <>
-            {dstArea}
-        </>
-    );
+    return dstArea;
 };

@@ -24,6 +24,7 @@ class ModelSlot:
 class RVCModelSlot(ModelSlot):
     voiceChangerType: VoiceChangerType = "RVC"
     modelFile: str = ""
+    modelFileOnnx: str = ""
     indexFile: str = ""
     defaultTune: int = 0
     defaultFormantShift: float = 0
@@ -31,6 +32,7 @@ class RVCModelSlot(ModelSlot):
     defaultProtect: float = 0.5
     isONNX: bool = False
     modelType: str = EnumInferenceTypes.pyTorchRVC.value
+    modelTypeOnnx: str = EnumInferenceTypes.onnxRVC.value
     samplingRate: int = -1
     f0: bool = True
     embChannels: int = 256
@@ -56,7 +58,8 @@ def loadSlotInfo(model_dir: str, slotIndex: int) -> ModelSlots:
     jsonFile = os.path.join(slotDir, "params.json")
     if not os.path.exists(jsonFile):
         return ModelSlot()
-    jsonDict = json.load(open(jsonFile, encoding="utf-8"))
+    with open(jsonFile, encoding="utf-8") as f:
+        jsonDict = json.load(f)
     slotInfoKey = list(ModelSlot.__annotations__.keys())
     slotInfo = ModelSlot(**{k: v for k, v in jsonDict.items() if k in slotInfoKey})
     if slotInfo.voiceChangerType == "RVC":
@@ -79,5 +82,5 @@ def saveSlotInfo(model_dir: str, slotIndex: int, slotInfo: ModelSlots):
     slotDir = os.path.join(model_dir, str(slotIndex))
     logger.info(f"SlotInfo::: {slotInfo}")
     slotInfoDict = asdict(slotInfo)
-    slotInfo.slotIndex = -1  # スロットインデックスは動的に注入
-    json.dump(slotInfoDict, open(os.path.join(slotDir, "params.json"), "w"), indent=4)
+    with open(os.path.join(slotDir, "params.json"), "w") as f:
+        json.dump(slotInfoDict, f, indent=4)

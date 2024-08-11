@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAppState } from "../../../001_provider/001_AppStateProvider";
 import { useGuiState } from "../001_GuiStateProvider";
-import { OnnxExporterInfo } from "@dannadori/voice-changer-client-js";
 import { useMessageBuilder } from "../../../hooks/useMessageBuilder";
 import { TuningArea } from "./101-1_TuningArea";
 import { IndexArea } from "./101-2_IndexArea";
@@ -17,9 +16,7 @@ export const CharacterArea = (_props: CharacterAreaProps) => {
     const guiState = useGuiState();
     const messageBuilderState = useMessageBuilder();
     useMemo(() => {
-        messageBuilderState.setMessage(__filename, "export_to_onnx", { ja: "onnx出力", en: "export to onnx" });
         messageBuilderState.setMessage(__filename, "save_default", { ja: "設定保存", en: "save setting" });
-        messageBuilderState.setMessage(__filename, "alert_onnx", { ja: "ボイチェン中はonnx出力できません", en: "cannot export onnx when voice conversion is enabled" });
     }, []);
 
     const selected = useMemo(() => {
@@ -240,69 +237,38 @@ export const CharacterArea = (_props: CharacterAreaProps) => {
             await serverSetting.updateModelDefault();
         };
 
-        const onnxExportButtonAction = async () => {
-            if (guiState.isConverting) {
-                alert(messageBuilderState.getMessage(__filename, "alert_onnx"));
-                return;
-            }
-
-            document.getElementById("dialog")?.classList.add("dialog-container-show");
-            guiState.stateControls.showWaitingCheckbox.updateState(true);
-            const res = (await serverSetting.getOnnx()) as OnnxExporterInfo;
-            if (res.status === 'ALREADY_CONVERTED') {
-                guiState.stateControls.showWaitingCheckbox.updateState(false);
-                toast.error('Model is already in ONNX. Try switching to another slot, then back to this model.')
-                return
-            }
-            const a = document.createElement("a");
-            a.href = res.path;
-            a.download = res.filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            guiState.stateControls.showWaitingCheckbox.updateState(false);
-        };
-
-        const exportOnnx =
-            selected.voiceChangerType == "RVC" && (selected.modelFile.endsWith("pth") || selected.modelFile.endsWith("safetensors")) ? (
-                <div className="character-area-button" onClick={onnxExportButtonAction}>
-                    {messageBuilderState.getMessage(__filename, "export_to_onnx")}
-                </div>
-            ) : (
-                <></>
-            );
         return (
-            <div className="character-area-control">
-                <div className="character-area-control-title"></div>
+            <div className="character-area-control" style={{ margin: "0 auto" }}>
                 <div className="character-area-control-field">
                     <div className="character-area-buttons">
                         <div className="character-area-button" onClick={onUpdateDefaultClicked}>
                             {messageBuilderState.getMessage(__filename, "save_default")}
                         </div>
-                        {exportOnnx}
                     </div>
                 </div>
             </div>
         );
-    }, [selected, serverSetting.getOnnx, serverSetting.updateModelDefault, guiState.isConverting]);
+    }, [selected, serverSetting.updateModelDefault]);
 
-    const characterArea = useMemo(() => {
+    const characterControlArea = useMemo(() => {
         return (
-            <div className="character-area">
-                <Portrait></Portrait>
-                <div className="character-area-control-area">
-                    {nameArea}
-                    {startControl}
-                    {gainControl}
-                    <TuningArea />
-                    <FormantShiftArea />
-                    <IndexArea />
-                    <SpeakerArea />
-                    {modelSlotControl}
-                </div>
+            <div className="character-area-control-area">
+                {nameArea}
+                {startControl}
+                {gainControl}
+                <TuningArea />
+                <FormantShiftArea />
+                <IndexArea />
+                <SpeakerArea />
+                {modelSlotControl}
             </div>
-        );
-    }, [startControl, gainControl, modelSlotControl]);
+        )
+    }, [startControl, gainControl, modelSlotControl])
 
-    return characterArea;
+    return (
+        <div className="character-area">
+            <Portrait></Portrait>
+            {characterControlArea}
+        </div>
+    );
 };
