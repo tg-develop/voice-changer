@@ -9,6 +9,7 @@ if sys.platform == 'darwin':
 # Reset CUDA_PATH since all libraries are already bundled.
 # Existing CUDA installations may be incompatible with PyTorch or ONNX runtime
 os.environ['CUDA_PATH'] = ''
+os.environ['CUDNN_PATH'] = ''
 # Fix high CPU usage caused by faiss-cpu for AMD CPUs.
 # https://github.com/facebookresearch/faiss/issues/53#issuecomment-288351188
 os.environ['OMP_WAIT_POLICY'] = 'PASSIVE'
