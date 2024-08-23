@@ -122,6 +122,11 @@ jobs:
       run: cp ./server/{force_gpu_clocks.bat,reset_gpu_clocks.bat} ./server/dist/
       shell: bash
       if: matrix.os == 'windows-latest' && matrix.backend == 'cuda'
+    - name: Add CUDA library symlinks
+      run: ln -svf nvidia/*/lib/*.so* .
+      shell: bash
+      if: matrix.os == 'ubuntu-20.04' && matrix.backend == 'cuda'
+      working-directory: ./server/dist/MMVCServerSIO/_internal
     - name: Pack artifact
       shell: bash
       run: |
