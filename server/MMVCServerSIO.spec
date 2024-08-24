@@ -21,6 +21,8 @@ with open('edition.txt', 'w') as f:
       f.write('-')
 
 datas = [('../client/demo/dist', './dist'), ('./edition.txt', '.')]
+if sys.platform == 'win32':
+  datas += [('./libs/win', '.')]
 
 if 'BUILD_NAME' in os.environ:
   with open('version.txt', 'w') as f:
