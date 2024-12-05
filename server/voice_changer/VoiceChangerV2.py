@@ -73,10 +73,6 @@ class VoiceChangerV2:
         return {}
 
     def update_settings(self, key: str, val: Any, old_val: Any):
-        if self.vcmodel is None:
-            logger.warning("Voice Changer model is not selected.")
-            return
-
         if key == "serverReadChunkSize":
             self.block_frame = self.settings.serverReadChunkSize * 128
         elif key == 'gpu':
@@ -92,9 +88,10 @@ class VoiceChangerV2:
             self.crossfade_frame = int(val * self.settings.inputSampleRate)
             self._generate_strength()
 
-        self.vcmodel.update_settings(key, val, old_val)
-        if key in {'gpu', 'serverReadChunkSize', 'extraConvertSize', 'crossFadeOverlapSize', 'silenceFront', 'forceFp32'}:
-            self.vcmodel.realloc(self.block_frame, self.extra_frame, self.crossfade_frame, self.sola_search_frame)
+        if self.vcmodel is not None:
+            self.vcmodel.update_settings(key, val, old_val)
+            if key in {'gpu', 'serverReadChunkSize', 'extraConvertSize', 'crossFadeOverlapSize', 'silenceFront', 'forceFp32'}:
+                self.vcmodel.realloc(self.block_frame, self.extra_frame, self.crossfade_frame, self.sola_search_frame)
 
 
     def _generate_strength(self):
