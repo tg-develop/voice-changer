@@ -45,7 +45,7 @@ class MMVC_Namespace(socketio.AsyncNamespace):
         # Receive and send int16 instead of float32 to reduce bandwidth requirement over websocket
         input_audio = np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768
 
-        out_audio, vol, perf, err = self.voiceChangerManager.changeVoice(input_audio)
+        out_audio, vol, perf, err = self.voiceChangerManager.change_voice(input_audio)
         if err is not None:
             error_code, error_message = err
             await self.emit("error", [error_code, error_message], to=sid)

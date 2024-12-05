@@ -6,20 +6,21 @@ from data.ModelSlot import RVCModelSlot, saveSlotInfo
 from const import EnumInferenceTypes
 import logging
 import os
-from voice_changer.RVC.embedder.EmbedderManager import EmbedderManager
+from voice_changer.embedder.EmbedderManager import EmbedderManager
 from voice_changer.utils.VoiceChangerModel import (
     AudioInOutFloat,
     VoiceChangerModel,
 )
-from settings import ServerSettings
-from voice_changer.RVC.onnxExporter.export2onnx import export2onnx
-from voice_changer.RVC.pitchExtractor.PitchExtractorManager import PitchExtractorManager
+from voice_changer.RVC.consts import HUBERT_SAMPLE_RATE, WINDOW_SIZE
+from voice_changer.RVC.onnx_exporter.export2onnx import export2onnx
+from voice_changer.pitch_extractor.PitchExtractorManager import PitchExtractorManager
 from voice_changer.RVC.pipeline.PipelineGenerator import createPipeline
 from voice_changer.common.TorchUtils import circular_write
 from voice_changer.common.deviceManager.DeviceManager import DeviceManager
 from voice_changer.RVC.pipeline.Pipeline import Pipeline
 from torchaudio import transforms as tat
 from voice_changer.VoiceChangerSettings import VoiceChangerSettings
+from settings import get_settings
 from Exceptions import (
     PipelineNotInitializedException,
 )
@@ -28,14 +29,14 @@ logger = logging.getLogger(__name__)
 
 
 class RVCr2(VoiceChangerModel):
-    def __init__(self, params: ServerSettings, slotInfo: RVCModelSlot, settings: VoiceChangerSettings):
+    def __init__(self, slotInfo: RVCModelSlot, settings: VoiceChangerSettings):
         self.voiceChangerType = "RVC"
 
         self.device_manager = DeviceManager.get_instance()
-        EmbedderManager.initialize(params)
-        PitchExtractorManager.initialize(params)
+        EmbedderManager.initialize()
+        PitchExtractorManager.initialize()
         self.settings = settings
-        self.params = params
+        self.params = get_settings()
 
         self.pipeline: Pipeline | None = None
 
@@ -47,10 +48,6 @@ class RVCr2(VoiceChangerModel):
         self.silence_front = 0
         self.slotInfo = slotInfo
 
-        # 処理は16Kで実施(Pitch, embed, (infer))
-        self.sr = 16000
-        self.window = 160
-
         self.resampler_in: tat.Resample | None = None
         self.resampler_out: tat.Resample | None = None
 
@@ -60,9 +57,8 @@ class RVCr2(VoiceChangerModel):
         # Convert dB to RMS
         self.inputSensitivity = 10 ** (self.settings.silentThreshold / 20)
 
-        self.is_half = False
-
-        self.initialize()
+        self.is_half = self.device_manager.use_fp16()
+        self.dtype = torch.float16 if self.is_half else torch.float32
 
     def initialize(self, force_reload: bool = False):
         logger.info("Initializing...")
@@ -70,24 +66,20 @@ class RVCr2(VoiceChangerModel):
         if self.settings.useONNX and not self.slotInfo.modelFileOnnx:
             self.export2onnx()
 
-        self.is_half = self.device_manager.use_fp16()
-
         # pipelineの生成
         try:
             self.pipeline = createPipeline(
-                self.params, self.slotInfo, self.settings.f0Detector, self.settings.useONNX, force_reload
+                self.slotInfo, self.settings.f0Detector, self.settings.useONNX, force_reload
             )
         except Exception as e:  # NOQA
             logger.error("Failed to create pipeline.")
             logger.exception(e)
             return
 
-        self.dtype = torch.float16 if self.is_half else torch.float32
-
         # 処理は16Kで実施(Pitch, embed, (infer))
         self.resampler_in = tat.Resample(
             orig_freq=self.input_sample_rate,
-            new_freq=self.sr,
+            new_freq=HUBERT_SAMPLE_RATE,
             dtype=torch.float32
         ).to(self.device_manager.device)
 
@@ -99,12 +91,12 @@ class RVCr2(VoiceChangerModel):
 
         logger.info("Initialized.")
 
-    def setSamplingRate(self, input_sample_rate, output_sample_rate):
+    def set_sampling_rate(self, input_sample_rate: int, output_sample_rate: int):
         if self.input_sample_rate != input_sample_rate:
             self.input_sample_rate = input_sample_rate
             self.resampler_in = tat.Resample(
                 orig_freq=self.input_sample_rate,
-                new_freq=self.sr,
+                new_freq=HUBERT_SAMPLE_RATE,
                 dtype=torch.float32
             ).to(self.device_manager.device)
         if self.output_sample_rate != output_sample_rate:
@@ -123,6 +115,8 @@ class RVCr2(VoiceChangerModel):
 
     def update_settings(self, key: str, val, old_val):
         if key in {"gpu", "forceFp32", "disableJit"}:
+            self.is_half = self.device_manager.use_fp16()
+            self.dtype = torch.float16 if self.is_half else torch.float32
             self.initialize(True)
         elif key == 'useONNX':
             self.initialize()
@@ -149,19 +143,19 @@ class RVCr2(VoiceChangerModel):
 
     def realloc(self, block_frame: int, extra_frame: int, crossfade_frame: int, sola_search_frame: int):
         # Calculate frame sizes based on DEVICE sample rate (f.e., 48000Hz) and convert to 16000Hz
-        block_frame_16k = int(block_frame / self.input_sample_rate * self.sr)
-        crossfade_frame_16k = int(crossfade_frame / self.input_sample_rate * self.sr)
-        sola_search_frame_16k = int(sola_search_frame / self.input_sample_rate * self.sr)
-        extra_frame_16k = int(extra_frame / self.input_sample_rate * self.sr)
+        block_frame_16k = int(block_frame / self.input_sample_rate * HUBERT_SAMPLE_RATE)
+        crossfade_frame_16k = int(crossfade_frame / self.input_sample_rate * HUBERT_SAMPLE_RATE)
+        sola_search_frame_16k = int(sola_search_frame / self.input_sample_rate * HUBERT_SAMPLE_RATE)
+        extra_frame_16k = int(extra_frame / self.input_sample_rate * HUBERT_SAMPLE_RATE)
 
         convert_size_16k = block_frame_16k + sola_search_frame_16k + extra_frame_16k + crossfade_frame_16k
-        if (modulo := convert_size_16k % self.window) != 0:  # モデルの出力のホップサイズで切り捨てが発生するので補う。
-            convert_size_16k = convert_size_16k + (self.window - modulo)
-        self.convert_feature_size_16k = convert_size_16k // self.window
+        if (modulo := convert_size_16k % WINDOW_SIZE) != 0:  # モデルの出力のホップサイズで切り捨てが発生するので補う。
+            convert_size_16k = convert_size_16k + (WINDOW_SIZE - modulo)
+        self.convert_feature_size_16k = convert_size_16k // WINDOW_SIZE
 
-        self.skip_head = extra_frame_16k // self.window
+        self.skip_head = extra_frame_16k // WINDOW_SIZE
         self.return_length = self.convert_feature_size_16k - self.skip_head
-        self.silence_front = extra_frame_16k - (self.window * 5) if self.settings.silenceFront else 0
+        self.silence_front = extra_frame_16k - (WINDOW_SIZE * 5) if self.settings.silenceFront else 0
 
         # Audio buffer to measure volume between chunks
         audio_buffer_size = block_frame_16k + crossfade_frame_16k
@@ -186,11 +180,11 @@ class RVCr2(VoiceChangerModel):
         if self.is_half:
             audio_in_t = audio_in_t.half()
 
-        convert_feature_size_16k = audio_in_t.shape[0] // self.window
+        convert_feature_size_16k = audio_in_t.shape[0] // WINDOW_SIZE
 
         audio_in_16k = tat.Resample(
             orig_freq=sample_rate,
-            new_freq=self.sr,
+            new_freq=HUBERT_SAMPLE_RATE,
             dtype=self.dtype
         ).to(self.device_manager.device)(audio_in_t)
 
@@ -300,7 +294,7 @@ class RVCr2(VoiceChangerModel):
         self.slotInfo.modelTypeOnnx = EnumInferenceTypes.onnxRVC.value if self.slotInfo.f0 else EnumInferenceTypes.onnxRVCNono.value
         saveSlotInfo(self.params.model_dir, self.slotInfo.slotIndex, self.slotInfo)
 
-    def get_model_current(self):
+    def get_model_current(self) -> dict:
         return [
             {
                 "key": "defaultTune",

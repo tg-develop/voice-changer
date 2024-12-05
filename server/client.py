@@ -1,5 +1,4 @@
 import sys
-from utils.check_user_admin import is_user_admin
 
 def pause_excepthook(type, value, traceback, oldhook=sys.excepthook):
     oldhook(type, value, traceback)
@@ -19,4 +18,7 @@ if __name__ == "__main__":
     parser.add_argument("--launch-browser", type=strtobool, default=True, help="Automatically launches web browser and opens the voice changer's interface.")
     args, _ = parser.parse_known_args()
 
-    asyncio.run(main(args))
+    try:
+        asyncio.run(main(args))
+    except KeyboardInterrupt:
+        pass

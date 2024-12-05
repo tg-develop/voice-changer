@@ -17,13 +17,10 @@ os.environ['OMP_WAIT_POLICY'] = 'PASSIVE'
 from voice_changer.VoiceChangerManager import VoiceChangerManager
 from sio.MMVC_SocketIOApp import MMVC_SocketIOApp
 from restapi.MMVC_Rest import MMVC_Rest
-from settings import ServerSettings
 
-settings = ServerSettings()
-
-voice_changer_manager = VoiceChangerManager(settings)
-fastapi = MMVC_Rest.get_instance(voice_changer_manager, settings.model_dir, settings.allowed_origins, settings.port)
-socketio = MMVC_SocketIOApp.get_instance(fastapi, voice_changer_manager, settings.allowed_origins, settings.port)
+voice_changer_manager = VoiceChangerManager()
+fastapi = MMVC_Rest.get_instance(voice_changer_manager)
+socketio = MMVC_SocketIOApp.get_instance(fastapi, voice_changer_manager)
 
 # NOTE: Bundled executable overrides excepthook to pause on exception during startup.
 # Here we revert to original excepthook once all initialization is done.

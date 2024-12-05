@@ -8,14 +8,14 @@ from const import EnumInferenceTypes
 from data.ModelSlot import RVCModelSlot
 from voice_changer.common.SafetensorsUtils import load_model
 from voice_changer.common.deviceManager.DeviceManager import DeviceManager
-from ..inferencer.rvc_models.infer_pack.models_onnx import SynthesizerTrnMsNSFsidM  # type: ignore
-from settings import ServerSettings
+from voice_changer.RVC.inferencer.rvc_models.infer_pack.models_onnx import SynthesizerTrnMsNSFsidM  # type: ignore
+from settings import get_settings
 from io import BytesIO
 import logging
 logger = logging.getLogger(__name__)
 
 def export2onnx(modelSlot: RVCModelSlot) -> str:
-    model_dir = ServerSettings().model_dir
+    model_dir = get_settings().model_dir
     model_path = os.path.join(model_dir, str(modelSlot.slotIndex))
     modelFile = os.path.join(model_path, modelSlot.modelFile)
 

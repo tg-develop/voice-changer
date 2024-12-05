@@ -6,22 +6,23 @@ import torch
 from data.ModelSlot import RVCModelSlot
 
 from voice_changer.common.deviceManager.DeviceManager import DeviceManager
-from voice_changer.RVC.embedder.EmbedderManager import EmbedderManager
+from voice_changer.embedder.EmbedderManager import EmbedderManager
 from voice_changer.RVC.inferencer.InferencerManager import InferencerManager
 from voice_changer.RVC.pipeline.Pipeline import Pipeline
-from voice_changer.RVC.pitchExtractor.PitchExtractorManager import PitchExtractorManager
-from settings import ServerSettings
+from voice_changer.pitch_extractor.PitchExtractorManager import PitchExtractorManager
+from settings import get_settings
 
 import logging
 logger = logging.getLogger(__name__)
 
-def createPipeline(params: ServerSettings, modelSlot: RVCModelSlot, f0Detector: str, useONNX: bool, force_reload: bool):
+def createPipeline(modelSlot: RVCModelSlot, f0Detector: str, useONNX: bool, force_reload: bool):
+    model_dir = get_settings().model_dir
     # Inferencer 生成
     if useONNX:
-        modelPath = os.path.join(params.model_dir, str(modelSlot.slotIndex), os.path.basename(modelSlot.modelFileOnnx))
+        modelPath = os.path.join(model_dir, str(modelSlot.slotIndex), os.path.basename(modelSlot.modelFileOnnx))
         inferencer = InferencerManager.getInferencer(modelSlot.modelTypeOnnx, modelPath)
     else:
-        modelPath = os.path.join(params.model_dir, str(modelSlot.slotIndex), os.path.basename(modelSlot.modelFile))
+        modelPath = os.path.join(model_dir, str(modelSlot.slotIndex), os.path.basename(modelSlot.modelFile))
         inferencer = InferencerManager.getInferencer(modelSlot.modelType, modelPath)
 
     # Embedder 生成
@@ -31,7 +32,7 @@ def createPipeline(params: ServerSettings, modelSlot: RVCModelSlot, f0Detector: 
     pitchExtractor = PitchExtractorManager.getPitchExtractor(f0Detector, force_reload)
 
     # index, feature
-    indexPath = os.path.join(params.model_dir, str(modelSlot.slotIndex), os.path.basename(modelSlot.indexFile))
+    indexPath = os.path.join(model_dir, str(modelSlot.slotIndex), os.path.basename(modelSlot.indexFile))
     index, index_reconstruct = _loadIndex(indexPath)
 
     pipeline = Pipeline(
@@ -54,7 +55,7 @@ def _loadIndex(indexPath: str) -> tuple[faiss.Index | None, torch.Tensor | None]
     logger.info("Loading index...")
     # ファイル指定があってもファイルがない場合はNone
     if os.path.exists(indexPath) is not True or os.path.isfile(indexPath) is not True:
-        logger.warn("Index file not found. Index will not be used.")
+        logger.warning("Index file not found. Index will not be used.")
         return (None, None)
 
     logger.info(f"Try loading \"{indexPath}\"...")

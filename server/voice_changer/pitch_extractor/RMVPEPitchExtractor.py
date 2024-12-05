@@ -1,5 +1,5 @@
 from const import PitchExtractorType
-from voice_changer.RVC.pitchExtractor.PitchExtractor import PitchExtractor
+from voice_changer.pitch_extractor.PitchExtractor import PitchExtractor
 from voice_changer.common.rmvpe.rmvpe import RMVPE
 from voice_changer.common.deviceManager.DeviceManager import DeviceManager
 import torch

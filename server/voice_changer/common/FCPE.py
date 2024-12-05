@@ -1,8 +1,6 @@
 import torch
-from torchfcpe.mel_extractor import Wav2MelModule
-from torchfcpe.models_infer import spawn_model, spawn_wav2mel
+from torchfcpe.models_infer import spawn_model
 from torchfcpe.tools import (
-    get_device,
     DotDict
 )
 

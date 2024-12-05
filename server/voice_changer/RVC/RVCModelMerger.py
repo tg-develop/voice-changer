@@ -2,7 +2,7 @@ import os
 
 import torch
 from const import UPLOAD_DIR
-from voice_changer.RVC.modelMerger.MergeModel import merge_model
+from voice_changer.RVC.model_merger.MergeModel import merge_model
 from voice_changer.utils.ModelMerger import ModelMerger, ModelMergerRequest
 from settings import ServerSettings
 import logging

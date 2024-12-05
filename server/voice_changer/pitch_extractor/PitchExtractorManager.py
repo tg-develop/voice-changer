@@ -1,13 +1,13 @@
 from typing import Protocol
 from const import PitchExtractorType
-from voice_changer.RVC.pitchExtractor.CrepeOnnxPitchExtractor import CrepeOnnxPitchExtractor
-from voice_changer.RVC.pitchExtractor.CrepePitchExtractor import CrepePitchExtractor
-from voice_changer.RVC.pitchExtractor.PitchExtractor import PitchExtractor
-from voice_changer.RVC.pitchExtractor.RMVPEOnnxPitchExtractor import RMVPEOnnxPitchExtractor
-from voice_changer.RVC.pitchExtractor.RMVPEPitchExtractor import RMVPEPitchExtractor
-from voice_changer.RVC.pitchExtractor.FcpePitchExtractor import FcpePitchExtractor
-from voice_changer.RVC.pitchExtractor.FcpeOnnxPitchExtractor import FcpeOnnxPitchExtractor
-from settings import ServerSettings
+from voice_changer.pitch_extractor.CrepeOnnxPitchExtractor import CrepeOnnxPitchExtractor
+from voice_changer.pitch_extractor.CrepePitchExtractor import CrepePitchExtractor
+from voice_changer.pitch_extractor.PitchExtractor import PitchExtractor
+from voice_changer.pitch_extractor.RMVPEOnnxPitchExtractor import RMVPEOnnxPitchExtractor
+from voice_changer.pitch_extractor.RMVPEPitchExtractor import RMVPEPitchExtractor
+from voice_changer.pitch_extractor.FcpePitchExtractor import FcpePitchExtractor
+from voice_changer.pitch_extractor.FcpeOnnxPitchExtractor import FcpeOnnxPitchExtractor
+from settings import ServerSettings, get_settings
 import logging
 logger = logging.getLogger(__name__)
 
@@ -16,8 +16,8 @@ class PitchExtractorManager(Protocol):
     params: ServerSettings
 
     @classmethod
-    def initialize(cls, params: ServerSettings):
-        cls.params = params
+    def initialize(cls):
+        cls.params = get_settings()
 
     @classmethod
     def getPitchExtractor(cls, pitch_extractor: PitchExtractorType, force_reload: bool) -> PitchExtractor:
@@ -51,7 +51,7 @@ class PitchExtractorManager(Protocol):
             elif pitch_extractor == "fcpe_onnx":
                 return FcpeOnnxPitchExtractor(cls.params.fcpe_onnx)
             else:
-                logger.warn(f"PitchExctractor not found {pitch_extractor}. Fallback to rmvpe_onnx")
+                logger.warning(f"PitchExctractor not found {pitch_extractor}. Fallback to rmvpe_onnx")
                 return RMVPEOnnxPitchExtractor(cls.params.rmvpe_onnx)
         except RuntimeError as e:
             logger.error(f'Failed to load {pitch_extractor}. Fallback to rmvpe_onnx.')

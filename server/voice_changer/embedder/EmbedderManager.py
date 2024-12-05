@@ -1,7 +1,7 @@
 from const import EmbedderType
-from voice_changer.RVC.embedder.Embedder import Embedder
-from voice_changer.RVC.embedder.OnnxContentvec import OnnxContentvec
-from settings import ServerSettings
+from voice_changer.embedder.Embedder import Embedder
+from voice_changer.embedder.OnnxContentvec import OnnxContentvec
+from settings import ServerSettings, get_settings
 import logging
 logger = logging.getLogger(__name__)
 
@@ -10,8 +10,8 @@ class EmbedderManager:
     params: ServerSettings
 
     @classmethod
-    def initialize(cls, params: ServerSettings):
-        cls.params = params
+    def initialize(cls):
+        cls.params = get_settings()
 
     @classmethod
     def get_embedder(cls, embedder_type: EmbedderType, force_reload: bool = False) -> Embedder:

@@ -2,11 +2,10 @@ import json
 import os
 import sys
 import shutil
-import threading
 import numpy as np
 from downloader.SampleDownloader import downloadSample, getSampleInfos
 import logging
-from voice_changer.Local.ServerDevice import ServerDevice, ServerDeviceCallbacks
+from voice_changer.Local.ServerAudio import ServerAudio, ServerAudioCallbacks
 from voice_changer.ModelSlotManager import ModelSlotManager
 from voice_changer.RVC.RVCModelMerger import RVCModelMerger
 from const import STORED_SETTING_FILE, UPLOAD_DIR
@@ -14,15 +13,14 @@ from voice_changer.VoiceChangerSettings import VoiceChangerSettings
 from voice_changer.VoiceChangerV2 import VoiceChangerV2
 from voice_changer.utils.LoadModelParams import LoadModelParamFile, LoadModelParams
 from voice_changer.utils.ModelMerger import MergeElement, ModelMergerRequest
-from voice_changer.utils.VoiceChangerModel import AudioInOut
-from settings import ServerSettings
+from voice_changer.utils.VoiceChangerModel import AudioInOutFloat
+from settings import get_settings
 from voice_changer.common.deviceManager.DeviceManager import DeviceManager
 from Exceptions import (
     PipelineNotInitializedException,
     VoiceChangerIsNotSelectedException,
 )
 from traceback import format_exc
-# import threading
 from typing import Callable, Any
 
 from voice_changer.RVC.RVCr2 import RVCr2
@@ -31,26 +29,24 @@ from voice_changer.RVC.RVCModelSlotGenerator import RVCModelSlotGenerator  # 起
 logger = logging.getLogger(__name__)
 
 
-class VoiceChangerManager(ServerDeviceCallbacks):
+class VoiceChangerManager(ServerAudioCallbacks):
     _instance = None
 
     ############################
     # ServerDeviceCallbacks
     ############################
-    def on_request(self, unpackedData: AudioInOut):
-        return self.changeVoice(unpackedData)
+    def on_audio(self, unpackedData: AudioInOutFloat):
+        return self.change_voice(unpackedData)
 
-    def emitTo(self, volume: float, performance: list[float], err):
+    def emit_to(self, volume: float, performance: list[float], err):
         self.emitToFunc(volume, performance, err)
 
     ############################
     # VoiceChangerManager
     ############################
-    def __init__(self, params: ServerSettings):
+    def __init__(self):
         logger.info("Initializing...")
-        self.params = params
-        self.voiceChanger: VoiceChangerV2 = None
-        self.voiceChangerModel = None
+        self.params = get_settings()
 
         self.modelSlotManager = ModelSlotManager.get_instance(self.params.model_dir)
         # スタティックな情報を収集
@@ -67,10 +63,8 @@ class VoiceChangerManager(ServerDeviceCallbacks):
         self.devices = self.device_manager.list_devices()
         self.device_manager.initialize(self.settings.gpu, self.settings.forceFp32, self.settings.disableJit)
 
-        self.serverDevice = ServerDevice(self, self.settings)
-
-        thread = threading.Thread(target=self.serverDevice.start, args=())
-        thread.start()
+        self.vc = VoiceChangerV2(self.settings)
+        self.server_audio = ServerAudio(self, self.settings)
 
         logger.info("Initialized.")
 
@@ -82,9 +76,9 @@ class VoiceChangerManager(ServerDeviceCallbacks):
             json.dump(self.settings.to_dict_stateless(), f)
 
     @classmethod
-    def get_instance(cls, params: ServerSettings):
+    def get_instance(cls):
         if cls._instance is None:
-            cls._instance = cls(params)
+            cls._instance = cls()
         return cls._instance
 
     async def load_model(self, params: LoadModelParams):
@@ -136,19 +130,18 @@ class VoiceChangerManager(ServerDeviceCallbacks):
 
         data["status"] = "OK"
 
-        info = self.serverDevice.get_info()
+        info = self.server_audio.get_info()
         data.update(info)
 
-        if self.voiceChanger is not None:
-            info = self.voiceChanger.get_info()
-            data.update(info)
+        info = self.vc.get_info()
+        data.update(info)
 
         return data
 
     def initialize(self, val: int):
         slotInfo = self.modelSlotManager.get_slot_info(val)
         if slotInfo is None or slotInfo.voiceChangerType is None:
-            logger.warn(f"Model slot is not found {val}")
+            logger.warning(f"Model slot is not found {val}")
             return
 
         self.settings.set_properties({
@@ -158,18 +151,11 @@ class VoiceChangerManager(ServerDeviceCallbacks):
             'protect': slotInfo.defaultProtect
         })
 
-        if self.voiceChangerModel is not None and slotInfo.voiceChangerType == self.voiceChangerModel.voiceChangerType:
-            self.voiceChangerModel.set_slot_info(slotInfo)
-            self.voiceChanger.set_model(self.voiceChangerModel)
-            self.voiceChangerModel.initialize()
-            return
-
-        if slotInfo.voiceChangerType == "RVC":
+        if slotInfo.voiceChangerType == self.vc.get_type():
+            self.vc.set_slot_info(slotInfo)
+        elif slotInfo.voiceChangerType == "RVC":
             logger.info("Loading RVC...")
-
-            self.voiceChangerModel = RVCr2(self.params, slotInfo, self.settings)
-            self.voiceChanger = VoiceChangerV2(self.params, self.settings)
-            self.voiceChanger.set_model(self.voiceChangerModel)
+            self.vc.initialize(RVCr2(slotInfo, self.settings))
         else:
             logger.error(f"Unknown voice changer model: {slotInfo.voiceChangerType}")
 
@@ -209,26 +195,21 @@ class VoiceChangerManager(ServerDeviceCallbacks):
             self.update_settings('inputSampleRate', self.settings.serverAudioSampleRate)
             self.update_settings('outputSampleRate', self.settings.serverAudioSampleRate)
 
-        self.serverDevice.update_settings(key, val, old_value)
-        if self.voiceChanger is not None:
-            self.voiceChanger.update_settings(key, val, old_value)
+        self.server_audio.update_settings(key, val, old_value)
+        self.vc.update_settings(key, val, old_value)
 
         return self.get_info()
 
-    def changeVoice(self, receivedData: AudioInOut) -> tuple[AudioInOut, tuple, tuple | None]:
+    def change_voice(self, receivedData: AudioInOutFloat) -> tuple[AudioInOutFloat, tuple, tuple | None]:
         if self.settings.passThrough:  # パススルー
             vol = float(np.sqrt(
                 np.square(receivedData).mean(dtype=np.float32)
             ))
             return receivedData, vol, [0, 0, 0], None
 
-        if self.voiceChanger is None:
-            logger.error("Voice Change is not loaded. Did you load a correct model?")
-            return np.zeros(1, dtype=np.float32), 0, [0, 0, 0], ('NoVoiceChangerLoaded', "Voice Change is not loaded. Did you load a correct model?")
-
         try:
             with self.device_manager.lock:
-                audio, vol, perf = self.voiceChanger.on_request(receivedData)
+                audio, vol, perf = self.vc.on_request(receivedData)
             return audio, vol, perf, None
         except VoiceChangerIsNotSelectedException as e:
             logger.exception(e)
@@ -241,10 +222,10 @@ class VoiceChangerManager(ServerDeviceCallbacks):
             return np.zeros(1, dtype=np.float32), 0, [0, 0, 0], ('Exception', format_exc())
 
     def export2onnx(self):
-        return self.voiceChanger.export2onnx()
+        return self.vc.export2onnx()
 
     async def merge_models(self, request: str):
-        # self.voiceChanger.merge_models(request)
+        # self.vc.merge_models(request)
         req = json.loads(request)
         req = ModelMergerRequest(**req)
         req.files = [MergeElement(**f) for f in req.files]
@@ -260,19 +241,18 @@ class VoiceChangerManager(ServerDeviceCallbacks):
         self.emitToFunc = emitTo
 
     def update_model_default(self):
-        # self.voiceChanger.update_model_default()
-        current_settings = self.voiceChangerModel.get_model_current()
-        for current_setting in current_settings:
-            current_setting["slot"] = self.settings.modelSlotIndex
-            self.modelSlotManager.update_model_info(json.dumps(current_setting))
+        # self.vc.update_model_default()
+        current_settings = self.vc.get_current_model_settings()
+        for setting in current_settings:
+            self.modelSlotManager.update_model_info(self.settings.modelSlotIndex, **setting)
         return self.get_info()
 
     def update_model_info(self, newData: str):
-        # self.voiceChanger.update_model_info(newData)
+        # self.vc.update_model_info(newData)
         self.modelSlotManager.update_model_info(newData)
         return self.get_info()
 
     def upload_model_assets(self, params: str):
-        # self.voiceChanger.upload_model_assets(params)
+        # self.vc.upload_model_assets(params)
         self.modelSlotManager.store_model_assets(params)
         return self.get_info()

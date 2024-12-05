@@ -3,7 +3,7 @@ import torch
 import onnxruntime
 from const import PitchExtractorType
 from voice_changer.common.OnnxLoader import load_onnx_model
-from voice_changer.RVC.pitchExtractor.PitchExtractor import PitchExtractor
+from voice_changer.pitch_extractor.PitchExtractor import PitchExtractor
 from voice_changer.common.deviceManager.DeviceManager import DeviceManager
 from voice_changer.common.MelExtractor import MelSpectrogram
 

@@ -2,7 +2,7 @@ import torch
 
 from const import PitchExtractorType
 from voice_changer.common.deviceManager.DeviceManager import DeviceManager
-from voice_changer.RVC.pitchExtractor.PitchExtractor import PitchExtractor
+from voice_changer.pitch_extractor.PitchExtractor import PitchExtractor
 from voice_changer.common.FCPE import spawn_infer_model_from_pt
 from voice_changer.common.MelExtractorFcpe import Wav2MelModule
 
