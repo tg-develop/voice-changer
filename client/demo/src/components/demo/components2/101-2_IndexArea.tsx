@@ -43,6 +43,7 @@ export const IndexArea = (_props: IndexAreaProps) => {
                                 onChange={(e) => {
                                     indexRatioValueUpdatedAction(Number(e.target.value));
                                 }}
+                                disabled={!selected.indexFile}
                             ></input>
                         </span>
                         <span className="character-area-slider-control-val">{currentIndexRatio}</span>
