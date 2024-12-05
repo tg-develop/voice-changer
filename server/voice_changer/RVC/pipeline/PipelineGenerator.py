@@ -63,6 +63,9 @@ def _loadIndex(indexPath: str) -> tuple[faiss.Index | None, torch.Tensor | None]
         if not index.is_trained:
             logger.error("Invalid index. You MUST use added_xxxx.index, not trained_xxxx.index. Index will not be used.")
             return (None, None)
+        if index.ntotal == 0:
+            logger.error("Index is empty. Index will not be used.")
+            return (None, None)
         # BUG: faiss-gpu does not support reconstruct on GPU indices
         # https://github.com/facebookresearch/faiss/issues/2181
         index_reconstruct = index.reconstruct_n(0, index.ntotal).to(dev)
