@@ -4,7 +4,7 @@ import faiss.contrib.torch_utils
 from onnx import TensorProto
 from onnx.helper import (
     make_model, make_node, make_graph,
-    make_tensor_value_info
+    make_tensor_value_info, make_opsetid
 )
 
 import numpy as np
@@ -95,7 +95,7 @@ class Pipeline:
 
         graph = make_graph([resize_node], 'upscaler', [input, scales], [output])
 
-        onnx_model = make_model(graph)
+        onnx_model = make_model(graph, opset_imports=[make_opsetid("", 21)])
 
         (
             providers,
