@@ -4,7 +4,7 @@ import faiss.contrib.torch_utils
 from onnx import TensorProto
 from onnx.helper import (
     make_model, make_node, make_graph,
-    make_tensor_value_info
+    make_tensor_value_info, make_opsetid
 )
 
 import numpy as np
@@ -16,11 +16,12 @@ from torchaudio import transforms as tat
 from voice_changer.common.deviceManager.DeviceManager import DeviceManager
 import logging
 
+from voice_changer.RVC.consts import HUBERT_SAMPLE_RATE, WINDOW_SIZE
 from voice_changer.common.TorchUtils import circular_write
-from voice_changer.RVC.embedder.Embedder import Embedder
+from voice_changer.embedder.Embedder import Embedder
 from voice_changer.RVC.inferencer.Inferencer import Inferencer
 
-from voice_changer.RVC.pitchExtractor.PitchExtractor import PitchExtractor
+from voice_changer.pitch_extractor.PitchExtractor import PitchExtractor
 from voice_changer.utils.Timer import Timer2
 from const import F0_MEL_MIN, F0_MEL_MAX
 
@@ -75,9 +76,6 @@ class Pipeline:
 
         self.dtype = torch.float16 if self.is_half else torch.float32
 
-        self.sr = 16000
-        self.window = 160
-
         self.resamplers = {}
 
     def make_onnx_upscaler(self, dim_size: int):
@@ -97,7 +95,7 @@ class Pipeline:
 
         graph = make_graph([resize_node], 'upscaler', [input, scales], [output])
 
-        onnx_model = make_model(graph)
+        onnx_model = make_model(graph, opset_imports=[make_opsetid("", 21)])
 
         (
             providers,
@@ -117,15 +115,18 @@ class Pipeline:
     def extract_pitch(self, audio: torch.Tensor, pitch: torch.Tensor | None, pitchf: torch.Tensor | None, f0_up_key: int, formant_shift: float) -> tuple[torch.Tensor, torch.Tensor]:
         f0 = self.pitchExtractor.extract(
             audio,
-            self.sr,
-            self.window,
+            HUBERT_SAMPLE_RATE,
+            WINDOW_SIZE,
         )
         f0 *= 2 ** ((f0_up_key - formant_shift) / 12)
 
         f0_mel = 1127.0 * torch.log(1.0 + f0 / 700.0)
-        f0_mel[f0_mel > 0] = (f0_mel[f0_mel > 0] - F0_MEL_MIN) * 254 / (F0_MEL_MAX - F0_MEL_MIN) + 1
-        f0_mel[f0_mel <= 1] = 1
-        f0_mel[f0_mel > 255] = 255
+        f0_mel = torch.clip(
+            (f0_mel - F0_MEL_MIN) * 254 / (F0_MEL_MAX - F0_MEL_MIN) + 1,
+            1,
+            255,
+            out=f0_mel
+        )
         f0_coarse = torch.round(f0_mel, out=f0_mel).long()
 
         if pitch is not None and pitchf is not None:

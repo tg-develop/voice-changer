@@ -4,7 +4,7 @@ import torch
 from torch import device
 
 from const import EmbedderType
-from voice_changer.RVC.embedder.EmbedderProtocol import EmbedderProtocol
+from voice_changer.embedder.EmbedderProtocol import EmbedderProtocol
 import logging
 logger = logging.getLogger(__name__)
 

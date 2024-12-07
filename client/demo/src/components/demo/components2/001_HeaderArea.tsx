@@ -4,6 +4,8 @@ import { useAppRoot } from "../../../001_provider/001_AppRootProvider";
 import { useAppState } from "../../../001_provider/001_AppStateProvider";
 import { useIndexedDB } from "@dannadori/voice-changer-client-js";
 import { useMessageBuilder } from "../../../hooks/useMessageBuilder";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faGithub } from "@fortawesome/free-brands-svg-icons";
 
 export type HeaderAreaProps = {
     mainTitle: string;
@@ -30,12 +32,12 @@ export const HeaderArea = (props: HeaderAreaProps) => {
                 window.electronAPI.openBrowser("https://github.com/deiteris/voice-changer");
             }}
         >
-            <img src="./assets/icons/github.svg" />
+            <FontAwesomeIcon icon={faGithub} fontSize="1.7em" />
             <div className="tooltip-text">Github</div>
         </span>
     ) : (
         <a className="link tooltip" href="https://github.com/deiteris/voice-changer" target="_blank" rel="noopener noreferrer">
-            <img src="./assets/icons/github.svg" />
+            <FontAwesomeIcon icon={faGithub} fontSize="1.7em" />
             <div className="tooltip-text">Github</div>
         </a>
     );

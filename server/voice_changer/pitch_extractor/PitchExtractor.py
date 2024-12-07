@@ -1,7 +1,5 @@
 from typing import Protocol
 import torch
-import numpy as np
-from typing import Any
 
 
 class PitchExtractor(Protocol):

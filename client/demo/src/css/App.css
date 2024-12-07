@@ -1,56 +1,153 @@
 @import url("https://fonts.googleapis.com/css2?family=Chicle&family=Poppins:ital,wght@0,200;0,400;0,600;1,200;1,400;1,600&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap");
 
-@import 'react-toastify/dist/ReactToastify.css';
-@import 'react-tooltip/dist/react-tooltip.css';
-@import "./101_RotatedButton.css";
-@import "./Error.css";
-:root {
-    --text-color: #333;
-    --company-color1: rgba(64, 119, 187, 1);
-    --company-color2: rgba(29, 47, 78, 1);
-    --company-color3: rgba(255, 255, 255, 1);
-    --company-color1-alpha: rgba(64, 119, 187, 0.3);
-    --company-color2-alpha: rgba(29, 47, 78, 0.3);
-    --company-color3-alpha: rgba(255, 255, 255, 0.3);
-    --global-shadow-color: rgba(0, 0, 0, 0.4);
-
-    --sidebar-transition-time: 0.2s;
-    --sidebar-transition-time-quick: 0.1s;
-    --sidebar-transition-animation: ease-in-out;
-
-    --header-height: 1.5rem;
-    --right-sidebar-width: 320px;
-
-    --dialog-border-color: rgba(100, 100, 100, 1);
-    --dialog-shadow-color: rgba(0, 0, 0, 0.3);
-    --dialog-background-color: rgba(255, 255, 255, 1);
-    --dialog-primary-color: rgba(19, 70, 209, 1);
-    --dialog-active-color: rgba(40, 70, 209, 1);
-    --dialog-input-border-color: rgba(200, 200, 200, 1);
-    --dialog-submit-button-color: rgba(180, 190, 230, 1);
-    --dialog-cancel-button-color: rgba(235, 80, 80, 1);
-
-    --body-video-seeker-height: 3rem;
-}
-
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: "Poppins", sans-serif;
 }
+
+:root {
+    --text-color: #333;
+    --company-color1: rgba(64, 119, 187, 1);
+    --company-color2: rgba(29, 47, 78, 1);
+    --company-color3: rgba(255, 255, 255, 1);
+
+    --sidebar-transition-time: 0.2s;
+    --sidebar-transition-animation: ease-in-out;
+
+    --button-passthru-active-border: 1px solid #955;
+    --button-passthru-active: #fdd;
+    --button-passthru-inactive-border: 1px solid #999;
+    --button-passthru-inactive: #aba;
+
+    --button-selector-active-border: 1px solid #999;
+    --button-selector-active: #ada;
+    --button-selector-inactive-border: 1px solid #333;
+    --button-selector-inactive: #aba;
+
+    --button-primary-active-border: 1px solid #FFF;
+    --button-primary-active: #FFF;
+    --button-primary-inactive-border: 1px solid #FFF;
+    --button-primary-inactive: #FFF;
+
+    --button-secondary-active-border: 1px solid #FFF;
+    --button-secondary-active: #FFF;
+    --button-secondary-inactive-border: 1px solid #FFF;
+    --button-secondary-inactive: #FFF;
+
+    --dialog-background-tint: rgba(200, 200, 200, 0.4);
+    --dialog-border-color: rgba(100, 100, 100, 1);
+    --dialog-shadow-color: rgba(0, 0, 0, 0.3);
+    --dialog-background-color: rgba(0, 0, 0, 1);
+}
+
 html {
     font-size: 16px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
+
 body {
     height: 100%;
     width: 100%;
+    margin: 0px;
     overflow-y: scroll;
     overflow-x: hidden;
     color: var(--text-color);
-    /* background: linear-gradient(45deg, var(--company-color1) 0, 5%, var(--company-color2) 5% 10%, var(--company-color3) 10% 80%, var(--company-color1) 80% 85%, var(--company-color2) 85% 100%); */
     background: linear-gradient(45deg, var(--company-color1) 0, 1%, var(--company-color2) 1% 5%, var(--company-color3) 5% 90%, var(--company-color1) 90% 95%, var(--company-color2) 95% 100%);
+}
+
+@import 'react-toastify/dist/ReactToastify.css';
+@import 'react-tooltip/dist/react-tooltip.css';
+@import "./Error.css";
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --text-color: #dedede;
+        --company-color1: rgba(64, 119, 187, 1);
+        --company-color2: rgb(14, 25, 45);
+        --company-color3: rgba(0, 0, 0, 1);
+
+        --button-passthru-active-border: 1px solid #a80000;
+        --button-passthru-active: #990000;
+        --button-passthru-inactive-border: 1px solid #999;
+        --button-passthru-inactive: #6f6f6f;
+
+        --button-selector-active-border: 1px solid #006a00;
+        --button-selector-active: #006200;
+        --button-selector-inactive-border: 1px solid #003600;
+        --button-selector-inactive: #003200;
+
+        --button-primary-active-border: 1px solid #FFF;
+        --button-primary-active: #FFF;
+        --button-primary-inactive-border: 1px solid #FFF;
+        --button-primary-inactive: #FFF;
+
+        --button-secondary-active-border: 1px solid #FFF;
+        --button-secondary-active: #FFF;
+        --button-secondary-inactive-border: 1px solid #FFF;
+        --button-secondary-inactive: #FFF;
+
+        --dialog-background-tint: rgba(100, 100, 100, 0.4);
+        --dialog-border-color: rgba(100, 100, 100, 1);
+        --dialog-shadow-color: rgba(0, 0, 0, 0.3);
+        --dialog-background-color: rgba(0, 0, 0, 1);
+    }
+
+    .dialog-container, .dialog-container2 {
+        .dialog-frame .dialog-fixed-size-content .model-slot-container .model-slot {
+            .model-slot-icon-pointable,
+            .model-slot-icon {
+                opacity: 0.8;
+            }
+        }
+    }
+
+    .character-area .portrait-area .portrait-container .portrait,
+    .model-slot-tile-icon {
+        opacity: 0.8;
+    }
+
+    a {
+        color: #FFF
+    }
+
+    a:visited {
+        color: #FFF
+    }
+
+    a.hint-text {
+        color: var(--text-color)
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #434343
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #6c6c6c
+    }
+
+    select {
+        background: var(--company-color3);
+        color: var(--text-color);
+        max-width: 100%;
+    }
+
+    textarea {
+        background: #000000;
+        color: #FFF;
+    }
+}
+
+.state-control-checkbox {
+    display: none;
 }
 
 .Toastify__toast-body {
@@ -570,7 +667,7 @@ a.hint-text {
     display: flex;
 }
 .body-item-text {
-    color: rgb(30, 30, 30);
+    color: var(--text-color);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -579,15 +676,8 @@ a.hint-text {
     }
 }
 .body-item-text-small {
-    color: rgb(30, 30, 30);
+    color: var(--text-color);
     font-size: 0.7rem;
-}
-.body-item-text-em {
-    color: rgb(250, 30, 30);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-weight: 700;
 }
 
 .body-input-container {
@@ -640,15 +730,15 @@ a.hint-text {
     }
     .body-button-active {
         user-select: none;
-        border: solid 1px #333;
+        border: var(--button-selector-active-border);
         border-radius: 2px;
-        background: #ada;
+        background: var(--button-selector-active);
     }
     .body-button-stanby {
         user-select: none;
-        border: solid 1px #999;
+        border: var(--button-selector-inactive-border);
         border-radius: 2px;
-        background: #aba;
+        background: var(--button-selector-inactive);
         cursor: pointer;
         &:hover {
             border: solid 1px #000;
@@ -660,16 +750,6 @@ a.hint-text {
     justify-content: space-around;
 }
 
-.body-select {
-    color: rgb(30, 30, 30);
-    max-width: 100%;
-}
-
-.body-select-50 {
-    color: rgb(30, 30, 30);
-    max-width: 50%;
-    height: 1.5rem;
-}
 .select-option-red {
     color: #f66;
     font-weight: 700;
@@ -707,7 +787,7 @@ a.hint-text {
     z-index: -1;
     display: none;
     .dialog-frame {
-        color: var(--company-color2);
+        color: var(--text-color);
         width: 40rem;
         max-height: 80vh;
         border: 2px solid var(--dialog-border-color);
@@ -719,14 +799,15 @@ a.hint-text {
         overflow: hidden;
         display: flex;
         .dialog-title {
-            margin-top: 20px;
+            margin-top: 15px;
             background: var(--company-color2);
-            color: #fff;
+            color: var(--text-color);
             width: 100%;
             text-align: center;
         }
         .dialog-content {
-            width: 90%;
+            width: 100%;
+            padding: 0 15px 15px 15px;
             .dialog-application-title {
                 font-family: "Chicle", cursive;
                 font-size: 3rem;
@@ -743,8 +824,9 @@ a.hint-text {
             }
         }
         .dialog-fixed-size-content {
-            width: 90%;
+            width: 100%;
             max-height: 70vh;
+            padding: 15px;
             .model-slot-header,
             .file-uploader-header {
                 font-weight: 700;
@@ -770,18 +852,6 @@ a.hint-text {
                 max-height: 60vh;
                 width: 100%;
                 overflow-y: scroll;
-                &::-webkit-scrollbar {
-                    width: 10px;
-                    height: 10px;
-                }
-                &::-webkit-scrollbar-track {
-                    background-color: #eee;
-                    border-radius: 3px;
-                }
-                &::-webkit-scrollbar-thumb {
-                    background: #f7cfec80;
-                    border-radius: 3px;
-                }
 
                 .model-slot {
                     height: 5rem;
@@ -802,19 +872,6 @@ a.hint-text {
                         font-size: 0.8rem;
                         border-bottom: solid 1px #aaa;
                         width: 80%;
-                        overflow-y: scroll;
-                        &::-webkit-scrollbar {
-                            width: 10px;
-                            height: 10px;
-                        }
-                        &::-webkit-scrollbar-track {
-                            background-color: #eee;
-                            border-radius: 3px;
-                        }
-                        &::-webkit-scrollbar-thumb {
-                            background: #f7cfec80;
-                            border-radius: 3px;
-                        }
 
                         .model-slot-detail-row {
                             display: flex;
@@ -878,15 +935,15 @@ a.hint-text {
                     }
                     .model-slot-button-active {
                         user-select: none;
-                        border: solid 1px #333;
+                        border: var(--button-selector-active-border);
                         border-radius: 2px;
-                        background: #ada;
+                        background: var(--button-selector-active);
                     }
                     .model-slot-button-stanby {
                         user-select: none;
-                        border: solid 1px #999;
+                        border: var(--button-selector-inactive-border);
                         border-radius: 2px;
-                        background: #aba;
+                        background: var(--button-selector-inactive);
                         cursor: pointer;
                         &:hover {
                             border: solid 1px #000;
@@ -990,7 +1047,6 @@ a.hint-text {
 }
 
 .state-control-checkbox:checked ~ .dialog-container {
-    background: rgba(200, 200, 200, 0.4);
     animation-name: dialog-show;
     animation-duration: 0.4s;
     animation-iteration-count: 1;
@@ -998,7 +1054,7 @@ a.hint-text {
     animation-direction: normal;
 }
 .state-control-checkbox ~ .dialog-container {
-    background: rgba(100, 100, 100, 0.4);
+    background: var(--dialog-background-tint);
     animation-name: dialog-hide;
     animation-duration: 0.4s;
     animation-iteration-count: 1;
@@ -1057,12 +1113,6 @@ a.hint-text {
     animation-fill-mode: forwards;
     animation-direction: normal;
 }
-/* .state-control-checkbox:checked + .dialog-frame {
-    display: flex;
-}
-.state-control-checkbox + .dialog-frame {
-    display: none;
-} */
 
 @keyframes dialog-hide2 {
     from {
@@ -1178,18 +1228,6 @@ a.hint-text {
             flex-wrap: wrap;
             overflow-y: scroll;
             max-height: 12rem;
-            &::-webkit-scrollbar {
-                width: 10px;
-                height: 10px;
-            }
-            &::-webkit-scrollbar-track {
-                background-color: #eee;
-                border-radius: 3px;
-            }
-            &::-webkit-scrollbar-thumb {
-                background: #f7cfec80;
-                border-radius: 3px;
-            }
 
             /* width: calc(30rem + 40px + 10px); */
         }
@@ -1359,17 +1397,17 @@ a.hint-text {
                 gap: 10px;
                 .character-area-control-button-active {
                     width: 5rem;
-                    border: solid 1px #333;
+                    border: var(--button-selector-active-border);
                     border-radius: 2px;
-                    background: #ada;
+                    background: var(--button-selector-active);
                     font-weight: 700;
                     text-align: center;
                 }
                 .character-area-control-button-stanby {
                     width: 5rem;
-                    border: solid 1px #999;
+                    border: var(--button-selector-inactive-border);
                     border-radius: 2px;
-                    background: #aba;
+                    background: var(--button-selector-inactive);
                     cursor: pointer;
                     font-weight: 700;
                     text-align: center;
@@ -1388,10 +1426,10 @@ a.hint-text {
                 }
                 .character-area-control-passthru-button-stanby {
                     width: 5rem;
-                    border: solid 1px #999;
+                    border: var(--button-passthru-inactive-border);
                     border-radius: 15px;
                     padding: 2px;
-                    background: #aba;
+                    background: var(--button-passthru-inactive);
                     cursor: pointer;
                     font-weight: 700;
                     font-size: 0.8rem;
@@ -1402,10 +1440,10 @@ a.hint-text {
                 }
                 .character-area-control-passthru-button-active {
                     width: 5rem;
-                    border: solid 1px #955;
+                    border: var(--button-passthru-active-border);
                     border-radius: 15px;
                     padding: 2px;
-                    background: #fdd;
+                    background: var(--button-passthru-active);
                     cursor: pointer;
                     font-weight: 700;
                     font-size: 0.8rem;
@@ -1453,7 +1491,7 @@ a.hint-text {
                         color: white;
                         font-size: 0.8rem;
                         border-radius: 2px;
-                        background: #666;
+                        background: #333;
                         cursor: pointer;
                         padding: 5px;
                     }
@@ -1463,7 +1501,7 @@ a.hint-text {
                     .character-area-toggle-button {
                         border: solid 2px #999;
                         color: white;
-                        background: #666;
+                        background: #333;
 
                         cursor: pointer;
 
@@ -1563,7 +1601,7 @@ audio::-webkit-media-controls-overlay-enclosure{
                     .config-sub-area-button {
                         border: solid 2px #999;
                         color: white;
-                        background: #666;
+                        background: #333;
 
                         cursor: pointer;
 
@@ -1610,9 +1648,9 @@ audio::-webkit-media-controls-overlay-enclosure{
                     gap: 5px;
                     .config-sub-area-control-field-screen-select-button-active {
                         font-size: 0.8rem;
-                        border: solid 1px #333;
+                        border: var(--button-selector-active-border);
                         border-radius: 5px;
-                        background: #ada;
+                        background: var(--button-selector-active);
                         height: 1.2rem;
                         padding-left: 2px;
                         padding-right: 2px;
@@ -1657,9 +1695,9 @@ audio::-webkit-media-controls-overlay-enclosure{
                     }
                     .config-sub-area-control-field-wav-file-echoback-button-active {
                         font-size: 0.8rem;
-                        border: solid 1px #333;
+                        border: var(--button-selector-active-border);
                         border-radius: 5px;
-                        background: #ada;
+                        background: var(--button-selector-active);
                         height: 1.2rem;
                         padding-left: 2px;
                         padding-right: 2px;
@@ -1685,8 +1723,6 @@ audio::-webkit-media-controls-overlay-enclosure{
         .title {
             font-size: 1.8rem;
             font-weight: 700;
-            color: #333;
-            text-shadow: 0 0 2px #333;
         }
         .title-version {
             font-size: 0.9rem;
@@ -1699,16 +1735,17 @@ audio::-webkit-media-controls-overlay-enclosure{
         display: flex;
         flex-direction: row;
         gap: 20px;
+        color: #FFF;
         .belongings {
             display: flex;
             flex-direction: row;
             gap: 3px;
             .belongings-button {
                 border: solid 2px #999;
-                color: white;
+                color: #FFF;
                 font-size: 0.8rem;
                 border-radius: 5px;
-                background: #666;
+                background: #333;
                 cursor: pointer;
                 padding: 5px;
                 height: 1.7rem;
@@ -1753,7 +1790,7 @@ audio::-webkit-media-controls-overlay-enclosure{
                     flex-direction: row;
                     gap: 3px;
                     & > div:nth-child(1) {
-                        color: #333;
+                        color: var(--text-color);
                     }
                     & > div:nth-child(2) {
                     }
@@ -1767,6 +1804,7 @@ audio::-webkit-media-controls-overlay-enclosure{
     .get-server-information-text-area {
         width: 100%;
         height: 20rem;
+        resize: none;
     }
 }
 .merge-lab-container {
@@ -1791,18 +1829,6 @@ audio::-webkit-media-controls-overlay-enclosure{
             width: 70%;
             overflow-y: scroll;
             max-height: 20rem;
-            &::-webkit-scrollbar {
-                width: 10px;
-                height: 10px;
-            }
-            &::-webkit-scrollbar-track {
-                background-color: #eee;
-                border-radius: 3px;
-            }
-            &::-webkit-scrollbar-thumb {
-                background: #f7cfec80;
-                border-radius: 3px;
-            }
 
             .merge-lab-model-item {
                 display: flex;
@@ -1819,6 +1845,7 @@ audio::-webkit-media-controls-overlay-enclosure{
             display: flex;
             flex-direction: column-reverse;
             width: 30%;
+            padding: 0 10px;
             .merge-lab-merge-button {
                 border: solid 2px #ddd;
                 color: black;
@@ -1836,7 +1863,7 @@ audio::-webkit-media-controls-overlay-enclosure{
             .merge-lab-merge-buttons-notice {
                 font-size: 0.7rem;
                 font-weight: 700;
-                color: #333;
+                color: var(--text-color);
                 text-align: center;
             }
         }

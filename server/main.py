@@ -21,8 +21,7 @@ from downloader.WeightDownloader import downloadWeight
 from downloader.SampleDownloader import downloadInitialSamples
 from mods.ssl import create_self_signed_cert
 from webbrowser import open_new_tab
-from settings import ServerSettings
-from utils.check_user_admin import is_user_admin
+from settings import get_settings
 
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.INFO)
@@ -33,7 +32,7 @@ logging.basicConfig(
     handlers=[logging.FileHandler(LOG_FILE), stream_handler]
 )
 logger = logging.getLogger(__name__)
-settings = ServerSettings()
+settings = get_settings()
 
 def setupArgParser():
     parser = argparse.ArgumentParser()
@@ -146,4 +145,7 @@ if __name__ == "__main__":
     args, _ = parser.parse_known_args()
     args.launch_browser = False
 
-    asyncio.run(main(args))
+    try:
+        asyncio.run(main(args))
+    except KeyboardInterrupt:
+        pass

@@ -115,15 +115,21 @@ export const MergeLabDialog = () => {
             setMergeElements(newMergeElements);
         };
 
-        const onMergeClicked = () => {
+        const onMergeClicked = async () => {
             const validMergeElements = mergeElements.filter((x) => {
                 return x.strength > 0;
             });
-            serverSetting.mergeModel({
+            await serverSetting.mergeModel({
                 voiceChangerType: VoiceChangerType.RVC,
                 command: "mix",
                 files: validMergeElements,
             });
+            const a = document.createElement("a");
+            a.href = "/tmp/merged.pth";
+            a.download = "merged.pth";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         };
 
         const modelList = mergeElements.map((x, index) => {
@@ -171,9 +177,9 @@ export const MergeLabDialog = () => {
                 <div className="merge-lab-manipulator">
                     <div className="merge-lab-model-list">{modelList}</div>
                     <div className="merge-lab-merge-buttons">
-                        <div className="merge-lab-merge-buttons-notice">The merged model is stored in the final slot. If you assign this slot, it will be overwritten.</div>
+                        <div className="merge-lab-merge-buttons-notice">Check your browser downloads for the merged model.</div>
                         <div className="merge-lab-merge-button" onClick={onMergeClicked}>
-                            merge
+                            Merge
                         </div>
                     </div>
                 </div>
@@ -181,7 +187,7 @@ export const MergeLabDialog = () => {
         );
         return (
             <div className="dialog-frame">
-                <div className="dialog-title">MergeLab</div>
+                <div className="dialog-title">Merge Lab</div>
                 <div className="dialog-content">
                     {content}
                     {closeButtonRow}

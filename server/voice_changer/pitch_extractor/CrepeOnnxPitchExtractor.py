@@ -3,8 +3,8 @@ import torch
 import onnxruntime
 from const import PitchExtractorType, F0_MIN, F0_MAX
 from voice_changer.common.deviceManager.DeviceManager import DeviceManager
-from voice_changer.RVC.pitchExtractor.PitchExtractor import PitchExtractor
-from voice_changer.RVC.pitchExtractor import onnxcrepe
+from voice_changer.pitch_extractor.PitchExtractor import PitchExtractor
+from voice_changer.pitch_extractor import onnxcrepe
 
 
 class CrepeOnnxPitchExtractor(PitchExtractor):

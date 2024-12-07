@@ -38,7 +38,7 @@ def checkSamplingRate(deviceId: int, desiredSamplingRate: int, type: ServerAudio
                 pass
             return True
         except Exception as e:  # NOQA
-            logger.warn(f"[checkSamplingRate] {e}")
+            logger.warning(f"[checkSamplingRate] {e}")
             return False
     else:
         try:
@@ -51,7 +51,7 @@ def checkSamplingRate(deviceId: int, desiredSamplingRate: int, type: ServerAudio
                 pass
             return True
         except Exception as e:  # NOQA
-            logger.warn(f"[checkSamplingRate] {e}")
+            logger.warning(f"[checkSamplingRate] {e}")
             return False
 
 

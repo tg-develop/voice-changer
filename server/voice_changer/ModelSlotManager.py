@@ -42,15 +42,14 @@ class ModelSlotManager:
     def save_model_slot(self, slotIndex: int, slotInfo: ModelSlots):
         self._save_model_slot(slotIndex, slotInfo)
 
-    def update_model_info(self, newData: str):
-        logger.info(f"UPDATE MODEL INFO: {newData}")
-        newDataDict = json.loads(newData)
-        slotInfo = self._load_model_slot(newDataDict["slot"])
-        if newDataDict["key"] == "speakers":
-            setattr(slotInfo, newDataDict["key"], json.loads(newDataDict["val"]))
+    def update_model_info(self, slot_index: int, key: str, val):
+        logger.info(f"UPDATE MODEL INFO: {key}={val}")
+        slotInfo = self._load_model_slot(slot_index)
+        if key == "speakers":
+            setattr(slotInfo, key, json.loads(val))
         else:
-            setattr(slotInfo, newDataDict["key"], newDataDict["val"])
-        self._save_model_slot(newDataDict["slot"], slotInfo)
+            setattr(slotInfo, key, val)
+        self._save_model_slot(slot_index, slotInfo)
 
     def store_model_assets(self, params: str):
         paramsDict = json.loads(params)

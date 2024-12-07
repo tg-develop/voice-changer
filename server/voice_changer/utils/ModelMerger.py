@@ -1,6 +1,7 @@
 from typing import Protocol
 from const import VoiceChangerType
 from dataclasses import dataclass
+from settings import ServerSettings
 
 
 @dataclass
@@ -18,5 +19,5 @@ class ModelMergerRequest:
 
 class ModelMerger(Protocol):
     @classmethod
-    def merge_models(cls, request: ModelMergerRequest):
+    def merge_models(cls, params: ServerSettings, request: ModelMergerRequest, store_slot: int) -> str:
         ...

@@ -85,7 +85,7 @@ async def _downloadSamples(samples: list[ModelSamples], sampleModelIds: list[Tup
                 match = True
                 break
         if match is False:
-            logger.warn(f"Initial sample not found: {targetSampleId}")
+            logger.warning(f"Initial sample not found: {targetSampleId}")
             continue
 
         # 検出されたら、、、
@@ -144,7 +144,7 @@ async def _downloadSamples(samples: list[ModelSamples], sampleModelIds: list[Tup
             slotInfo.isONNX = slotInfo.modelFile.endswith(".onnx")
             modelSlotManager.save_model_slot(targetSlotIndex, slotInfo)
         else:
-            logger.warn(f"{sample.voiceChangerType} is not supported.")
+            logger.warning(f"{sample.voiceChangerType} is not supported.")
 
     # ダウンロード
     logger.info("Downloading model files...")

@@ -17,6 +17,8 @@ DOTENV_FILE = os.path.join(ROOT_PATH, '.env')
 STORED_SETTING_FILE = os.path.join(ROOT_PATH, 'stored_setting.json')
 ASSETS_FILE = os.path.join(ROOT_PATH, 'assets.json')
 
+PTH_MERGED_FILENAME = "merged.pth"
+
 SERVER_DEVICE_SAMPLE_RATES = [16000, 32000, 44100, 48000, 96000, 192000]
 
 tmpdir = tempfile.TemporaryDirectory()

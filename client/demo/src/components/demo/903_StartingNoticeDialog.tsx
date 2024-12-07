@@ -54,7 +54,7 @@ export const StartingNoticeDialog = () => {
 
         const welcomeMessage = (
             <div className="dialog-content-part">
-                <div>Thank you for using the application! If you like the application or encounter any issues, please leave a star or file an issue in the Github repository.</div>
+                <div>Thank you for using this application! If you like the application or encounter any issues, please leave a star or file an issue in the Github repository.</div>
                 <div>{githubLink} to visit the Github repository.</div>
             </div>
         );

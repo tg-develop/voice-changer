@@ -1,7 +1,7 @@
 import numpy as np
 import scipy
 
-from voice_changer.RVC.pitchExtractor import onnxcrepe
+from voice_changer.pitch_extractor import onnxcrepe
 
 
 ###############################################################################
