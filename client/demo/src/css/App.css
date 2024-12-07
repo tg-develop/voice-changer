@@ -75,7 +75,7 @@ body {
         --text-color: #dedede;
         --company-color1: rgba(64, 119, 187, 1);
         --company-color2: rgb(14, 25, 45);
-        --company-color3: rgba(0, 0, 0, 1);
+        --company-color3: rgb(20, 20, 20);
 
         --button-passthru-active-border: 1px solid #a80000;
         --button-passthru-active: #990000;
@@ -100,7 +100,7 @@ body {
         --dialog-background-tint: rgba(100, 100, 100, 0.4);
         --dialog-border-color: rgba(100, 100, 100, 1);
         --dialog-shadow-color: rgba(0, 0, 0, 0.3);
-        --dialog-background-color: rgba(0, 0, 0, 1);
+        --dialog-background-color: rgb(20, 20, 20);
     }
 
     .dialog-container, .dialog-container2 {
