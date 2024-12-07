@@ -9,6 +9,7 @@
 }
 
 :root {
+    --title-color: #FFF;
     --text-color: #333;
     --company-color1: rgba(64, 119, 187, 1);
     --company-color2: rgba(29, 47, 78, 1);
@@ -40,7 +41,7 @@
     --dialog-background-tint: rgba(200, 200, 200, 0.4);
     --dialog-border-color: rgba(100, 100, 100, 1);
     --dialog-shadow-color: rgba(0, 0, 0, 0.3);
-    --dialog-background-color: rgba(0, 0, 0, 1);
+    --dialog-background-color: rgba(255, 255, 255, 1);
 }
 
 html {
@@ -70,6 +71,7 @@ body {
 
 @media (prefers-color-scheme: dark) {
     :root {
+        --title-color: #dedede;
         --text-color: #dedede;
         --company-color1: rgba(64, 119, 187, 1);
         --company-color2: rgb(14, 25, 45);
@@ -123,10 +125,6 @@ body {
         color: #FFF
     }
 
-    a.hint-text {
-        color: var(--text-color)
-    }
-
     ::-webkit-scrollbar-track {
         background: #434343
     }
@@ -134,16 +132,20 @@ body {
         background: #6c6c6c
     }
 
-    select {
-        background: var(--company-color3);
-        color: var(--text-color);
-        max-width: 100%;
-    }
-
     textarea {
         background: #000000;
         color: #FFF;
     }
+}
+
+a.hint-text {
+    color: var(--text-color)
+}
+
+select {
+    background: var(--company-color3);
+    color: var(--text-color);
+    max-width: 100%;
 }
 
 .state-control-checkbox {
@@ -801,7 +803,7 @@ a.hint-text {
         .dialog-title {
             margin-top: 15px;
             background: var(--company-color2);
-            color: var(--text-color);
+            color: var(--title-color);
             width: 100%;
             text-align: center;
         }
