@@ -224,7 +224,7 @@ class VoiceChangerManager(ServerAudioCallbacks):
     def export2onnx(self):
         return self.vc.export2onnx()
 
-    async def merge_models(self, request: str):
+    async def merge_models(self, request: str) -> str | None:
         # self.vc.merge_models(request)
         req = json.loads(request)
         req = ModelMergerRequest(**req)
@@ -232,9 +232,7 @@ class VoiceChangerManager(ServerAudioCallbacks):
         # Slots range is 0-499
         slot = len(self.modelSlotManager.getAllSlotInfo()) - 1
         if req.voiceChangerType == "RVC":
-            merged = RVCModelMerger.merge_models(self.params, req, slot)
-            loadParam = LoadModelParams(voiceChangerType="RVC", slot=slot, isSampleMode=False, sampleId="", files=[LoadModelParamFile(name=os.path.basename(merged), kind="rvcModel", dir="")], params={})
-            await self.load_model(loadParam)
+            RVCModelMerger.merge_models(self.params, req, slot)
         return self.get_info()
 
     def setEmitTo(self, emitTo: Callable[[Any], None]):

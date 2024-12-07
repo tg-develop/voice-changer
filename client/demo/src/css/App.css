@@ -1845,6 +1845,7 @@ audio::-webkit-media-controls-overlay-enclosure{
             display: flex;
             flex-direction: column-reverse;
             width: 30%;
+            padding: 0 10px;
             .merge-lab-merge-button {
                 border: solid 2px #ddd;
                 color: black;
