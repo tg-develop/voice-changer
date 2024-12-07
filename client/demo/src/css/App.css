@@ -1659,8 +1659,8 @@ audio::-webkit-media-controls-overlay-enclosure{
                         cursor: pointer;
                     }
                     .config-sub-area-control-field-screen-select-button {
-                        border: solid 1px #333;
-                        background: #fff;
+                        border: var(--button-selector-inactive-border);
+                        background: var(--button-selector-inactive);
                         font-size: 0.8rem;
                         border-radius: 5px;
                         height: 1.2rem;
@@ -1681,13 +1681,11 @@ audio::-webkit-media-controls-overlay-enclosure{
                         }
                     }
                     .config-sub-area-control-field-wav-file-folder {
-                        height: 1rem;
-                        width: 1rem;
                         cursor: pointer;
                     }
                     .config-sub-area-control-field-wav-file-echoback-button {
-                        border: solid 1px #333;
-                        background: #fff;
+                        border: var(--button-selector-inactive-border);
+                        background: var(--button-selector-inactive);
                         font-size: 0.8rem;
                         border-radius: 5px;
                         height: 1.2rem;

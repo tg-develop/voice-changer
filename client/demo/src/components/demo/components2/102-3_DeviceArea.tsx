@@ -4,6 +4,8 @@ import { fileSelectorAsDataURL, useIndexedDB } from "@dannadori/voice-changer-cl
 import { useGuiState } from "../001_GuiStateProvider";
 import { AUDIO_ELEMENT_FOR_PLAY_MONITOR, AUDIO_ELEMENT_FOR_PLAY_RESULT, AUDIO_ELEMENT_FOR_TEST_CONVERTED, AUDIO_ELEMENT_FOR_TEST_CONVERTED_ECHOBACK, INDEXEDDB_KEY_AUDIO_MONITR, INDEXEDDB_KEY_AUDIO_OUTPUT } from "../../../const";
 import { isDesktopApp } from "../../../const";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFolderClosed } from "@fortawesome/free-regular-svg-icons";
 
 export type DeviceAreaProps = {};
 
@@ -293,7 +295,9 @@ export const DeviceArea = (_props: DeviceAreaProps) => {
                             <audio id={AUDIO_ELEMENT_FOR_TEST_CONVERTED_ECHOBACK} controls hidden></audio>
                         </div>
                         <div>
-                            <img className="config-sub-area-control-field-wav-file-folder" src="./assets/icons/folder.svg" onClick={onFileLoadClicked} />
+                            <a className="config-sub-area-control-field-wav-file-folder" onClick={onFileLoadClicked}>
+                                <FontAwesomeIcon icon={faFolderClosed} />
+                            </a>
                         </div>
                         <div
                             className={echobackClass}
