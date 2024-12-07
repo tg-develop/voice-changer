@@ -31,7 +31,7 @@ export const useStateControlCheckbox = (className: string, changeCallback?: (new
             return (
                 <input
                     type="checkbox"
-                    className={`${className} state-control-checkbox rotate-button`}
+                    className={`${className} state-control-checkbox`}
                     id={`${className}`}
                     onChange={(e) => {
                         callback(e.target.checked);
@@ -39,7 +39,7 @@ export const useStateControlCheckbox = (className: string, changeCallback?: (new
                 />
             );
         } else {
-            return <input type="checkbox" className={`${className} state-control-checkbox rotate-button`} id={`${className}`} />;
+            return <input type="checkbox" className={`${className} state-control-checkbox`} id={`${className}`} />;
         }
     }, []);
     const checked = useMemo(() => {
