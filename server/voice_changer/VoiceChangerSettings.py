@@ -396,3 +396,17 @@ class VoiceChangerSettings:
     @silenceFront.setter
     def silenceFront(self, enable: str):
         self._silenceFront = int(enable)
+
+    # Audio Effects settings
+    _audioEffects: dict = {}
+
+    @property
+    def audioEffects(self):
+        return self._audioEffects
+
+    @audioEffects.setter
+    def audioEffects(self, effects: str | dict):
+        if isinstance(effects, str):
+            import json
+            effects = json.loads(effects)
+        self._audioEffects = effects if effects else {}

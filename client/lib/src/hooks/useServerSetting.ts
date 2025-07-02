@@ -83,8 +83,18 @@ export const useServerSetting = (props: UseServerSettingProps): ServerSettingSta
                 const cur_v = serverSetting[k];
                 const new_v = setting[k];
 
-                if (cur_v != new_v) {
-                    const res = await props.voiceChangerClient.updateServerSettings(k, "" + new_v);
+                // Deep comparison for objects, simple comparison for primitives
+                const hasChanged = k === 'audioEffects' 
+                    ? JSON.stringify(cur_v) !== JSON.stringify(new_v)
+                    : cur_v != new_v;
+
+                if (hasChanged) {
+                    // Serialize objects as JSON, convert primitives to string
+                    const valueToSend = (k === 'audioEffects' && typeof new_v === 'object') 
+                        ? JSON.stringify(new_v) 
+                        : "" + new_v;
+                    
+                    const res = await props.voiceChangerClient.updateServerSettings(k, valueToSend);
                     setServerSetting(res);
                 }
             }

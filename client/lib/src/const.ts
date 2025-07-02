@@ -45,6 +45,42 @@ export const DiffMethod = {
 } as const;
 export type DiffMethod = (typeof DiffMethod)[keyof typeof DiffMethod];
 
+///////////////////////
+// Audio Effects
+///////////////////////
+export type AudioChannel = 'input' | 'output';
+
+// Server-side storage format (minimal data)
+export interface AudioEffect {
+    type: string;
+    channel: AudioChannel;
+    enabled: boolean;
+    parameters: Record<string, number | boolean | string>; // key-value pairs only
+}
+
+export type AudioEffectsConfiguration = AudioEffect[];
+
+// Client-side UI format (with metadata)
+export interface AudioEffectParameterDefinition {
+    name: string;
+    type: 'slider' | 'toggle' | 'select';
+    defaultValue: number | boolean | string;
+    min?: number;
+    max?: number;
+    step?: number;
+    options?: string[];
+    unit?: string;
+    description?: string;
+}
+
+export interface AudioEffectDefinition {
+    name: string;
+    description: string;
+    parameters: Record<string, AudioEffectParameterDefinition>;
+}
+
+export type AudioEffectDefinitions = Record<string, AudioEffectDefinition>;
+
 export const RVCModelType = {
     pyTorchRVC: "pyTorchRVC",
     pyTorchRVCNono: "pyTorchRVCNono",
@@ -106,6 +142,7 @@ export const ServerSettingKey = {
     modelSlotIndex: "modelSlotIndex",
 
     inputSampleRate: "inputSampleRate",
+    audioEffects: "audioEffects",
 } as const;
 export type ServerSettingKey = (typeof ServerSettingKey)[keyof typeof ServerSettingKey];
 
@@ -155,6 +192,7 @@ export type VoiceChangerServerSetting = {
     modelSlotIndex: number;
 
     inputSampleRate: InputSampleRate;
+    audioEffects: AudioEffectsConfiguration;
 };
 
 type ModelSlot = {
@@ -285,6 +323,7 @@ export const DefaultServerSetting: ServerInfo = {
     forceFp32: 0,
     disableJit: 0,
     modelSlotIndex: 0,
+    audioEffects: [],
     sampleModels: [],
     gpus: [],
 

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(python3:*)",
+      "Bash(pip install:*)",
+      "Bash(rm:*)"
+    ],
+    "deny": []
+  }
+}

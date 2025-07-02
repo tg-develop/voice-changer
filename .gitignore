@@ -7,7 +7,7 @@ node_modules
 __pycache__
 build
 dist
-
+.claude/
 server/upload_dir/
 server/MMVC_Client_v13/
 server/MMVC_Client_v15/
