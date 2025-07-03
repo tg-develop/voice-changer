@@ -194,6 +194,11 @@ class VoiceChangerManager(ServerAudioCallbacks):
         elif key == 'serverAudioSampleRate':
             self.update_settings('inputSampleRate', self.settings.serverAudioSampleRate)
             self.update_settings('outputSampleRate', self.settings.serverAudioSampleRate)
+        elif key == 'audioEffects':
+            # Configure audio effects on the pipeline
+            if hasattr(self.vc, 'vcmodel') and self.vc.vcmodel is not None and hasattr(self.vc.vcmodel, 'pipeline') and self.vc.vcmodel.pipeline is not None:
+                self.vc.vcmodel.pipeline.configure_audio_effects(self.settings.to_dict())
+                logger.info("Audio effects configuration updated")
 
         self.server_audio.update_settings(key, val, old_value)
         self.vc.update_settings(key, val, old_value)

@@ -76,6 +76,7 @@ export interface AudioEffectParameterDefinition {
 export interface AudioEffectDefinition {
     name: string;
     description: string;
+    provider?: string;
     parameters: Record<string, AudioEffectParameterDefinition>;
 }
 

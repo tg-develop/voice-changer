@@ -71,6 +71,11 @@ class RVCr2(VoiceChangerModel):
             self.pipeline = createPipeline(
                 self.slotInfo, self.settings.f0Detector, self.settings.useONNX, force_reload
             )
+            
+            # Configure initial audio effects from settings
+            if self.pipeline is not None and hasattr(self.settings, 'audioEffects'):
+                self.pipeline.configure_audio_effects(self.settings.to_dict())
+                logger.info("Initial audio effects configuration loaded")
         except Exception as e:  # NOQA
             logger.error("Failed to create pipeline.")
             logger.exception(e)
