@@ -16,19 +16,37 @@ class AudioEffectsManager:
     
     def _setup_default_providers(self) -> None:
         """Setup default audio effect providers"""
+        logger.info("Setting up default audio effect providers...")
+        
         try:
             from .providers.pedalboard.PedalboardProvider import PedalboardProvider
             pedalboard_provider = PedalboardProvider()
-            self.provider_registry.register_provider(pedalboard_provider)
-        except ImportError:
-            logger.warning("PedalboardProvider not available")
+            if pedalboard_provider.is_available:
+                self.provider_registry.register_provider(pedalboard_provider)
+                logger.info(f"PedalboardProvider registered successfully with {len(pedalboard_provider.supported_effects)} effects")
+            else:
+                logger.warning("PedalboardProvider not available (pedalboard library not installed)")
+        except ImportError as e:
+            logger.warning(f"PedalboardProvider import failed: {e}")
+        except Exception as e:
+            logger.error(f"Error setting up PedalboardProvider: {e}")
         
         try:
             from .providers.simple.SimpleProvider import SimpleProvider
             simple_provider = SimpleProvider()
-            self.provider_registry.register_provider(simple_provider)
-        except ImportError:
-            logger.warning("SimpleProvider not available")
+            if simple_provider.is_available:
+                self.provider_registry.register_provider(simple_provider)
+                logger.info(f"SimpleProvider registered successfully with {len(simple_provider.supported_effects)} effects")
+            else:
+                logger.warning("SimpleProvider not available")
+        except ImportError as e:
+            logger.warning(f"SimpleProvider import failed: {e}")
+        except Exception as e:
+            logger.error(f"Error setting up SimpleProvider: {e}")
+        
+        total_providers = len(self.provider_registry.providers)
+        total_effects = len(self.get_supported_effects())
+        logger.info(f"Audio effects setup complete: {total_providers} providers, {total_effects} total effects")
     
     def register_provider(self, provider) -> None:
         """Register a new audio effect provider"""

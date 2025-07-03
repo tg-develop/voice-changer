@@ -13,13 +13,11 @@ from voice_changer.utils.LoadModelParams import LoadModelParamFile, LoadModelPar
 import logging
 logger = logging.getLogger(__name__)
 
-class MMVC_Rest_Fileuploader:
+class MMVC_Rest_Models:
     def __init__(self, voiceChangerManager: VoiceChangerManager):
         self.voiceChangerManager = voiceChangerManager
         self.router = APIRouter()
-        self.router.add_api_route("/info", self.get_info, methods=["GET"])
         self.router.add_api_route("/upload_file", self.post_upload_file, methods=["POST"])
-        self.router.add_api_route("/update_settings", self.post_update_settings, methods=["POST"])
         self.router.add_api_route("/load_model", self.post_load_model, methods=["POST"])
         self.router.add_api_route("/onnx", self.get_onnx, methods=["GET"])
         self.router.add_api_route("/merge_model", self.post_merge_models, methods=["POST"])
@@ -31,22 +29,6 @@ class MMVC_Rest_Fileuploader:
         try:
             res = upload_file(UPLOAD_DIR, file, filename)
             json_compatible_item_data = jsonable_encoder(res)
-            return JSONResponse(content=json_compatible_item_data)
-        except Exception as e:
-            logger.exception(e)
-
-    def get_info(self):
-        try:
-            info = self.voiceChangerManager.get_info()
-            json_compatible_item_data = jsonable_encoder(info)
-            return JSONResponse(content=json_compatible_item_data)
-        except Exception as e:
-            logger.exception(e)
-
-    def post_update_settings(self, key: str = Form(...), val: Union[int, str, float] = Form(...)):
-        try:
-            info = self.voiceChangerManager.update_settings(key, val)
-            json_compatible_item_data = jsonable_encoder(info)
             return JSONResponse(content=json_compatible_item_data)
         except Exception as e:
             logger.exception(e)

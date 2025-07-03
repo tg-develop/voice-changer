@@ -10,7 +10,7 @@ from voice_changer.VoiceChangerManager import VoiceChangerManager
 
 from restapi.MMVC_Rest_Hello import MMVC_Rest_Hello
 from restapi.MMVC_Rest_VoiceChanger import MMVC_Rest_VoiceChanger
-from restapi.MMVC_Rest_Fileuploader import MMVC_Rest_Fileuploader
+from restapi.MMVC_Rest_Models import MMVC_Rest_Models
 from restapi.MMVC_Rest_AudioEffects import MMVC_Rest_AudioEffects
 from settings import get_settings
 from const import TMP_DIR
@@ -62,8 +62,8 @@ class MMVC_Rest:
             app_fastapi.include_router(restHello.router)
             restVoiceChanger = MMVC_Rest_VoiceChanger(voiceChangerManager)
             app_fastapi.include_router(restVoiceChanger.router)
-            fileUploader = MMVC_Rest_Fileuploader(voiceChangerManager)
-            app_fastapi.include_router(fileUploader.router)
+            modelsApi = MMVC_Rest_Models(voiceChangerManager)
+            app_fastapi.include_router(modelsApi.router)
             audioEffects = MMVC_Rest_AudioEffects(voiceChangerManager)
             app_fastapi.include_router(audioEffects.router)
 

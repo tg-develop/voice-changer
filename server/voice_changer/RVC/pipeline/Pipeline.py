@@ -24,11 +24,8 @@ from voice_changer.RVC.inferencer.Inferencer import Inferencer
 from voice_changer.pitch_extractor.PitchExtractor import PitchExtractor
 from voice_changer.utils.Timer import Timer2
 from const import F0_MEL_MIN, F0_MEL_MAX
-from voice_changer.audio_effects import (
-    AudioEffectsManager,
-    AudioEffectsConfig
-)
-from voice_changer.audio_effects.effects.PedalboardEffect import PedalboardEffect
+from voice_changer.audio_effects.AudioEffectsManager import AudioEffectsManager
+from voice_changer.audio_effects.AudioEffectsConfig import AudioEffectsConfig
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +42,7 @@ class Pipeline:
     model_sr: int
     device: torch.device
     isHalf: bool
-    effects_manager: AudioEffectsManager
+    audio_effects_manager: AudioEffectsManager
 
     def __init__(
         self,
@@ -84,31 +81,13 @@ class Pipeline:
 
         self.resamplers = {}
         
-        # Initialize Audio Effects Manager with Pedalboard effects
-        self.effects_manager = AudioEffectsManager()
-        self.effects_manager.register_effect("equalizer", PedalboardEffect)
-        self.effects_manager.register_effect("compressor", PedalboardEffect)
-        self.effects_manager.register_effect("echo", PedalboardEffect)
-        self.effects_manager.register_effect("reverb", PedalboardEffect)
-        self.effects_manager.register_effect("chorus", PedalboardEffect)
-        self.effects_manager.register_effect("distortion", PedalboardEffect)
-        self.effects_manager.register_effect("noiseGate", PedalboardEffect)
-        self.effects_manager.register_effect("gain", PedalboardEffect)
-        self.effects_manager.register_effect("lowpass", PedalboardEffect)
-        self.effects_manager.register_effect("highpass", PedalboardEffect)
-        # New Pedalboard effects
-        self.effects_manager.register_effect("bitcrush", PedalboardEffect)
-        self.effects_manager.register_effect("clipping", PedalboardEffect)
-        self.effects_manager.register_effect("limiter", PedalboardEffect)
-        self.effects_manager.register_effect("invert", PedalboardEffect)
-        self.effects_manager.register_effect("ladderFilter", PedalboardEffect)
-        self.effects_manager.register_effect("peakFilter", PedalboardEffect)
-        self.effects_manager.register_effect("highShelfFilter", PedalboardEffect)
-        self.effects_manager.register_effect("lowShelfFilter", PedalboardEffect)
-        self.effects_manager.register_effect("convolution", PedalboardEffect)
-        self.effects_manager.register_effect("mp3Compressor", PedalboardEffect)
-        self.effects_manager.register_effect("gsmCompressor", PedalboardEffect)
-        logger.info("Audio Effects Manager initialized with all Pedalboard effects")
+        # Initialize Audio Effects Manager with provider system
+        try:
+            self.audio_effects_manager = AudioEffectsManager()
+            logger.info("Audio Effects Manager initialized with provider system")
+        except Exception as e:
+            logger.error(f"Failed to initialize AudioEffectsManager: {e}")
+            self.audio_effects_manager = None
 
     def make_onnx_upscaler(self, dim_size: int):
         # Inputs
@@ -146,8 +125,12 @@ class Pipeline:
     
     def configure_audio_effects(self, settings: dict) -> None:
         """Configure audio effects from frontend settings"""
+        if self.audio_effects_manager is None:
+            logger.warning("AudioEffectsManager not available, skipping configuration")
+            return
+            
         success = AudioEffectsConfig.configure_effects_from_settings(
-            self.effects_manager, 
+            self.audio_effects_manager, 
             settings
         )
         if success:
@@ -228,7 +211,8 @@ class Pipeline:
             t.record("pre-process")
 
             # Audio Effects vor Voice Conversion anwenden
-            audio = self.effects_manager.process_input_chain(audio, sample_rate=16000)
+            if self.audio_effects_manager is not None:
+                audio = self.audio_effects_manager.process_input_chain(audio, sample_rate=16000)
             t.record("input-effects")
 
             # ピッチ検出
@@ -296,6 +280,7 @@ class Pipeline:
                 )
             
             # Audio Effects nach Voice Conversion anwenden
-            out_audio = self.effects_manager.process_output_chain(out_audio, sample_rate=self.model_sr)
+            if self.audio_effects_manager is not None:
+                out_audio = self.audio_effects_manager.process_output_chain(out_audio, sample_rate=self.model_sr)
             t.record("output-effects")
         return out_audio
