@@ -1,0 +1,654 @@
+{
+  "reverb": {
+    "name": "Reverb",
+    "description": "Adds room ambience and depth",
+    "provider": "Pedalboard",
+    "parameters": {
+      "roomSize": {
+        "name": "Room Size",
+        "type": "slider",
+        "defaultValue": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "description": "Controls the size of the simulated room space"
+      },
+      "damping": {
+        "name": "Damping",
+        "type": "slider",
+        "defaultValue": 0.3,
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "description": "Amount of high-frequency absorption in the room"
+      },
+      "wetDryMix": {
+        "name": "Wet/Dry Mix",
+        "type": "slider",
+        "defaultValue": 0.3,
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "description": "Balance between original and reverb signal"
+      },
+      "preDelay": {
+        "name": "Pre-delay",
+        "type": "slider",
+        "defaultValue": 20,
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "unit": "ms",
+        "description": "Delay before reverb starts, simulates room distance"
+      }
+    }
+  },
+  "echo": {
+    "name": "Echo",
+    "description": "Creates delayed repetitions",
+    "provider": "Pedalboard",
+    "parameters": {
+      "delayTime": {
+        "name": "Delay Time",
+        "type": "slider",
+        "defaultValue": 300,
+        "min": 50,
+        "max": 1000,
+        "step": 10,
+        "unit": "ms",
+        "description": "Time between the original sound and the echo"
+      },
+      "feedback": {
+        "name": "Feedback",
+        "type": "slider",
+        "defaultValue": 0.4,
+        "min": 0,
+        "max": 0.9,
+        "step": 0.01,
+        "description": "How much of the echo is fed back to create repeats"
+      },
+      "wetLevel": {
+        "name": "Wet Level",
+        "type": "slider",
+        "defaultValue": 0.3,
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "description": "Volume level of the echo effect"
+      },
+      "highCut": {
+        "name": "High Cut",
+        "type": "slider",
+        "defaultValue": 8000,
+        "min": 1000,
+        "max": 20000,
+        "step": 100,
+        "unit": "Hz",
+        "description": "Removes high frequencies from the echo"
+      }
+    }
+  },
+  "chorus": {
+    "name": "Chorus",
+    "description": "Adds richness and width",
+    "provider": "Pedalboard",
+    "parameters": {
+      "rate": {
+        "name": "Rate",
+        "type": "slider",
+        "defaultValue": 1.5,
+        "min": 0.1,
+        "max": 10,
+        "step": 0.1,
+        "unit": "Hz",
+        "description": "Speed of the chorus modulation"
+      },
+      "depth": {
+        "name": "Depth",
+        "type": "slider",
+        "defaultValue": 0.3,
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "description": "Intensity of the pitch modulation"
+      },
+      "mix": {
+        "name": "Mix",
+        "type": "slider",
+        "defaultValue": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "description": "Balance between dry and chorus signal"
+      },
+      "voiceCount": {
+        "name": "Voice Count",
+        "type": "select",
+        "defaultValue": "3",
+        "options": ["2", "3", "4", "6"],
+        "description": "Number of virtual voices in the chorus"
+      }
+    }
+  },
+  "distortion": {
+    "name": "Distortion",
+    "description": "Adds harmonic saturation",
+    "provider": "Pedalboard",
+    "parameters": {
+      "drive": {
+        "name": "Drive",
+        "type": "slider",
+        "defaultValue": 0.3,
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "description": "Amount of distortion applied to the signal"
+      },
+      "tone": {
+        "name": "Tone",
+        "type": "slider",
+        "defaultValue": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "description": "EQ balance from dark to bright"
+      },
+      "level": {
+        "name": "Level",
+        "type": "slider",
+        "defaultValue": 0.7,
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "description": "Output volume of the effect"
+      },
+      "type": {
+        "name": "Type",
+        "type": "select",
+        "defaultValue": "soft",
+        "options": ["soft", "hard", "tube", "fuzz"],
+        "description": "Character of the distortion algorithm"
+      }
+    }
+  },
+  "compressor": {
+    "name": "Compressor",
+    "description": "Controls dynamic range",
+    "provider": "Pedalboard",
+    "parameters": {
+      "threshold": {
+        "name": "Threshold",
+        "type": "slider",
+        "defaultValue": -20,
+        "min": -60,
+        "max": 0,
+        "step": 1,
+        "unit": "dB",
+        "description": "Level above which compression starts"
+      },
+      "ratio": {
+        "name": "Ratio",
+        "type": "slider",
+        "defaultValue": 4,
+        "min": 1,
+        "max": 20,
+        "step": 0.1,
+        "description": "How much the signal is compressed (4:1 means 4dB in = 1dB out)"
+      },
+      "attack": {
+        "name": "Attack",
+        "type": "slider",
+        "defaultValue": 10,
+        "min": 0.1,
+        "max": 100,
+        "step": 0.1,
+        "unit": "ms",
+        "description": "How quickly the compressor responds to loud signals"
+      },
+      "release": {
+        "name": "Release",
+        "type": "slider",
+        "defaultValue": 100,
+        "min": 10,
+        "max": 1000,
+        "step": 10,
+        "unit": "ms",
+        "description": "How quickly the compressor stops compressing"
+      }
+    }
+  },
+  "equalizer": {
+    "name": "Equalizer",
+    "description": "Adjusts frequency response",
+    "provider": "Pedalboard",
+    "parameters": {
+      "low": {
+        "name": "Low (80Hz)",
+        "type": "slider",
+        "defaultValue": 0,
+        "min": -12,
+        "max": 12,
+        "step": 0.1,
+        "unit": "dB",
+        "description": "Boost or cut low frequencies (bass)"
+      },
+      "lowMid": {
+        "name": "Low-Mid (320Hz)",
+        "type": "slider",
+        "defaultValue": 0,
+        "min": -12,
+        "max": 12,
+        "step": 0.1,
+        "unit": "dB",
+        "description": "Boost or cut low-mid frequencies (warmth)"
+      },
+      "mid": {
+        "name": "Mid (1.25kHz)",
+        "type": "slider",
+        "defaultValue": 0,
+        "min": -12,
+        "max": 12,
+        "step": 0.1,
+        "unit": "dB",
+        "description": "Boost or cut mid frequencies (presence)"
+      },
+      "highMid": {
+        "name": "High-Mid (5kHz)",
+        "type": "slider",
+        "defaultValue": 0,
+        "min": -12,
+        "max": 12,
+        "step": 0.1,
+        "unit": "dB",
+        "description": "Boost or cut high-mid frequencies (clarity)"
+      },
+      "high": {
+        "name": "High (12.5kHz)",
+        "type": "slider",
+        "defaultValue": 0,
+        "min": -12,
+        "max": 12,
+        "step": 0.1,
+        "unit": "dB",
+        "description": "Boost or cut high frequencies (air/brightness)"
+      }
+    }
+  },
+  "noiseGate": {
+    "name": "Noise Gate",
+    "description": "Eliminates unwanted background noise",
+    "provider": "Pedalboard",
+    "parameters": {
+      "threshold": {
+        "name": "Threshold",
+        "type": "slider",
+        "defaultValue": -30,
+        "min": -60,
+        "max": 0,
+        "step": 1,
+        "unit": "dB",
+        "description": "Level below which audio is gated (silenced)"
+      },
+      "ratio": {
+        "name": "Ratio",
+        "type": "slider",
+        "defaultValue": 10,
+        "min": 1,
+        "max": 20,
+        "step": 0.1,
+        "description": "How aggressively the gate closes"
+      },
+      "attack": {
+        "name": "Attack",
+        "type": "slider",
+        "defaultValue": 5,
+        "min": 0.1,
+        "max": 100,
+        "step": 0.1,
+        "unit": "ms",
+        "description": "How quickly the gate opens"
+      },
+      "release": {
+        "name": "Release",
+        "type": "slider",
+        "defaultValue": 100,
+        "min": 10,
+        "max": 1000,
+        "step": 10,
+        "unit": "ms",
+        "description": "How quickly the gate closes"
+      }
+    }
+  },
+  "gain": {
+    "name": "Gain",
+    "description": "Adjusts overall volume level",
+    "provider": "Pedalboard",
+    "parameters": {
+      "gain": {
+        "name": "Gain",
+        "type": "slider",
+        "defaultValue": 0,
+        "min": -20,
+        "max": 20,
+        "step": 0.1,
+        "unit": "dB",
+        "description": "Amount of volume boost or cut"
+      }
+    }
+  },
+  "lowpass": {
+    "name": "Low Pass Filter",
+    "description": "Removes high frequencies above cutoff",
+    "provider": "Pedalboard",
+    "parameters": {
+      "cutoff": {
+        "name": "Cutoff Frequency",
+        "type": "slider",
+        "defaultValue": 8000,
+        "min": 100,
+        "max": 20000,
+        "step": 50,
+        "unit": "Hz",
+        "description": "Frequency above which signals are filtered out"
+      },
+      "resonance": {
+        "name": "Resonance",
+        "type": "slider",
+        "defaultValue": 0.7,
+        "min": 0.1,
+        "max": 10,
+        "step": 0.1,
+        "description": "Emphasis at the cutoff frequency"
+      }
+    }
+  },
+  "highpass": {
+    "name": "High Pass Filter",
+    "description": "Removes low frequencies below cutoff",
+    "provider": "Pedalboard",
+    "parameters": {
+      "cutoff": {
+        "name": "Cutoff Frequency",
+        "type": "slider",
+        "defaultValue": 100,
+        "min": 20,
+        "max": 2000,
+        "step": 10,
+        "unit": "Hz",
+        "description": "Frequency below which signals are filtered out"
+      },
+      "resonance": {
+        "name": "Resonance",
+        "type": "slider",
+        "defaultValue": 0.7,
+        "min": 0.1,
+        "max": 10,
+        "step": 0.1,
+        "description": "Emphasis at the cutoff frequency"
+      }
+    }
+  },
+  "bitcrush": {
+    "name": "Bitcrush",
+    "description": "Adds lo-fi digital reduction",
+    "provider": "Pedalboard",
+    "parameters": {
+      "bitDepth": {
+        "name": "Bit Depth",
+        "type": "slider",
+        "defaultValue": 8,
+        "min": 1,
+        "max": 16,
+        "step": 1,
+        "unit": "bits",
+        "description": "Number of bits for quantization (lower = more distorted)"
+      }
+    }
+  },
+  "clipping": {
+    "name": "Clipping",
+    "description": "Hard distortion by signal clipping",
+    "provider": "Pedalboard",
+    "parameters": {
+      "threshold": {
+        "name": "Threshold",
+        "type": "slider",
+        "defaultValue": -6,
+        "min": -20,
+        "max": 0,
+        "step": 0.1,
+        "unit": "dB",
+        "description": "Level at which clipping occurs"
+      }
+    }
+  },
+  "limiter": {
+    "name": "Limiter",
+    "description": "Prevents audio from exceeding threshold",
+    "provider": "Pedalboard",
+    "parameters": {
+      "threshold": {
+        "name": "Threshold",
+        "type": "slider",
+        "defaultValue": -3,
+        "min": -20,
+        "max": 0,
+        "step": 0.1,
+        "unit": "dB",
+        "description": "Maximum output level"
+      },
+      "release": {
+        "name": "Release",
+        "type": "slider",
+        "defaultValue": 50,
+        "min": 1,
+        "max": 1000,
+        "step": 1,
+        "unit": "ms",
+        "description": "Time to return to normal after limiting"
+      }
+    }
+  },
+  "invert": {
+    "name": "Invert",
+    "description": "Flips signal polarity",
+    "provider": "Pedalboard",
+    "parameters": {}
+  },
+  "ladderFilter": {
+    "name": "Ladder Filter",
+    "description": "Moog-style multimode filter",
+    "provider": "Pedalboard",
+    "parameters": {
+      "cutoff": {
+        "name": "Cutoff Frequency",
+        "type": "slider",
+        "defaultValue": 1000,
+        "min": 20,
+        "max": 20000,
+        "step": 10,
+        "unit": "Hz",
+        "description": "Filter cutoff frequency"
+      },
+      "resonance": {
+        "name": "Resonance",
+        "type": "slider",
+        "defaultValue": 0.7,
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "description": "Filter resonance (emphasis at cutoff)"
+      },
+      "drive": {
+        "name": "Drive",
+        "type": "slider",
+        "defaultValue": 1.0,
+        "min": 1,
+        "max": 10,
+        "step": 0.1,
+        "description": "Amount of filter overdrive"
+      },
+      "mode": {
+        "name": "Mode",
+        "type": "select",
+        "defaultValue": "LPF12",
+        "options": ["LPF12", "LPF24", "HPF12", "HPF24", "BPF12", "BPF24"],
+        "description": "Filter mode (LPF=lowpass, HPF=highpass, BPF=bandpass, 12/24=slope)"
+      }
+    }
+  },
+  "peakFilter": {
+    "name": "Peak Filter",
+    "description": "Parametric EQ band",
+    "provider": "Pedalboard",
+    "parameters": {
+      "cutoff": {
+        "name": "Frequency",
+        "type": "slider",
+        "defaultValue": 1000,
+        "min": 20,
+        "max": 20000,
+        "step": 10,
+        "unit": "Hz",
+        "description": "Center frequency of the peak"
+      },
+      "gain": {
+        "name": "Gain",
+        "type": "slider",
+        "defaultValue": 0,
+        "min": -12,
+        "max": 12,
+        "step": 0.1,
+        "unit": "dB",
+        "description": "Boost or cut at the center frequency"
+      },
+      "q": {
+        "name": "Q Factor",
+        "type": "slider",
+        "defaultValue": 1.0,
+        "min": 0.1,
+        "max": 10,
+        "step": 0.1,
+        "description": "Width of the frequency band (higher = narrower)"
+      }
+    }
+  },
+  "highShelfFilter": {
+    "name": "High Shelf Filter",
+    "description": "Boosts/cuts high frequencies",
+    "provider": "Pedalboard",
+    "parameters": {
+      "cutoff": {
+        "name": "Cutoff Frequency",
+        "type": "slider",
+        "defaultValue": 8000,
+        "min": 1000,
+        "max": 20000,
+        "step": 100,
+        "unit": "Hz",
+        "description": "Frequency where shelf begins"
+      },
+      "gain": {
+        "name": "Gain",
+        "type": "slider",
+        "defaultValue": 0,
+        "min": -12,
+        "max": 12,
+        "step": 0.1,
+        "unit": "dB",
+        "description": "Amount of boost or cut"
+      },
+      "q": {
+        "name": "Q Factor",
+        "type": "slider",
+        "defaultValue": 0.7,
+        "min": 0.1,
+        "max": 10,
+        "step": 0.1,
+        "description": "Sharpness of the transition"
+      }
+    }
+  },
+  "lowShelfFilter": {
+    "name": "Low Shelf Filter",
+    "description": "Boosts/cuts low frequencies",
+    "provider": "Pedalboard",
+    "parameters": {
+      "cutoff": {
+        "name": "Cutoff Frequency",
+        "type": "slider",
+        "defaultValue": 200,
+        "min": 20,
+        "max": 2000,
+        "step": 10,
+        "unit": "Hz",
+        "description": "Frequency where shelf begins"
+      },
+      "gain": {
+        "name": "Gain",
+        "type": "slider",
+        "defaultValue": 0,
+        "min": -12,
+        "max": 12,
+        "step": 0.1,
+        "unit": "dB",
+        "description": "Amount of boost or cut"
+      },
+      "q": {
+        "name": "Q Factor",
+        "type": "slider",
+        "defaultValue": 0.7,
+        "min": 0.1,
+        "max": 10,
+        "step": 0.1,
+        "description": "Sharpness of the transition"
+      }
+    }
+  },
+  "convolution": {
+    "name": "Convolution",
+    "description": "Impulse response reverb/simulation",
+    "provider": "Pedalboard",
+    "parameters": {
+      "impulseResponse": {
+        "name": "Impulse Response",
+        "type": "select",
+        "defaultValue": "hall",
+        "options": ["hall", "room", "plate", "spring", "cathedral"],
+        "description": "Type of acoustic space to simulate"
+      },
+      "mix": {
+        "name": "Mix",
+        "type": "slider",
+        "defaultValue": 0.3,
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "description": "Balance between dry and processed signal"
+      }
+    }
+  },
+  "mp3Compressor": {
+    "name": "MP3 Compressor",
+    "description": "Adds MP3 compression artifacts",
+    "provider": "Pedalboard",
+    "parameters": {
+      "vbrQuality": {
+        "name": "VBR Quality",
+        "type": "slider",
+        "defaultValue": 2,
+        "min": 0,
+        "max": 9,
+        "step": 1,
+        "description": "MP3 VBR quality (0=highest, 9=lowest)"
+      }
+    }
+  },
+  "gsmCompressor": {
+    "name": "GSM Compressor",
+    "description": "2G cellular phone compression",
+    "provider": "Pedalboard",
+    "parameters": {}
+  }
+}

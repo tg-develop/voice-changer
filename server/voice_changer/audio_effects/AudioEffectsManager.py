@@ -2,6 +2,7 @@ from typing import List, Dict, Any, Optional
 import torch
 import logging
 from .AudioEffect import AudioEffect, AudioChannel
+from .AudioEffectProvider import ProviderRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -10,21 +11,42 @@ class AudioEffectsManager:
     def __init__(self):
         self.input_effects: List[AudioEffect] = []
         self.output_effects: List[AudioEffect] = []
-        self.available_effects: Dict[str, type] = {}
+        self.provider_registry = ProviderRegistry()
+        self._setup_default_providers()
     
-    def register_effect(self, effect_type: str, effect_class: type) -> None:
-        self.available_effects[effect_type] = effect_class
-        logger.info(f"Registered audio effect: {effect_type}")
+    def _setup_default_providers(self) -> None:
+        """Setup default audio effect providers"""
+        try:
+            from .providers.pedalboard.PedalboardProvider import PedalboardProvider
+            pedalboard_provider = PedalboardProvider()
+            self.provider_registry.register_provider(pedalboard_provider)
+        except ImportError:
+            logger.warning("PedalboardProvider not available")
+        
+        try:
+            from .providers.simple.SimpleProvider import SimpleProvider
+            simple_provider = SimpleProvider()
+            self.provider_registry.register_provider(simple_provider)
+        except ImportError:
+            logger.warning("SimpleProvider not available")
+    
+    def register_provider(self, provider) -> None:
+        """Register a new audio effect provider"""
+        self.provider_registry.register_provider(provider)
+        logger.info(f"Registered audio effect provider: {provider.provider_name}")
     
     def add_effect(self, effect_type: str, channel: AudioChannel, order: int = 0, parameters: Optional[Dict[str, Any]] = None) -> AudioEffect:
-        if effect_type not in self.available_effects:
+        # Create effect using provider registry
+        effect = self.provider_registry.create_effect(effect_type, channel, order)
+        if effect is None:
             raise ValueError(f"Unknown effect type: {effect_type}")
         
-        effect_class = self.available_effects[effect_type]
-        effect = effect_class(effect_type, channel, order)
-        
         if parameters:
-            effect.set_parameters(parameters)
+            # Validate parameters if possible
+            if self.provider_registry.validate_effect_parameters(effect_type, parameters):
+                effect.set_parameters(parameters)
+            else:
+                logger.warning(f"Invalid parameters for effect {effect_type}, using defaults")
         
         if channel == "input":
             self.input_effects.append(effect)
@@ -74,11 +96,12 @@ class AudioEffectsManager:
             logger.error(f"Error in output effects chain: {e}")
             return audio
     
-    def get_effects_info(self) -> Dict[str, List[Dict[str, Any]]]:
+    def get_effects_info(self) -> Dict[str, Any]:
         return {
             "input_effects": [effect.get_effect_info() for effect in self.input_effects],
             "output_effects": [effect.get_effect_info() for effect in self.output_effects],
-            "available_effects": list(self.available_effects.keys())
+            "available_effects": self.provider_registry.get_all_supported_effects(),
+            "providers": self.provider_registry.get_providers_info()
         }
     
     def update_effect_parameters(self, effect_type: str, channel: AudioChannel, order: int, parameters: Dict[str, Any]) -> bool:
@@ -111,3 +134,15 @@ class AudioEffectsManager:
             if effect.effect_type == effect_type and effect.order == order:
                 return effect
         return None
+    
+    def get_supported_effects(self) -> Dict[str, Dict[str, Any]]:
+        """Get all supported effects with their parameter schemas"""
+        return self.provider_registry.get_all_supported_effects()
+    
+    def get_providers_info(self) -> List[Dict[str, Any]]:
+        """Get information about all registered providers"""
+        return self.provider_registry.get_providers_info()
+    
+    def validate_effect_parameters(self, effect_type: str, parameters: Dict[str, Any]) -> bool:
+        """Validate parameters for a specific effect type"""
+        return self.provider_registry.validate_effect_parameters(effect_type, parameters)
