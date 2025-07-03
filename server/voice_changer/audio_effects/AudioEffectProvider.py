@@ -118,7 +118,7 @@ class ProviderRegistry:
         for effect_type in provider.get_supported_effects():
             if effect_type in self._effect_to_provider:
                 existing_provider = self._effect_to_provider[effect_type]
-                logger.warning(f"Effect '{effect_type}' already registered by provider '{existing_provider}', "
+                logger.debug(f"Effect '{effect_type}' already registered by provider '{existing_provider}', "
                              f"overriding with '{provider.provider_name}'")
             self._effect_to_provider[effect_type] = provider.provider_name
         
@@ -153,7 +153,21 @@ class ProviderRegistry:
     
     def get_providers_info(self) -> List[Dict[str, Any]]:
         """Get information about all registered providers"""
-        return [provider.get_provider_info() for provider in self.providers.values()]
+        provider_info = []
+        all_effects = self.get_all_supported_effects()
+        
+        for provider in self.providers.values():
+            # Count effects that are actually available from this provider in the final schema
+            provider_effects_in_schema = [
+                effect_type for effect_type, effect_data in all_effects.items()
+                if effect_data.get("provider") == provider.provider_name
+            ]
+            
+            info = provider.get_provider_info()
+            info["effect_count"] = len(provider_effects_in_schema)
+            provider_info.append(info)
+        
+        return provider_info
     
     def validate_effect_parameters(self, effect_type: str, parameters: Dict[str, Any]) -> bool:
         """Validate parameters for a specific effect type"""

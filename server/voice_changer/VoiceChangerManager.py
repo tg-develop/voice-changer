@@ -66,6 +66,14 @@ class VoiceChangerManager(ServerAudioCallbacks):
         self.vc = VoiceChangerV2(self.settings)
         self.server_audio = ServerAudio(self, self.settings)
 
+        # Initialize audio effects manager once
+        self.audio_effects_manager = None
+        try:
+            from voice_changer.audio_effects.AudioEffectsManager import AudioEffectsManager
+            self.audio_effects_manager = AudioEffectsManager()
+        except Exception as e:
+            logger.warning(f"Failed to initialize audio effects manager: {e}")
+
         logger.info("Initialized.")
 
         # Initialize the voice changer
@@ -136,6 +144,22 @@ class VoiceChangerManager(ServerAudioCallbacks):
         info = self.vc.get_info()
         data.update(info)
 
+        # Add audio effects schema and providers info
+        if self.audio_effects_manager:
+            try:
+                data["audioEffectsSchema"] = self.audio_effects_manager.get_supported_effects()
+                data["audioEffectsProviders"] = {
+                    "providers": self.audio_effects_manager.get_providers_info(),
+                    "total_effects": len(self.audio_effects_manager.get_supported_effects())
+                }
+            except Exception as e:
+                logger.warning(f"Failed to load audio effects info: {e}")
+                data["audioEffectsSchema"] = {}
+                data["audioEffectsProviders"] = {"providers": [], "total_effects": 0}
+        else:
+            data["audioEffectsSchema"] = {}
+            data["audioEffectsProviders"] = {"providers": [], "total_effects": 0}
+
         return data
 
     def initialize(self, val: int):
@@ -160,7 +184,11 @@ class VoiceChangerManager(ServerAudioCallbacks):
             logger.error(f"Unknown voice changer model: {slotInfo.voiceChangerType}")
 
     def update_settings(self, key: str, val: Any):
-        logger.info(f"update configuration {key}: {val}")
+        # Only log audio effects changes at debug level to reduce noise
+        if key == 'audioEffects':
+            logger.debug(f"update configuration {key}: {val}")
+        else:
+            logger.info(f"update configuration {key}: {val}")
         error, old_value = self.settings.set_property(key, val)
         if error:
             return self.get_info()
@@ -198,7 +226,7 @@ class VoiceChangerManager(ServerAudioCallbacks):
             # Configure audio effects on the pipeline
             if hasattr(self.vc, 'vcmodel') and self.vc.vcmodel is not None and hasattr(self.vc.vcmodel, 'pipeline') and self.vc.vcmodel.pipeline is not None:
                 self.vc.vcmodel.pipeline.configure_audio_effects(self.settings.to_dict())
-                logger.info("Audio effects configuration updated")
+                logger.debug("Audio effects configuration updated")
 
         self.server_audio.update_settings(key, val, old_value)
         self.vc.update_settings(key, val, old_value)

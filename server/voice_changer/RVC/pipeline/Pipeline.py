@@ -134,7 +134,7 @@ class Pipeline:
             settings
         )
         if success:
-            logger.info("Audio effects configured successfully")
+            logger.debug("Audio effects configured successfully")
         else:
             logger.warning("Failed to configure audio effects")
 

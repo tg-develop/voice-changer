@@ -75,7 +75,7 @@ class AudioEffectsManager:
             # Sort by order after adding
             self.output_effects.sort(key=lambda x: x.order)
         
-        logger.info(f"Added {effect_type} effect to {channel} chain with order {order}")
+        logger.debug(f"Added {effect_type} effect to {channel} chain with order {order}")
         return effect
     
     def remove_effect(self, effect: AudioEffect) -> None:
@@ -90,7 +90,7 @@ class AudioEffectsManager:
             self.input_effects.clear()
         if channel is None or channel == "output":
             self.output_effects.clear()
-        logger.info(f"Cleared effects for {channel or 'all'} channel(s)")
+        logger.debug(f"Cleared effects for {channel or 'all'} channel(s)")
     
     def process_input_chain(self, audio: torch.Tensor, sample_rate: int) -> torch.Tensor:
         try:

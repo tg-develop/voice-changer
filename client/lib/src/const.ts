@@ -82,6 +82,23 @@ export interface AudioEffectDefinition {
 
 export type AudioEffectDefinitions = Record<string, AudioEffectDefinition>;
 
+// Audio Effects Schema (from server API)
+export interface AudioEffectsSchema {
+    [effectType: string]: AudioEffectDefinition;
+}
+
+export interface AudioEffectsProviderInfo {
+    name: string;
+    available: boolean;
+    supported_effects: string[];
+    effect_count: number;
+}
+
+export interface AudioEffectsProvidersResponse {
+    providers: AudioEffectsProviderInfo[];
+    total_effects: number;
+}
+
 export const RVCModelType = {
     pyTorchRVC: "pyTorchRVC",
     pyTorchRVCNono: "pyTorchRVCNono",
@@ -252,6 +269,8 @@ export type ServerInfo = VoiceChangerServerSetting & {
     voiceChangerParams: {
         model_dir: string;
     };
+    audioEffectsSchema: AudioEffectsSchema;
+    audioEffectsProviders: AudioEffectsProvidersResponse;
 };
 
 export type SampleModel = {
@@ -337,6 +356,11 @@ export const DefaultServerSetting: ServerInfo = {
     maxInputLength: 128 * 2048,
     voiceChangerParams: {
         model_dir: "",
+    },
+    audioEffectsSchema: {},
+    audioEffectsProviders: {
+        providers: [],
+        total_effects: 0,
     },
 };
 

@@ -57,7 +57,7 @@ class AudioEffectsConfig:
                 }
                 
                 parsed_effects.append(parsed_effect)
-                logger.info("Parsed effect: %s on %s channel", effect_type, channel)
+                logger.debug("Parsed effect: %s on %s channel", effect_type, channel)
                 
             except Exception as e:
                 logger.error("Error parsing effect at index %d: %s", i, e)
@@ -94,7 +94,7 @@ class AudioEffectsConfig:
                     parameters=effect["parameters"]
                 )
                 added_effect.set_enabled(effect["enabled"])
-                logger.info("Added input effect: %s (order: %d, enabled: %s)", 
+                logger.debug("Added input effect: %s (order: %d, enabled: %s)", 
                           effect["type"], effect["order"], effect["enabled"])
             except Exception as e:
                 logger.error("Failed to add input effect %s: %s", effect["type"], e)
@@ -109,7 +109,7 @@ class AudioEffectsConfig:
                     parameters=effect["parameters"]
                 )
                 added_effect.set_enabled(effect["enabled"])
-                logger.info("Added output effect: %s (order: %d, enabled: %s)",
+                logger.debug("Added output effect: %s (order: %d, enabled: %s)",
                           effect["type"], effect["order"], effect["enabled"])
             except Exception as e:
                 logger.error("Failed to add output effect %s: %s", effect["type"], e)
@@ -123,7 +123,18 @@ class AudioEffectsConfig:
         try:
             effects_config = AudioEffectsConfig.parse_effects_from_config(settings)
             AudioEffectsConfig.apply_effects_to_manager(effects_manager, effects_config)
-            logger.info("Successfully configured %d audio effects", len(effects_config))
+            # Count active (enabled) effects
+            active_effects = [effect for effect in effects_config if effect.get("enabled", False)]
+            total_effects = len(effects_config)
+            
+            # Log at INFO level if this is the first configuration or if there are active effects
+            if total_effects > 0:
+                if len(active_effects) > 0:
+                    logger.info("Successfully configured %d audio effects (%d active)", total_effects, len(active_effects))
+                else:
+                    logger.info("Successfully configured %d audio effects (all disabled)", total_effects)
+            else:
+                logger.debug("Successfully configured %d audio effects", total_effects)
             return True
         except Exception as e:
             logger.error("Failed to configure audio effects: %s", e)
