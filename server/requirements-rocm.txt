@@ -4,13 +4,13 @@
 # # bash Anaconda3-2022.10-Linux-x86_64.sh
 
 --extra-index-url https://download.pytorch.org/whl/rocm6.2
-torch
-torchaudio
-faiss-cpu
+torch==2.7.1
+torchaudio==2.7.1
+faiss-cpu==1.11.0
 
-onnxscript
-onnxsim
+onnxscript==0.2.6
+onnxsim==0.4.36
 onnxruntime-rocm @ https://repo.radeon.com/rocm/manylinux/rocm-rel-6.2.3/onnxruntime_rocm-1.18.0-cp310-cp310-linux_x86_64.whl
-torchcrepe
-torchfcpe
-safetensors
+torchcrepe==0.0.24
+torchfcpe==0.0.4
+safetensors==0.5.3

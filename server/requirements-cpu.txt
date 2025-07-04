@@ -4,13 +4,13 @@
 # # bash Anaconda3-2022.10-Linux-x86_64.sh
 
 --extra-index-url https://download.pytorch.org/whl/cpu
-torch
-torchaudio
-faiss-cpu
+torch==2.7.1
+torchaudio==2.7.1
+faiss-cpu==1.11.0
 
-onnxscript
-onnxsim
-onnxruntime
-torchcrepe
-torchfcpe
-safetensors
+onnxscript==0.2.6
+onnxsim==0.4.36
+onnxruntime==1.20.0
+torchcrepe==0.0.24
+torchfcpe==0.0.4
+safetensors==0.5.3
