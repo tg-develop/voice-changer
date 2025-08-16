@@ -20,7 +20,7 @@ with open('edition.txt', 'w') as f:
     else:
       f.write('-')
 
-datas = [('../client/demo/dist', './dist'), ('./edition.txt', '.')]
+datas = [('../client/modern-gui/dist', './dist'), ('./edition.txt', '.')]
 
 if 'BUILD_NAME' in os.environ:
   with open('version.txt', 'w') as f:
