@@ -6,7 +6,6 @@ dummy
 node_modules
 __pycache__
 build
-dist
 **/.claude/
 server/upload_dir/
 server/MMVC_Client_v13/
@@ -39,14 +38,25 @@ server/test
 
 server/memo.md
 
-client/lib/dist
-client/lib/worklet/dist
-client/demo/public/models
-client/demo/public/models_
-client/demo/dist/models
-client/demo/dist_web
-client/demo/src/001_provider/backup
-# client/demo/dist/ # demo用に残す
+# client/modern-gui
+# dependencies
+/client/modern-gui/node_modules
+/client/modern-gui/.pnp
+/client/modern-gui/.pnp.js
+
+# testing
+/client/modern-gui/coverage
+
+# misc
+/client/modern-gui/**/.DS_Store
+/client/modern-gui/.env.local
+/client/modern-gui/.env.development.local
+/client/modern-gui/.env.test.local
+/client/modern-gui/.env.production.local
+
+/client/modern-gui/npm-debug.log*
+/client/modern-gui/yarn-debug.log*
+/client/modern-gui/yarn-error.log*
 
 docker/cudnn/
 
@@ -74,3 +84,4 @@ start_trainer.sh
 
 # venv
 venv/
+
