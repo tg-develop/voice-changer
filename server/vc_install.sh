@@ -142,17 +142,9 @@ show_completion() {
     echo "To start the voice changer server:"
     echo ""
     if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
-        echo "1. Activate the virtual environment:"
-        echo "   venv\\Scripts\\activate"
-        echo ""
-        echo "2. Start the server:"
-        echo "   python app.py"
+        echo "Run ./vc_start.sh"
     else
-        echo "1. Activate the virtual environment:"
-        echo "   source venv/bin/activate"
-        echo ""
-        echo "2. Start the server:"
-        echo "   python app.py"
+        echo "Run ./vc_start.sh"
     fi
     echo ""
     echo "Backend: $BACKEND"
@@ -166,7 +158,7 @@ main() {
     echo ""
     
     # Check if we're in the server directory
-    if [ ! -f "app.py" ] || [ ! -f "requirements-common.txt" ]; then
+    if [ ! -f "main.py" ] || [ ! -f "requirements-common.txt" ]; then
         echo "Error: This script must be run from the server directory"
         echo "Please navigate to the server directory and run the script again"
         exit 1

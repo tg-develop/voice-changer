@@ -24,12 +24,12 @@ for /f "tokens=1,2 delims=." %%a in ("%PYTHON_VERSION%") do (
 )
 
 if %PYTHON_MAJOR% lss 3 (
-    echo Error: Python 3.8 or higher is required. Found: %PYTHON_VERSION%
+    echo Error: Python 3.10 or higher is required. Found: %PYTHON_VERSION%
     pause
     exit /b 1
 )
-if %PYTHON_MAJOR% equ 3 if %PYTHON_MINOR% lss 8 (
-    echo Error: Python 3.8 or higher is required. Found: %PYTHON_VERSION%
+if %PYTHON_MAJOR% equ 3 if %PYTHON_MINOR% lss 10 (
+    echo Error: Python 3.10 or higher is required. Found: %PYTHON_VERSION%
     pause
     exit /b 1
 )
@@ -153,11 +153,7 @@ echo ===============================================
 echo.
 echo To start the voice changer server:
 echo.
-echo 1. Activate the virtual environment:
-echo    venv\Scripts\activate.bat
-echo.
-echo 2. Start the server:
-echo    python app.py
+echo Run .\vc_start.bat
 echo.
 echo Backend: %BACKEND%
 echo Requirements file: %REQUIREMENTS_FILE%
@@ -172,7 +168,7 @@ echo Starting installation process...
 echo.
 
 REM Check if we're in the server directory
-if not exist "app.py" (
+if not exist "main.py" (
     echo Error: This script must be run from the server directory
     echo Please navigate to the server directory and run the script again
     pause
