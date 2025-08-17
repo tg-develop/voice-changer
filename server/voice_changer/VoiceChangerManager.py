@@ -288,8 +288,26 @@ class VoiceChangerManager(ServerAudioCallbacks):
         return self.get_info()
 
     def update_model_info(self, newData: str):
-        # self.vc.update_model_info(newData)
-        self.modelSlotManager.update_model_info(newData)
+        # Accept JSON string with keys: slot, key, val
+        try:
+            data = json.loads(newData) if isinstance(newData, str) else newData
+        except Exception:
+            data = newData
+
+        # Backward compatibility: allow passing dict directly or list of settings
+        if isinstance(data, list):
+            for setting in data:
+                # expected: {"key": "...", "val": any}
+                self.modelSlotManager.update_model_info(self.settings.modelSlotIndex, setting.get("key"), setting.get("val"))
+        elif isinstance(data, dict):
+            slot = int(data.get("slot", self.settings.modelSlotIndex))
+            key = data.get("key")
+            val = data.get("val")
+            self.modelSlotManager.update_model_info(slot, key, val)
+        else:
+            # If an unexpected payload arrives, do nothing graceful
+            logger.warning(f"update_model_info received unsupported payload: {type(data)}")
+
         return self.get_info()
 
     def upload_model_assets(self, params: str):
