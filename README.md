@@ -41,7 +41,7 @@
 
 ## Overview
 
-This is a fork of [w-okada voice changer](https://github.com/w-okada/voice-changer) that performs real-time voice conversion
+This is a fork of [deiteris voice changer](https://github.com/deiteris/voice-changer) that performs real-time voice conversion
 using various voice conversion algorithms.
 
 > [!IMPORTANT]
@@ -49,16 +49,6 @@ using various voice conversion algorithms.
 
 The fork aims to improve the overall performance for any backend, and at the same time introducing new features and improving
 user experience.
-
-The following videos demonstrate how the voice changer works and performs with AMD graphics cards (including integrated GPU!):
-
-[Amd iGPU.webm](https://github.com/deiteris/voice-changer/assets/6103913/67354d4e-51aa-425c-bd23-d33ad2baf824)
-
-[Amd Dgpu Rx6600m.webm](https://github.com/deiteris/voice-changer/assets/6103913/b932296c-36e4-4150-9306-e80b5c7e4afb)
-
-And this one demonstrates how the voice changer works and performs with Nvidia GeForce GTX 1650 laptop:
-
-[Nvidia Dgpu Gtx 1650.webm](https://github.com/deiteris/voice-changer/assets/6103913/3985e6f3-c22d-4899-ad93-057c599b8b53)
 
 ## Supported operated systems
 
@@ -137,7 +127,7 @@ A dedicated graphics card Nvidia GeForce RTX 20 Series or later, or AMD Radeon R
 
 1. [If not installed] Download and install [VAC Lite by Muzychenko](https://software.muzychenko.net/freeware/vac470lite.zip).
 
-1. Navigate to the [releases section](https://github.com/deiteris/voice-changer/releases).
+1. Navigate to the [releases section](https://github.com/tg-develop/voice-changer/releases).
 
 #### Check your hardware
 
@@ -232,7 +222,7 @@ Once the download is finished, the voice changer will open the user interface us
 
 ### Running on Colab/Kaggle
 
-Refer to corresponding [Colab](https://github.com/deiteris/voice-changer/blob/master-custom/Colab_RealtimeVoiceChanger.ipynb) or [Kaggle](https://github.com/deiteris/voice-changer/blob/master-custom/Kaggle_RealtimeVoiceChanger.ipynb) notebooks in this repository and follow their instructions.
+Refer to corresponding [Colab](https://github.com/tg-develop/voice-changer/blob/master-custom/Colab_RealtimeVoiceChanger.ipynb) or [Kaggle](https://github.com/tg-develop/voice-changer/blob/master-custom/Kaggle_RealtimeVoiceChanger.ipynb) notebooks in this repository and follow their instructions.
 
 ## Troubleshooting
 
@@ -264,9 +254,7 @@ Find and delete the mentioned files from the voice changer folder and restart th
 
 ### Hearing non-converted voice
 
-In the voice changer, make sure **passthru** is not on (indicated by blinking red color). Click it to switch it off (indicated by solid green color).
-
-![unpassthru](https://github.com/user-attachments/assets/014fd740-d8cb-48f6-8b5c-d53258a34b95)
+In the voice changer, make sure **passthru** is not on (indicated by yellow "Passthrough On" button). Click it to switch it off.
 
 ### Hearing audio crackles
 
@@ -320,59 +308,37 @@ you encounter during usage.
 
 ### Setting up the environment
 
-1. [If not set up] Set up virtual environment with the following command:
-
-   ```
-   python -m venv venv
-   ```
-
-1. Activate virtual environment using one of the following commands:
+Run the installation script and choose your architecture:
 
    * For Windows:
 
      ```
-     .\venv\Scripts\activate.ps1
+     .\vc_install.bat
      ```
 
-   * For Linux/macOS:
+   * For Linux:
 
      ```
-     source ./venv/bin/activate
-     ```
-
-1. Install the requirements using one of the following commands:
-
-   * For AMD/Intel/CPU (Windows only):
-
-     ```
-     pip install -r requirements-common.txt -r requirements-dml.txt
-     ```
-
-   * For Nvidia (any OS):
-
-     ```
-     pip install -r requirements-common.txt -r requirements-cuda.txt
-     ```
-
-   * For AMD ROCm (Linux only):
-
-     ```
-     pip install -r requirements-common.txt -r requirements-rocm.txt
-     ```
-
-   * For CPU (Linux/macOS only):
-
-     ```
-     pip install -r requirements-common.txt -r requirements-cpu.txt
+     chmod u+x ./vc_install.sh
+     ./vc_install.sh
      ```
 
 ### Running the server
 
-Run the server by executing `main.py`.
+Run the startup script for the server:
 
-```
-python ./main.py
-```
+   * For Windows:
+
+     ```
+     .\vc_startup.bat
+     ```
+
+   * For Linux:
+
+     ```
+     chmod u+x ./vc_startup.sh
+     ./vc_start.sh
+     ```
 
 This will run the server with default settings. Note that it will not open the web browser by default, copy the address from command line.
 
