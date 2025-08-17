@@ -64,8 +64,12 @@ class DeviceManager(object):
             torch.mps.empty_cache()
         elif self.cuda_enabled:
             torch.cuda.empty_cache()
-
-        device, metadata = self._get_device(id)
+        # Try to resolve requested device; fall back to CPU when none available
+        try:
+            device, metadata = self._get_device(id)
+        except Exception:
+            logger.warning(f"Requested device id {id} not available. Falling back to CPU.")
+            device, metadata = (torch.device("cpu"), {"id": -1, "name": "CPU", 'backend': 'cpu'})
         self.device = device
         self.device_metadata = metadata
         self.fp16_available = self.is_fp16_available()
@@ -93,7 +97,8 @@ class DeviceManager(object):
         elif self.dml_enabled:
             name = torch_directml.device_name(dev_id)
             return (torch.device(torch_directml.device(dev_id)), {"id": dev_id, "name": f"{dev_id}: {name} (DirectML)", "memory": 0, 'backend': 'directml'})
-        raise Exception(f'Failed to find device with index {dev_id}')
+        # If no GPU/accelerator backend is available, default to CPU
+        return (torch.device("cpu"), {"id": -1, "name": "CPU", 'backend': 'cpu'})
 
     @staticmethod
     def list_devices() -> list[DevicePresentation]:

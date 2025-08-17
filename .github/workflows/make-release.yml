@@ -60,6 +60,11 @@ jobs:
           reqs: dml
           backend: dml
           python-version: '3.12'
+        - os: windows-latest
+          os_suffix: windows-amd64
+          reqs: cpu
+          backend: cpu
+          python-version: '3.12'
         - os: macos-latest
           os_suffix: macos-arm64
           reqs: cpu

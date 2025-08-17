@@ -10,6 +10,7 @@ torchaudio==2.7.1
 faiss-cpu==1.11.0; sys_platform!='linux'
 faiss-gpu-cu12; sys_platform=='linux'
 
+onnx==1.16.0
 onnxscript==0.2.6
 onnxsim==0.4.36
 onnxruntime-gpu==1.20.0

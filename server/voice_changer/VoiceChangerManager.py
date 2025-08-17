@@ -61,6 +61,15 @@ class VoiceChangerManager(ServerAudioCallbacks):
 
         self.device_manager = DeviceManager.get_instance()
         self.devices = self.device_manager.list_devices()
+        # Ensure selected device exists; default to CPU when not available
+        try:
+            device_ids = [d.get("id") for d in self.devices]
+            if self.settings.gpu not in device_ids:
+                logger.warning(f"Configured GPU id {self.settings.gpu} not available. Defaulting to CPU.")
+                self.settings.gpu = -1
+        except Exception:
+            # In case of any unexpected structure, still default to CPU
+            self.settings.gpu = -1
         self.device_manager.initialize(self.settings.gpu, self.settings.forceFp32, self.settings.disableJit)
 
         self.vc = VoiceChangerV2(self.settings)

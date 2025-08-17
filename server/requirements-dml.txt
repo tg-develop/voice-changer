@@ -3,14 +3,15 @@
 # # wget https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh
 # # bash Anaconda3-2022.10-Linux-x86_64.sh
 
-torch
-torchaudio
+torch==2.4.1
+torchaudio==2.4.1
 torch-directml
-faiss-cpu
+faiss-cpu==1.11.0
 
-onnxscript
-onnxsim
-onnxruntime-directml
-torchcrepe
-torchfcpe
-safetensors
+onnx==1.16.0
+onnxscript==0.2.6
+onnxsim==0.4.36
+onnxruntime-directml==1.20.0
+torchcrepe==0.0.24
+torchfcpe==0.0.4
+safetensors==0.5.3
