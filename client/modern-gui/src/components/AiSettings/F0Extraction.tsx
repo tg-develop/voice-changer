@@ -35,21 +35,13 @@ function F0Extraction({ appState, uiState, appGuiSettingState }: F0ExtractionPro
     const generateF0DetOptions = () => {
         // DirectML can only use ONNX models
         if (appGuiSettingState.serverInfo.edition.indexOf("DirectML") >= 0) {
-            const recommended = f0Detectors.filter(extractor => extractor.includes('_onnx'));
-            return Object.values(appState.serverSetting.serverSetting.voiceChangerParams).map((x) => {
-                if (recommended.includes(x)) {
-                    return (
-                        <option key={x} value={x}>
-                            {x}
-                        </option>
-                    );
-                } else {
-                    return (
-                        <option key={x} value={x} disabled>
-                            {x}(N/A)
-                        </option>
-                    );
-                }
+            const extractors = f0Detectors.filter(extractor => extractor.includes('_onnx'));
+            return Object.values(extractors).map((x) => {
+                return (
+                    <option key={x} value={x}>
+                        {x}
+                    </option>
+                );
             });
         } else {
             return Object.values(f0Detectors).map((x) => {
