@@ -27,6 +27,7 @@ function ModelInfo({ model, icon }: ModelInfoProps) {
             model={model}
             showModal={showEdit}
             setShowEdit={setShowEdit}
+            icon={icon}
           />
           <div className="flex flex-col items-center text-center mb-6 p-4 bg-slate-50 dark:bg-gray-700/30 rounded-lg">
             <div className="flex w-full items-start">

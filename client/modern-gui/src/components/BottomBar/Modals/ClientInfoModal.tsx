@@ -66,7 +66,7 @@ function ClientInfoModal({ showClientInfo, setShowClientInfo }: ClientInfoModalP
             </div>
 
             <a
-              href="https://github.com/tg-develop"
+              href="https://github.com/tg-develop/voice-changer"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center px-3 py-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 bg-white/50 dark:bg-black/20 hover:bg-white/80 dark:hover:bg-black/40 rounded-md transition-all duration-200"

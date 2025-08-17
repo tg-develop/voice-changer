@@ -31,6 +31,7 @@ function ModelSlot(props: ModelSlotProps) {
         model={props.model}
         showModal={showEdit}
         setShowEdit={setShowEdit}
+        modelDir={props.modelDir}
       />
       {/* Delete confirmation modal */}
       <DeleteModelModal

@@ -139,23 +139,6 @@ function AdvancedSettingsModal({ showAdvancedSettings, setShowAdvancedSettings }
     >
       <div className="space-y-4 py-2">
         <div>
-          <label htmlFor="uiLanguage" className={CSS_CLASSES.label}>UI Language</label>
-          <select
-            id="uiLanguage"
-            className={CSS_CLASSES.select}
-            value={(appState.setting as any)?.uiLanguage || 'en'}
-            onChange={(e) => {
-              console.log('UI Language selected:', e.target.value);
-              // Not implemented
-            }}
-          >
-            <option value="en">🇬🇧 English</option>
-            <option value="de">🇩🇪 Deutsch</option>
-            <option value="ja">🇯🇵 日本語</option>
-          </select>
-        </div>
-
-        <div>
           <label htmlFor="protocol" className={CSS_CLASSES.label}>Protocol</label>
           <select id="protocol" className={CSS_CLASSES.select}
             value={appState.setting.workletNodeSetting.protocol}
@@ -222,24 +205,6 @@ function AdvancedSettingsModal({ showAdvancedSettings, setShowAdvancedSettings }
             onChange={async val => { handleProtectChange(val) }}
           />
           <p className="text-xs text-slate-600 dark:text-gray-400 text-right">{localProtect.toFixed(2)}</p>
-        </div>
-        <div className="border border-blue-500 p-3 rounded bg-blue-50 dark:bg-blue-900/20 space-y-2">
-          <div className="flex items-center text-blue-600 mb-2">
-            <span className="font-semibold">Interface</span>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm text-slate-600 dark:text-gray-400">
-              Currently using: <span className="font-medium text-blue-600 dark:text-blue-400">Modern UI</span>
-            </p>
-            <button
-              type="button"
-              onClick={handleSwitchToClassicUI}
-              disabled={appState.serverSetting.isUploading}
-              className="w-full px-3 py-2 text-sm bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-md transition-colors duration-150 disabled:cursor-not-allowed"
-            >
-              Switch to Classic UI
-            </button>
-          </div>
         </div>
 
         <div className="border border-red-500 p-3 rounded bg-red-50 dark:bg-red-900/20 space-y-2">

@@ -144,12 +144,25 @@ function UploadModelModal({ appState, guiState, showUpload, setShowUpload }: Upl
         return;
       }
 
-      const filesForUpload: { kind: ModelFileKind; file: File; dir: string }[] = [
-        { kind: "rvcModel" as ModelFileKind, file: uploadSettings.files[0].file, dir: "" },
-      ];
+      // Build files list while renaming to the entered model name + original extension
+      const sanitizeBaseName = (name: string) => name.replace(/[\\/:*?"<>|]+/g, "_").trim();
+      const baseName = sanitizeBaseName(trimmedModelName);
+      const renameWithExt = (f: File, bn: string) => {
+        const dotPos = f.name.lastIndexOf('.');
+        const ext = dotPos >= 0 ? f.name.substring(dotPos) : '';
+        const newName = `${bn}${ext}`;
+        return new File([f], newName, { type: f.type, lastModified: f.lastModified });
+      };
 
-      if (uploadSettings.files[1]) {
-        filesForUpload.push({ kind: "rvcIndex" as ModelFileKind, file: uploadSettings.files[1].file, dir: "" });
+      const modelEntry = uploadSettings.files.find(f => f.kind === "rvcModel");
+      const indexEntry = uploadSettings.files.find(f => f.kind === "rvcIndex");
+
+      const filesForUpload: { kind: ModelFileKind; file: File; dir: string }[] = [];
+      if (modelEntry) {
+        filesForUpload.push({ kind: "rvcModel" as ModelFileKind, file: renameWithExt(modelEntry.file, baseName), dir: "" });
+      }
+      if (indexEntry) {
+        filesForUpload.push({ kind: "rvcIndex" as ModelFileKind, file: renameWithExt(indexEntry.file, "added_" + baseName), dir: "" });
       }
 
       const uploadSettingsData: ModelUploadSetting & { embedder: string } = {
@@ -170,7 +183,12 @@ function UploadModelModal({ appState, guiState, showUpload, setShowUpload }: Upl
       // Upload thumbnail image as separate asset if provided
       if (uploadSettings.thumbnailFile) {
         console.log(`Uploading icon to slot ${emptySlotIndex}...`);
-        await appState.serverSetting.uploadAssets(emptySlotIndex, "iconFile", uploadSettings.thumbnailFile);
+        const thumb = uploadSettings.thumbnailFile;
+        const dotPos = thumb.name.lastIndexOf('.');
+        const extOnly = dotPos >= 0 ? thumb.name.substring(dotPos + 1) : '';
+        const thumbName = extOnly ? `thumbnail.${extOnly}` : 'thumbnail';
+        const renamedThumb = new File([thumb], thumbName, { type: thumb.type, lastModified: thumb.lastModified });
+        await appState.serverSetting.uploadAssets(emptySlotIndex, "iconFile", renamedThumb);
         console.log('Icon uploaded.');
       }
 
