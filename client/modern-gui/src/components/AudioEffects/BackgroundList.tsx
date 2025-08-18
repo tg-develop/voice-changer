@@ -70,7 +70,7 @@ function SortableTrackItem({ track, isSelected, onSelect, onDelete, onToggle }: 
 
           <button
             onClick={(e) => { e.stopPropagation(); onToggle(); }}
-            className={`${CSS_CLASSES.iconButton} ${track.enabled ? 'text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-gray-500'}`}
+            className={`${CSS_CLASSES.iconButton} ${track.enabled ? 'text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300' : 'text-slate-400 dark:text-gray-500 hover:text-slate-500 dark:hover:text-gray-400'}`}
             title={track.enabled ? 'Disable' : 'Enable'}
           >
             <FontAwesomeIcon icon={track.mode === 'loop' ? faRepeat : faShuffle} className="h-4 w-4" />

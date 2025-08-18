@@ -5,10 +5,11 @@ import DragHandle from '../Helpers/DragHandle';
 import { CSS_CLASSES } from '../../styles/constants';
 import { AudioEffect, AudioChannel, AudioEffectsConfiguration } from '@dannadori/voice-changer-client-js';
 import { createEffectFromServerSchema, getAvailableEffectTypesFromServer } from './serverEffectsUtils';
-import EffectsList from './EffectsList';
+import EffectsList, { AudioEffectWithIndex as CEffect } from './EffectsList';
 import EffectConfig from './EffectConfig';
 import { useAppState } from '../../context/AppContext';
 import BackgroundConfig, { BackgroundTrack } from './BackgroundConfig';
+import BackgroundList from './BackgroundList';
 
 // UI type with index for client-side management
 type AudioEffectWithIndex = AudioEffect & { index: number };
@@ -65,46 +66,62 @@ function AudioEffectsCard({ dndAttributes, dndListeners }: AudioEffectsCardProps
 
   const updateServerEffects = useCallback(async (newEffects: AudioEffectWithIndex[]) => {
     if (!appState || isLoading) return;
-    
     setIsLoading(true);
     try {
       const effectsConfig: AudioEffectsConfiguration = newEffects.map(effect => {
         const { index, ...effectData } = effect;
         return effectData;
       });
-      
-      // Direct API call to update audio effects
-      const serverUrl = (appState as any).voiceChangerClient?.configurator?.restClient?.serverUrl || 
-                       (serverSetting as any).voiceChangerClient?.configurator?.restClient?.serverUrl ||
-                       window.location.origin;
-      
+      const serverUrl = (appState as any).voiceChangerClient?.configurator?.restClient?.serverUrl ||
+                        (serverSetting as any).voiceChangerClient?.configurator?.restClient?.serverUrl ||
+                        window.location.origin;
       const formData = new FormData();
       formData.append('key', 'audioEffects');
       formData.append('val', JSON.stringify(effectsConfig));
-      
-      const response = await fetch(`${serverUrl}/update_settings`, {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Server responded with ${response.status}`);
-      }
-      
+      const response = await fetch(`${serverUrl}/update_settings`, { method: 'POST', body: formData });
+      if (!response.ok) throw new Error(`Server responded with ${response.status}`);
       await response.json();
-      
-      // Reload server info to get updated state
-      if (serverSetting?.reloadServerInfo) {
-        await serverSetting.reloadServerInfo();
-      }
+      if (serverSetting?.reloadServerInfo) await serverSetting.reloadServerInfo();
     } catch (error) {
       console.error('Failed to update server effects:', error);
-      // Revert to server state on error
       await syncWithServer();
     } finally {
       setIsLoading(false);
     }
   }, [appState, serverSetting, isLoading, syncWithServer]);
+
+  const updateServerBackgrounds = useCallback(async (newTracks: BackgroundTrack[]) => {
+    if (!appState || isLoading) return;
+    setIsLoading(true);
+    try {
+      const payload = newTracks.map(t => ({
+        name: t.name,
+        enabled: t.enabled,
+        gainDb: t.gainDb,
+        mode: t.mode,
+        loopPauseSec: t.loopPauseSec ?? 0,
+        random: t.random ? {
+          minPauseSec: t.random.minPauseSec ?? 2,
+          maxPauseSec: t.random.maxPauseSec ?? 5,
+        } : undefined,
+        filename: (t as any).filename || '',
+      }));
+      const serverUrl = (appState as any).voiceChangerClient?.configurator?.restClient?.serverUrl ||
+                        (serverSetting as any).voiceChangerClient?.configurator?.restClient?.serverUrl ||
+                        window.location.origin;
+      const formData = new FormData();
+      formData.append('key', 'audioBackgrounds');
+      formData.append('val', JSON.stringify(payload));
+      const response = await fetch(`${serverUrl}/update_settings`, { method: 'POST', body: formData });
+      if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+      await response.json();
+      if (serverSetting?.reloadServerInfo) await serverSetting.reloadServerInfo();
+    } catch (e) {
+      console.error('Failed to update background tracks:', e);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [appState, serverSetting, isLoading]);
 
   // ---------------- Effects ----------------
   
@@ -198,11 +215,7 @@ function AudioEffectsCard({ dndAttributes, dndListeners }: AudioEffectsCardProps
         <div className="flex items-center space-x-3">
           <h4 className={CSS_CLASSES.heading}>Audio Effects</h4>
           <div className="flex items-center space-x-2">
-            {isLoading && (
-              <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 text-xs rounded-full">
-                Syncing...
-              </span>
-            )}
+            {/* Removed syncing badge to avoid slider overlap */}
             <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 text-xs rounded-full">
               {totalActiveEffects} Effects
             </span>
@@ -222,73 +235,109 @@ function AudioEffectsCard({ dndAttributes, dndListeners }: AudioEffectsCardProps
           <DragHandle attributes={dndAttributes} listeners={dndListeners} title="Drag" />
         </div>
       </div>
-      
+
       {!isCollapsed && (
         <div className="flex-1 min-h-0 flex">
-          {/* Left Panel - Effects List */}
+          {/* Left Panel - Effects or Background List */}
           <div className="w-1/2 pr-3 border-r border-slate-200 dark:border-gray-600">
-            <EffectsList
-              effects={effects}
-              selectedEffectIndex={selectedEffectIndex}
-              onEffectSelect={handleEffectSelect}
-              onEffectAdd={handleEffectAdd}
-              onEffectDelete={handleEffectDelete}
-              onEffectToggle={handleEffectToggle}
-              onEffectReorder={handleEffectReorder}
-              serverSchema={serverSetting?.serverSetting?.audioEffectsSchema}
-              providersInfo={serverSetting?.serverSetting?.audioEffectsProviders}
-              // Background integration
-              backgroundTracks={bgTracks}
-              selectedBackgroundId={selectedBgId}
-              onBackgroundSelect={setSelectedBgId}
-              onBackgroundAddFiles={(files) => {
-                const startOrder = bgTracks.length;
-                const newTracks: BackgroundTrack[] = [];
-                Array.from(files).forEach((file, idx) => {
-                  const id = `${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 8)}`;
-                  const url = URL.createObjectURL(file);
-                  newTracks.push({
-                    id,
-                    name: file.name.replace(/\.[^/.]+$/, ''),
-                    fileName: file.name,
-                    url,
-                    enabled: true,
-                    gainDb: -6,
-                    mode: 'loop',
-                    loop: true,
-                    loopPauseSec: 0,
-                    order: startOrder + idx,
+            {/* Local Tabs above lists only */}
+            <div className="flex mb-3 bg-slate-100 dark:bg-gray-700 rounded-md p-1">
+              {(['input','output','background'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-1 px-3 py-2 text-sm font-medium rounded transition-colors ${
+                    activeTab === tab
+                      ? 'bg-white dark:bg-gray-600 text-slate-700 dark:text-gray-200 shadow-sm'
+                      : 'text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-center space-x-1">
+                    <span className="capitalize">{tab}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            {activeTab === 'background' ? (
+              <BackgroundList
+                tracks={bgTracks}
+                selectedId={selectedBgId}
+                onSelect={setSelectedBgId}
+                onAddFiles={(files) => {
+                  const startOrder = bgTracks.length;
+                  const newTracks: BackgroundTrack[] = [];
+                  Array.from(files).forEach((file, idx) => {
+                    const id = `${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 8)}`;
+                    const url = URL.createObjectURL(file);
+                    newTracks.push({
+                      id,
+                      name: file.name.replace(/\.[^/.]+$/, ''),
+                      fileName: file.name,
+                      url,
+                      enabled: true,
+                      gainDb: -6,
+                      mode: 'loop',
+                      loop: true,
+                      loopPauseSec: 0,
+                      order: startOrder + idx,
+                    });
                   });
-                });
-                const updated = [...bgTracks, ...newTracks];
-                setBgTracks(updated);
-                if (newTracks.length > 0) setSelectedBgId(newTracks[0].id);
-              }}
-              onBackgroundDelete={(id) => {
-                const filtered = bgTracks.filter(t => t.id !== id).map((t, i) => ({ ...t, order: i }));
-                setBgTracks(filtered);
-                if (selectedBgId === id) setSelectedBgId(null);
-              }}
-              onBackgroundToggle={(id) => {
-                setBgTracks(prev => prev.map(t => (t.id === id ? { ...t, enabled: !t.enabled } : t)));
-              }}
-              onBackgroundReorder={(tracks) => setBgTracks(tracks)}
-              onActiveTabChange={(tab) => setActiveTab(tab)}
-            />
+                  const updated = [...bgTracks, ...newTracks];
+                  setBgTracks(updated);
+                  if (newTracks.length > 0) setSelectedBgId(newTracks[0].id);
+                  updateServerBackgrounds(updated);
+                }}
+                onDelete={(id) => {
+                  const filtered = bgTracks.filter(t => t.id !== id).map((t, i) => ({ ...t, order: i }));
+                  setBgTracks(filtered);
+                  if (selectedBgId === id) setSelectedBgId(null);
+                  updateServerBackgrounds(filtered);
+                }}
+                onToggle={(id) => {
+                  const updated = bgTracks.map(t => (t.id === id ? { ...t, enabled: !t.enabled } : t));
+                  setBgTracks(updated);
+                  updateServerBackgrounds(updated);
+                }}
+                onReorder={(tracks) => { setBgTracks(tracks); updateServerBackgrounds(tracks); }}
+              />
+            ) : (
+              <EffectsList
+                channel={activeTab}
+                effects={(activeTab === 'input' ? inputEffects : outputEffects) as unknown as CEffect[]}
+                selectedEffectIndex={selectedEffectIndex}
+                onEffectSelect={handleEffectSelect}
+                onEffectAdd={handleEffectAdd}
+                onEffectDelete={handleEffectDelete}
+                onEffectToggle={handleEffectToggle}
+                onEffectReorder={(reorderedChannel) => {
+                  const other = effects.filter(e => e.channel !== activeTab);
+                  const all = [...other, ...reorderedChannel];
+                  const reindexed = all.map((e, i) => ({ ...e, index: i }));
+                  setEffects(reindexed);
+                  updateServerEffects(reindexed);
+                }}
+                serverSchema={serverSetting?.serverSetting?.audioEffectsSchema}
+                providersInfo={serverSetting?.serverSetting?.audioEffectsProviders}
+              />
+            )}
           </div>
           
           {/* Right Panel - Effect Configuration */}
           <div className="w-1/2 pl-3">
             {activeTab !== 'background' ? (
               <EffectConfig
-                effect={selectedEffect}
+                effect={(selectedEffect && (effects.find(e => e.index === selectedEffectIndex && e.channel === activeTab) || null)) as any}
                 onParameterChange={handleParameterChange}
                 serverSchema={serverSetting?.serverSetting?.audioEffectsSchema}
               />
             ) : (
               <BackgroundConfig
                 track={bgTracks.find(t => t.id === selectedBgId) || null}
-                onChange={(updated) => setBgTracks(prev => prev.map(t => (t.id === updated.id ? updated : t)))}
+                onChange={(updated) => {
+                  const newList = bgTracks.map(t => (t.id === updated.id ? updated : t));
+                  setBgTracks(newList);
+                  updateServerBackgrounds(newList);
+                }}
               />
             )}
           </div>

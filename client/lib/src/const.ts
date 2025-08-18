@@ -161,8 +161,27 @@ export const ServerSettingKey = {
 
     inputSampleRate: "inputSampleRate",
     audioEffects: "audioEffects",
+    audioBackgrounds: "audioBackgrounds",
 } as const;
 export type ServerSettingKey = (typeof ServerSettingKey)[keyof typeof ServerSettingKey];
+
+// Background Audio (schema similar in spirit to audioEffects, but simpler)
+export type BackgroundTrackMode = 'loop' | 'random';
+export type BackgroundRandomConfig = {
+    minPauseSec: number;
+    maxPauseSec: number;
+};
+// Server-side Background Track schema (array order defines play order)
+export type BackgroundTrackServer = {
+    name: string;
+    enabled: boolean;
+    gainDb: number; // dB
+    mode: BackgroundTrackMode;
+    loopPauseSec?: number; // seconds between loops (loop mode)
+    random?: BackgroundRandomConfig; // only when mode === 'random'
+    filename: string; // server-side file reference (path or stored filename)
+};
+export type BackgroundsConfiguration = BackgroundTrackServer[];
 
 export type VoiceChangerServerSetting = {
     passThrough: boolean;
@@ -211,6 +230,7 @@ export type VoiceChangerServerSetting = {
 
     inputSampleRate: InputSampleRate;
     audioEffects: AudioEffectsConfiguration;
+    audioBackgrounds: BackgroundsConfiguration;
 };
 
 type ModelSlot = {
@@ -344,6 +364,7 @@ export const DefaultServerSetting: ServerInfo = {
     disableJit: 0,
     modelSlotIndex: 0,
     audioEffects: [],
+    audioBackgrounds: [],
     sampleModels: [],
     gpus: [],
 
