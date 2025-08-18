@@ -5,7 +5,7 @@ import { ModelUploadSetting, RVCModelSlot } from '@dannadori/voice-changer-clien
 import { useAppState } from '../../../context/AppContext';
 import { useUIContext } from '../../../context/UIContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faExclamationTriangle, faCircle } from '@fortawesome/free-solid-svg-icons';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useInitialPlaceholder } from '../../../scripts/usePlaceholder';
 
 interface DeleteModelModalProps {

@@ -8,6 +8,7 @@ import { createEffectFromServerSchema, getAvailableEffectTypesFromServer } from 
 import EffectsList from './EffectsList';
 import EffectConfig from './EffectConfig';
 import { useAppState } from '../../context/AppContext';
+import BackgroundConfig, { BackgroundTrack } from './BackgroundConfig';
 
 // UI type with index for client-side management
 type AudioEffectWithIndex = AudioEffect & { index: number };
@@ -27,6 +28,27 @@ function AudioEffectsCard({ dndAttributes, dndListeners }: AudioEffectsCardProps
   const [effects, setEffects] = useState<AudioEffectWithIndex[]>([]);
   const [selectedEffectIndex, setSelectedEffectIndex] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  // Background state
+  const [bgTracks, setBgTracks] = useState<BackgroundTrack[]>([]);
+  const [selectedBgId, setSelectedBgId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'input' | 'output' | 'background'>('output');
+
+  // Load/Save background tracks to localStorage
+  const LS_KEY = 'vc_background_tracks_v1';
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setBgTracks(parsed);
+      }
+    } catch {}
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(bgTracks));
+    } catch {}
+  }, [bgTracks]);
 
   // ---------------- Server Sync Functions ----------------
   
@@ -166,6 +188,7 @@ function AudioEffectsCard({ dndAttributes, dndListeners }: AudioEffectsCardProps
   const enabledInputEffects = inputEffects.filter(e => e.enabled).length;
   const enabledOutputEffects = outputEffects.filter(e => e.enabled).length;
   const totalActiveEffects = enabledInputEffects + enabledOutputEffects;
+  const totalActiveBackground = bgTracks.filter(t => t.enabled).length;
 
   // ---------------- Render ----------------
 
@@ -180,11 +203,12 @@ function AudioEffectsCard({ dndAttributes, dndListeners }: AudioEffectsCardProps
                 Syncing...
               </span>
             )}
-            {totalActiveEffects > 0 && (
-              <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 text-xs rounded-full">
-                {totalActiveEffects} active
-              </span>
-            )}
+            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 text-xs rounded-full">
+              {totalActiveEffects} Effects
+            </span>
+            <span className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-400 text-xs rounded-full">
+              {totalActiveBackground} Background Tracks
+            </span>
           </div>
         </div>
         <div className="flex space-x-1 items-center">
@@ -213,16 +237,60 @@ function AudioEffectsCard({ dndAttributes, dndListeners }: AudioEffectsCardProps
               onEffectReorder={handleEffectReorder}
               serverSchema={serverSetting?.serverSetting?.audioEffectsSchema}
               providersInfo={serverSetting?.serverSetting?.audioEffectsProviders}
+              // Background integration
+              backgroundTracks={bgTracks}
+              selectedBackgroundId={selectedBgId}
+              onBackgroundSelect={setSelectedBgId}
+              onBackgroundAddFiles={(files) => {
+                const startOrder = bgTracks.length;
+                const newTracks: BackgroundTrack[] = [];
+                Array.from(files).forEach((file, idx) => {
+                  const id = `${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 8)}`;
+                  const url = URL.createObjectURL(file);
+                  newTracks.push({
+                    id,
+                    name: file.name.replace(/\.[^/.]+$/, ''),
+                    fileName: file.name,
+                    url,
+                    enabled: true,
+                    gainDb: -6,
+                    mode: 'loop',
+                    loop: true,
+                    loopPauseSec: 0,
+                    order: startOrder + idx,
+                  });
+                });
+                const updated = [...bgTracks, ...newTracks];
+                setBgTracks(updated);
+                if (newTracks.length > 0) setSelectedBgId(newTracks[0].id);
+              }}
+              onBackgroundDelete={(id) => {
+                const filtered = bgTracks.filter(t => t.id !== id).map((t, i) => ({ ...t, order: i }));
+                setBgTracks(filtered);
+                if (selectedBgId === id) setSelectedBgId(null);
+              }}
+              onBackgroundToggle={(id) => {
+                setBgTracks(prev => prev.map(t => (t.id === id ? { ...t, enabled: !t.enabled } : t)));
+              }}
+              onBackgroundReorder={(tracks) => setBgTracks(tracks)}
+              onActiveTabChange={(tab) => setActiveTab(tab)}
             />
           </div>
           
           {/* Right Panel - Effect Configuration */}
           <div className="w-1/2 pl-3">
-            <EffectConfig
-              effect={selectedEffect}
-              onParameterChange={handleParameterChange}
-              serverSchema={serverSetting?.serverSetting?.audioEffectsSchema}
-            />
+            {activeTab !== 'background' ? (
+              <EffectConfig
+                effect={selectedEffect}
+                onParameterChange={handleParameterChange}
+                serverSchema={serverSetting?.serverSetting?.audioEffectsSchema}
+              />
+            ) : (
+              <BackgroundConfig
+                track={bgTracks.find(t => t.id === selectedBgId) || null}
+                onChange={(updated) => setBgTracks(prev => prev.map(t => (t.id === updated.id ? updated : t)))}
+              />
+            )}
           </div>
         </div>
       )}

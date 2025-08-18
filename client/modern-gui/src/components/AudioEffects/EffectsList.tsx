@@ -9,6 +9,8 @@ import { AudioEffect, AudioChannel } from '@dannadori/voice-changer-client-js';
 import { getEffectDefinition } from './serverEffectsUtils';
 import AddEffectModal from './AddEffectModal';
 import { CSS_CLASSES } from '../../styles/constants';
+import BackgroundList from './BackgroundList';
+import type { BackgroundTrack } from './BackgroundConfig';
 
 // UI type with index for client-side management
 type AudioEffectWithIndex = AudioEffect & { index: number };
@@ -23,6 +25,15 @@ interface EffectsListProps {
   onEffectReorder: (effects: AudioEffectWithIndex[]) => void;
   serverSchema?: any; // AudioEffectsSchema from server
   providersInfo?: any; // AudioEffectsProvidersResponse from server
+  // Background props
+  backgroundTracks?: BackgroundTrack[];
+  selectedBackgroundId?: string | null;
+  onBackgroundSelect?: (id: string) => void;
+  onBackgroundAddFiles?: (files: FileList) => void;
+  onBackgroundDelete?: (id: string) => void;
+  onBackgroundToggle?: (id: string) => void;
+  onBackgroundReorder?: (tracks: BackgroundTrack[]) => void;
+  onActiveTabChange?: (tab: ChannelTab) => void;
 }
 
 interface SortableEffectItemProps {
@@ -126,6 +137,8 @@ function SortableEffectItem({ effect, isSelected, onSelect, onDelete, onToggle, 
   );
 }
 
+type ChannelTab = 'input' | 'output' | 'background';
+
 function EffectsList({ 
   effects = [], 
   selectedEffectIndex, 
@@ -135,10 +148,23 @@ function EffectsList({
   onEffectToggle,
   onEffectReorder,
   serverSchema,
-  providersInfo
+  providersInfo,
+  backgroundTracks = [],
+  selectedBackgroundId = null,
+  onBackgroundSelect,
+  onBackgroundAddFiles,
+  onBackgroundDelete,
+  onBackgroundToggle,
+  onBackgroundReorder,
+  onActiveTabChange,
 }: EffectsListProps): JSX.Element {
-  const [activeChannel, setActiveChannel] = useState<AudioChannel>('input');
+  const [activeChannel, _setActiveChannel] = useState<ChannelTab>('input');
   const [showAddModal, setShowAddModal] = useState(false);
+
+  const setActiveChannel = (tab: ChannelTab) => {
+    _setActiveChannel(tab);
+    onActiveTabChange && onActiveTabChange(tab);
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -150,8 +176,9 @@ function EffectsList({
 
   const channelEffects = useMemo(() => {
     if (!effects || !Array.isArray(effects)) return [];
+    if (activeChannel === 'background') return [];
     return effects
-      .filter(effect => effect.channel === activeChannel)
+      .filter(effect => effect.channel === (activeChannel as AudioChannel))
       .sort((a, b) => a.index - b.index);
   }, [effects, activeChannel]);
 
@@ -163,6 +190,10 @@ function EffectsList({
   const outputEffectsCount = useMemo(() => {
     return effects.filter(effect => effect.channel === 'output' && effect.enabled).length;
   }, [effects]);
+
+  const backgroundCount = useMemo(() => {
+    return (backgroundTracks || []).filter(t => t.enabled).length;
+  }, [backgroundTracks]);
 
   // Performance optimization: prevent unnecessary re-renders
   const memoizedSortableItems = useMemo(() => {
@@ -231,37 +262,66 @@ function EffectsList({
             )}
           </div>
         </button>
+        <button
+          onClick={() => setActiveChannel('background')}
+          className={`flex-1 px-3 py-2 text-sm font-medium rounded transition-colors ${
+            activeChannel === 'background'
+              ? 'bg-white dark:bg-gray-600 text-slate-700 dark:text-gray-200 shadow-sm'
+              : 'text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200'
+          }`}
+        >
+          <div className="flex items-center justify-center space-x-1">
+            <span>Background</span>
+            {backgroundCount > 0 && (
+              <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 text-xs rounded-full">
+                {backgroundCount}
+              </span>
+            )}
+          </div>
+        </button>
       </div>
 
-      {/* Header with Add Button */}
-      <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-gray-600">
-        <div>
-          <h5 className="font-medium text-slate-700 dark:text-gray-200">
-            {activeChannel === 'input' ? 'Input' : 'Output'} Chain
-          </h5>
-          <div className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-            Signal flows from top to bottom
+      {/* Header with Add Button (hidden for Background tab) */}
+      {activeChannel !== 'background' && (
+        <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-gray-600">
+          <div>
+            <h5 className="font-medium text-slate-700 dark:text-gray-200">
+              {activeChannel === 'input' ? 'Input' : 'Output'} Chain
+            </h5>
+            <div className="text-xs text-slate-500 dark:text-gray-400 mt-1">
+              Signal flows from top to bottom
+            </div>
+          </div>
+          <div className="relative">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className={`${CSS_CLASSES.iconButton} text-green-600 dark:text-green-400`}
+              title="Add Effect"
+            >
+              <FontAwesomeIcon icon={faPlus} className="h-4 w-4" />
+            </button>
           </div>
         </div>
-        <div className="relative">
-          <button
-            onClick={() => setShowAddModal(true)}
-            className={`${CSS_CLASSES.iconButton} text-green-600 dark:text-green-400`}
-            title="Add Effect"
-          >
-            <FontAwesomeIcon icon={faPlus} className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Effects List with Drag and Drop */}
       <div className="flex-1 overflow-y-auto">
-        {channelEffects.length === 0 ? (
-          <div className="text-center py-8 text-slate-500 dark:text-gray-400 text-sm">
-            No {activeChannel} effects added yet.
-            <br />
-            Click the + button to add an effect.
-          </div>
+      {activeChannel === 'background' ? (
+        <BackgroundList
+          tracks={backgroundTracks || []}
+          selectedId={selectedBackgroundId || null}
+          onSelect={onBackgroundSelect || (() => {})}
+          onAddFiles={onBackgroundAddFiles || (() => {})}
+          onDelete={onBackgroundDelete || (() => {})}
+          onToggle={onBackgroundToggle || (() => {})}
+          onReorder={onBackgroundReorder || (() => {})}
+        />
+      ) : channelEffects.length === 0 ? (
+        <div className="text-center py-8 text-slate-500 dark:text-gray-400 text-sm">
+          No {activeChannel} effects added yet.
+          <br />
+          Click the + button to add an effect.
+        </div>
         ) : (
           <div className="space-y-1">
             {/* Signal Source Icon */}
@@ -342,15 +402,17 @@ function EffectsList({
         )}
       </div>
 
-      {/* Add Effect Modal */}
-      <AddEffectModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onAddEffect={handleAddEffect}
-        channel={activeChannel}
-        serverSchema={serverSchema}
-        providersInfo={providersInfo}
-      />
+      {/* Add Effect Modal (not used for Background tab) */}
+      {activeChannel !== 'background' && (
+        <AddEffectModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onAddEffect={handleAddEffect}
+          channel={activeChannel as AudioChannel}
+          serverSchema={serverSchema}
+          providersInfo={providersInfo}
+        />
+      )}
     </div>
   );
 }
