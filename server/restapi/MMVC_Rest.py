@@ -1,6 +1,6 @@
 import logging
 
-from restapi.mods.trustedorigin import TrustedOriginMiddleware
+from restapi.mods.TrustedOrigin import TrustedOriginMiddleware
 from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
@@ -8,7 +8,6 @@ from fastapi.exceptions import RequestValidationError
 from typing import Callable
 from voice_changer.VoiceChangerManager import VoiceChangerManager
 
-from restapi.MMVC_Rest_Hello import MMVC_Rest_Hello
 from restapi.MMVC_Rest_VoiceChanger import MMVC_Rest_VoiceChanger
 from restapi.MMVC_Rest_Models import MMVC_Rest_Models
 from settings import get_settings
@@ -57,8 +56,6 @@ class MMVC_Rest:
                 name="static",
             )
 
-            restHello = MMVC_Rest_Hello()
-            app_fastapi.include_router(restHello.router)
             restVoiceChanger = MMVC_Rest_VoiceChanger(voiceChangerManager)
             app_fastapi.include_router(restVoiceChanger.router)
             modelsApi = MMVC_Rest_Models(voiceChangerManager)

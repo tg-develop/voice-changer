@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Literal
+from typing import Optional, Sequence
 
 from mods.origins import compute_local_origins, normalize_origins
 from starlette.datastructures import Headers

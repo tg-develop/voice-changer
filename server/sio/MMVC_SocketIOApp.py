@@ -38,26 +38,6 @@ class MMVC_SocketIOApp:
                 sio,
                 other_asgi_app=app_fastapi,
                 static_files={
-                    "/assets/icons/github.svg": {
-                        "filename": f"{FRONTEND_DIR}/assets/icons/github.svg",
-                        "content_type": "image/svg+xml",
-                    },
-                    "/assets/icons/help-circle.svg": {
-                        "filename": f"{FRONTEND_DIR}/assets/icons/help-circle.svg",
-                        "content_type": "image/svg+xml",
-                    },
-                    "/assets/icons/tool.svg": {
-                        "filename": f"{FRONTEND_DIR}/assets/icons/tool.svg",
-                        "content_type": "image/svg+xml",
-                    },
-                    "/assets/icons/folder.svg": {
-                        "filename": f"{FRONTEND_DIR}/assets/icons/folder.svg",
-                        "content_type": "image/svg+xml",
-                    },
-                    "/buymeacoffee.png": {
-                        "filename": f"{FRONTEND_DIR}/assets/buymeacoffee.png",
-                        "content_type": "image/png",
-                    },
                     "": FRONTEND_DIR,
                     "/": f"{FRONTEND_DIR}/index.html",
                 },
