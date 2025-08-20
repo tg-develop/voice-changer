@@ -249,6 +249,56 @@ export class ServerRestClient {
         return info;
     };
 
+    //-------------- Background Sounds --------------
+    loadSound = async (slot: number, params: string = "{}") => {
+        const url = this.serverUrl + "/load_sound";
+        const info = new Promise<ServerInfo>(async (resolve) => {
+            const formData = new FormData();
+            formData.append("slot", "" + slot);
+            formData.append("params", params);
+
+            const request = new Request(url, {
+                method: "POST",
+                body: formData,
+            });
+            const res = (await (await fetch(request)).json()) as ServerInfo;
+            resolve(res);
+        });
+        return info;
+    };
+
+    updateSoundInfo = async (soundId: string, key: string, val: string) => {
+        const url = `${this.serverUrl}/update_sound_info`;
+        const formData = new FormData();
+        formData.append('soundId', soundId);
+        formData.append('key', key);
+        formData.append('val', val);
+
+        const request = new Request(url, {
+            method: "POST",
+            body: formData,
+        });
+
+        const res = await fetch(request);
+        const info = (await res.json()) as ServerInfo;
+        return info;
+    };
+
+    deleteSound = async (soundId: string) => {
+        const url = `${this.serverUrl}/delete_sound`;
+        const formData = new FormData();
+        formData.append('soundId', soundId);
+
+        const request = new Request(url, {
+            method: "POST",
+            body: formData,
+        });
+
+        const res = await fetch(request);
+        const info = (await res.json()) as ServerInfo;
+        return info;
+    };
+
     // VoiceChangerWorkletNodeから呼び出される
     //// Restで音声変換
     postVoice = async (timestamp: number, buffer: ArrayBuffer) => {

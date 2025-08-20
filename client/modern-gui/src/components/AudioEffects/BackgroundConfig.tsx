@@ -1,34 +1,16 @@
-import { JSX, useEffect, useMemo, useState } from 'react';
+import { JSX, useEffect, useState } from 'react';
 import { CSS_CLASSES } from '../../styles/constants';
 import DebouncedSlider from '../Helpers/DebouncedSlider';
 import AudioPlayer from '../Helpers/AudioPlayer';
-
-export type BackgroundTrack = {
-  id: string;
-  name: string;
-  enabled: boolean;
-  gainDb: number;
-  mode: 'loop' | 'random';
-  loop: boolean;
-  loopPauseSec?: number;
-  random?: {
-    minPauseSec: number;
-    maxPauseSec: number;
-  };
-  order: number;
-  // client-side only fields
-  fileName?: string;
-  url?: string;
-};
+import { BackgroundTrack } from '@dannadori/voice-changer-client-js';
 
 type BackgroundConfigProps = {
   track: BackgroundTrack | null;
-  onChange: (updated: BackgroundTrack) => void;
+  onChange: (id: string, key: string, value: any) => void;
 };
 
 function BackgroundConfig({ track, onChange }: BackgroundConfigProps): JSX.Element {
   const [local, setLocal] = useState<BackgroundTrack | null>(track);
-  const [duration, setDuration] = useState<number | null>(null);
   const [displayGain, setDisplayGain] = useState<number>(track?.gainDb ?? -6);
 
   useEffect(() => {
@@ -36,11 +18,11 @@ function BackgroundConfig({ track, onChange }: BackgroundConfigProps): JSX.Eleme
     if (track) setDisplayGain(track.gainDb);
   }, [track]);
 
-  const handle = (patch: Partial<BackgroundTrack>) => {
+  const handle = (key: keyof Omit<BackgroundTrack, 'id'>, value: any) => {
     if (!local) return;
-    const updated = { ...local, ...patch } as BackgroundTrack;
+    const updated = { ...local, [key]: value } as BackgroundTrack;
     setLocal(updated);
-    onChange(updated);
+    onChange(local.id, key, value);
   };
 
   if (!local) {
@@ -61,9 +43,9 @@ function BackgroundConfig({ track, onChange }: BackgroundConfigProps): JSX.Eleme
       {/* Header */}
       <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-gray-600">
         <div>
-          <h5 className="font-medium text-slate-700 dark:text-gray-200">{local.name || 'Untitled'}</h5>
+          <h5 className="font-medium text-slate-700 dark:text-gray-200">{local.name}</h5>
           <div className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-            {local.fileName || local.url || 'local file'}
+            {local.filename}
           </div>
         </div>
         <div className={`px-2 py-1 rounded text-xs font-medium ${
@@ -83,7 +65,7 @@ function BackgroundConfig({ track, onChange }: BackgroundConfigProps): JSX.Eleme
           <input
             type="text"
             value={local.name}
-            onChange={(e) => handle({ name: e.target.value })}
+            onChange={(e) => handle('name', e.target.value)}
             className={CSS_CLASSES.input}
           />
         </div>
@@ -95,12 +77,12 @@ function BackgroundConfig({ track, onChange }: BackgroundConfigProps): JSX.Eleme
             <span className={CSS_CLASSES.sliderValue}>{displayGain.toFixed(1)} dB</span>
           </div>
           <DebouncedSlider
-            min={-30}
+            min={-60}
             max={12}
             step={0.1}
             value={local.gainDb}
             onImmediateChange={(v) => setDisplayGain(v)}
-            onChange={(v) => { setDisplayGain(v); handle({ gainDb: v }); }}
+            onChange={(v) => { setDisplayGain(v); handle('gainDb', v); }}
             className={CSS_CLASSES.range}
           />
         </div>
@@ -110,7 +92,7 @@ function BackgroundConfig({ track, onChange }: BackgroundConfigProps): JSX.Eleme
           <label className={CSS_CLASSES.label}>Mode</label>
           <select
             value={local.mode}
-            onChange={(e) => handle({ mode: e.target.value as 'loop' | 'random' })}
+            onChange={(e) => handle('mode', e.target.value as 'loop' | 'random')}
             className={CSS_CLASSES.select}
           >
             <option value="loop">Loop</option>
@@ -127,7 +109,7 @@ function BackgroundConfig({ track, onChange }: BackgroundConfigProps): JSX.Eleme
               className={CSS_CLASSES.input}
               step={0.1}
               value={local.loopPauseSec ?? 0}
-              onChange={(e) => handle({ loopPauseSec: parseFloat(e.target.value || '0') })}
+              onChange={(e) => handle('loopPauseSec', parseFloat(e.target.value || '0'))}
             />
           </div>
         )}
@@ -143,11 +125,9 @@ function BackgroundConfig({ track, onChange }: BackgroundConfigProps): JSX.Eleme
               value={local.random?.minPauseSec ?? 2}
               onChange={(e) => {
                 const newMin = parseFloat(e.target.value || '0');
-                handle({
-                  random: {
-                    minPauseSec: newMin,
-                    maxPauseSec: local.random?.maxPauseSec ?? 5,
-                  },
+                handle('random', {
+                  minPauseSec: newMin,
+                  maxPauseSec: local.random?.maxPauseSec ?? 5,
                 });
               }}
             />
@@ -161,11 +141,9 @@ function BackgroundConfig({ track, onChange }: BackgroundConfigProps): JSX.Eleme
               value={local.random?.maxPauseSec ?? 5}
               onChange={(e) => {
                 const newMax = parseFloat(e.target.value || '0');
-                handle({
-                  random: {
-                    minPauseSec: local.random?.minPauseSec ?? 2,
-                    maxPauseSec: newMax,
-                  },
+                handle('random', {
+                  minPauseSec: local.random?.minPauseSec ?? 2,
+                  maxPauseSec: newMax,
                 });
               }}
             />
@@ -174,21 +152,10 @@ function BackgroundConfig({ track, onChange }: BackgroundConfigProps): JSX.Eleme
         )}
 
         {/* Preview & Info (bottom) */}
-        {local.url && (
+        {local.filename && (
           <div>
             <label className={CSS_CLASSES.label}>Preview</label>
-            <AudioPlayer src={local.url} />
-            {/* Hidden audio to capture duration */}
-            <audio
-              src={local.url}
-              onLoadedMetadata={(e) => setDuration((e.target as HTMLAudioElement).duration)}
-              className="hidden"
-            />
-            {duration !== null && (
-              <div className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-                Duration: {new Date(duration * 1000).toISOString().substr(14, 5)}
-              </div>
-            )}
+            <AudioPlayer src={`/sound_dir/${local.id}/${local.filename}`} />
           </div>
         )}
       </div>

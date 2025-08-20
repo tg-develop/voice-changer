@@ -1,5 +1,5 @@
 import { useState, ChangeEvent, useEffect } from 'react';
-import { ClientState, ModelFileKind, ModelSlot, ModelUploadSetting } from '@dannadori/voice-changer-client-js';
+import { ClientState, ModelFileKind, ModelUploadSetting, RVCModelSlot } from '@dannadori/voice-changer-client-js';
 import { CSS_CLASSES } from '../../../styles/constants';
 import GenericModal from '../../Modals/GenericModal';
 import { UIContextType } from '../../../context/UIContext';
@@ -136,7 +136,7 @@ function UploadModelModal({ appState, guiState, showUpload, setShowUpload }: Upl
 
       // Find first available empty slot for the new model
       if (currentModelSlots && currentModelSlots.length > 0) {
-        emptySlotIndex = currentModelSlots.findIndex((slot: ModelSlot) => !slot.name || slot.name.length === 0);
+        emptySlotIndex = currentModelSlots.findIndex((slot: RVCModelSlot) => !slot.name || slot.name.length === 0);
       }
 
       if (emptySlotIndex === -1) {

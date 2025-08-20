@@ -1,12 +1,9 @@
-import { JSX, useMemo, useRef, useState } from 'react';
+import { JSX, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash, faGripVertical, faShuffle, faRepeat } from '@fortawesome/free-solid-svg-icons';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { faPlus, faTrash, faShuffle, faRepeat } from '@fortawesome/free-solid-svg-icons';
 import { CSS_CLASSES } from '../../styles/constants';
-import type { BackgroundTrack } from './BackgroundConfig';
+import { BackgroundTrack } from '@dannadori/voice-changer-client-js';
+
 
 export type BackgroundListProps = {
   tracks: BackgroundTrack[];
@@ -15,35 +12,17 @@ export type BackgroundListProps = {
   onAddFiles: (files: FileList) => void;
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
-  onReorder: (reordered: BackgroundTrack[]) => void;
 };
 
-function SortableTrackItem({ track, isSelected, onSelect, onDelete, onToggle }: {
+function TrackItem({ track, isSelected, onSelect, onDelete, onToggle }: {
   track: BackgroundTrack;
   isSelected: boolean;
   onSelect: () => void;
   onDelete: () => void;
   onToggle: () => void;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: track.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
   return (
     <div
-      ref={setNodeRef}
-      style={style}
       className={`p-3 rounded-md border cursor-pointer transition-all duration-150 ${
         isSelected
           ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-500'
@@ -52,22 +31,7 @@ function SortableTrackItem({ track, isSelected, onSelect, onDelete, onToggle }: 
       onClick={onSelect}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          {/* Order indicator */}
-          <div className="flex items-center justify-center w-6 h-6 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 rounded-full text-xs font-medium">
-            {track.order + 1}
-          </div>
-          
-          <button
-            {...attributes}
-            {...listeners}
-            className={`${CSS_CLASSES.iconButton} cursor-grab active:cursor-grabbing`}
-            title="Drag to reorder"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <FontAwesomeIcon icon={faGripVertical} className="h-4 w-4" />
-          </button>
-
+        <div className="flex items-center space-x-2">         
           <button
             onClick={(e) => { e.stopPropagation(); onToggle(); }}
             className={`${CSS_CLASSES.iconButton} ${track.enabled ? 'text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300' : 'text-slate-400 dark:text-gray-500 hover:text-slate-500 dark:hover:text-gray-400'}`}
@@ -78,8 +42,8 @@ function SortableTrackItem({ track, isSelected, onSelect, onDelete, onToggle }: 
 
           <div>
           <div className="font-medium text-slate-700 dark:text-gray-200 text-sm flex items-center space-x-2">
-            <span className="truncate max-w-[180px]" title={track.name || track.fileName || track.url}>
-              {track.name || track.fileName || 'Untitled'}
+            <span className="truncate max-w-[180px]" title={track.name || track.filename }>
+              {track.name || track.filename || 'Untitled'}
             </span>
           </div>
             <div className="text-xs text-slate-500 dark:text-gray-400 flex items-center space-x-2">
@@ -110,24 +74,9 @@ function SortableTrackItem({ track, isSelected, onSelect, onDelete, onToggle }: 
   );
 }
 
-export default function BackgroundList({ tracks, selectedId, onSelect, onAddFiles, onDelete, onToggle, onReorder }: BackgroundListProps): JSX.Element {
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+export default function BackgroundList({ tracks, selectedId, onSelect, onAddFiles, onDelete, onToggle }: BackgroundListProps): JSX.Element {
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const items = useMemo(() => (tracks || []).sort((a, b) => a.order - b.order), [tracks]);
-  const sortableIds = useMemo(() => items.map(t => t.id), [items]);
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = items.findIndex(t => t.id === active.id);
-    const newIndex = items.findIndex(t => t.id === over.id);
-    if (oldIndex !== -1 && newIndex !== -1) {
-      const reordered = arrayMove(items, oldIndex, newIndex).map((t, idx) => ({ ...t, order: idx }));
-      onReorder(reordered);
-    }
-  };
 
   return (
     <div className="flex flex-col h-full">
@@ -142,7 +91,6 @@ export default function BackgroundList({ tracks, selectedId, onSelect, onAddFile
             ref={fileInputRef}
             type="file"
             accept="audio/*"
-            multiple
             className="hidden"
             onChange={(e) => {
               if (e.target.files?.length) onAddFiles(e.target.files);
@@ -162,27 +110,23 @@ export default function BackgroundList({ tracks, selectedId, onSelect, onAddFile
 
       {/* List */}
       <div className="flex-1 min-h-0">
-        {items.length === 0 ? (
+        {tracks.length === 0 ? (
           <div className="text-center py-8 text-slate-500 dark:text-gray-400 text-sm">
             No background tracks yet. Use the + button to add audio files.
           </div>
         ) : (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
-              <div className="space-y-1">
-                {items.map((track) => (
-                  <SortableTrackItem
-                    key={track.id}
-                    track={track}
-                    isSelected={selectedId === track.id}
-                    onSelect={() => onSelect(track.id)}
-                    onDelete={() => onDelete(track.id)}
-                    onToggle={() => onToggle(track.id)}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+          <div className="space-y-1">
+            {tracks.map((track) => (
+              <TrackItem
+                key={track.id}
+                track={track}
+                isSelected={selectedId === track.id}
+                onSelect={() => onSelect(track.id)}
+                onDelete={() => onDelete(track.id)}
+                onToggle={() => onToggle(track.id)}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>

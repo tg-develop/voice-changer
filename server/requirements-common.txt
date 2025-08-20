@@ -21,3 +21,4 @@ aiohttp==3.12.1
 certifi==2025.4.26
 msgspec==0.19.0
 pedalboard==0.9.17
+uuid6

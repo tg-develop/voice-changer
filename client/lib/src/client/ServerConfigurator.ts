@@ -40,6 +40,19 @@ export class ServerConfigurator {
         return this.restClient.uploadAssets(params);
     };
 
+    //-------------- Background Sounds --------------
+    loadSound = async (slot: number, params: string = "{}") => {
+        return this.restClient.loadSound(slot, params);
+    };
+
+    updateSoundInfo = async (slot: string, key: string, val: string) => {
+        return this.restClient.updateSoundInfo(slot, key, val);
+    };
+
+    deleteSound = async (slot: string) => {
+        return this.restClient.deleteSound(slot);
+    };
+
     getModelType = async () => {
         return this.restClient.getModelType();
     };

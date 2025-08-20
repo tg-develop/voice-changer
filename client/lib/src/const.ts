@@ -172,7 +172,8 @@ export type BackgroundRandomConfig = {
     maxPauseSec: number;
 };
 // Server-side Background Track schema (array order defines play order)
-export type BackgroundTrackServer = {
+export type BackgroundTrack = {
+    id: string;
     name: string;
     enabled: boolean;
     gainDb: number; // dB
@@ -181,7 +182,7 @@ export type BackgroundTrackServer = {
     random?: BackgroundRandomConfig; // only when mode === 'random'
     filename: string; // server-side file reference (path or stored filename)
 };
-export type BackgroundsConfiguration = BackgroundTrackServer[];
+export type BackgroundsConfiguration = BackgroundTrack[];
 
 export type VoiceChangerServerSetting = {
     passThrough: boolean;

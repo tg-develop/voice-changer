@@ -322,6 +322,17 @@ export class VoiceChangerClient {
         return this.configurator.uploadAssets(params);
     };
 
+    //-------------- Background Sounds --------------
+    loadSound = (slot: number, params: string) => {
+        return this.configurator.loadSound(slot, params);
+    };
+    updateSoundInfo = (slot: string, key: string, val: string) => {
+        return this.configurator.updateSoundInfo(slot, key, val);
+    };
+    deleteSound = (slot: string) => {
+        return this.configurator.deleteSound(slot);
+    };
+
     //##  Worklet ##//
     configureWorklet = (setting: WorkletSetting) => {
         this.vcInNode.configure(setting);

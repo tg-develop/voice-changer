@@ -45,7 +45,10 @@ export declare class VoiceChangerClient {
     uploadFile2: (dir: string, file: File, onprogress: (progress: number, end: boolean) => void) => Promise<unknown>;
     concatUploadedFile: (filename: string, chunkNum: number) => Promise<void>;
     loadModel: (slot: number, isHalf: boolean, params: string) => Promise<import("./const").ServerInfo>;
+    loadSound: (slot: number, params: string) => Promise<import("./const").ServerInfo>;
+    updateSoundInfo: (slot: string, key: string, val: string) => Promise<import("./const").ServerInfo>;
     uploadAssets: (params: string) => Promise<import("./const").ServerInfo>;
+    deleteSound: (slot: string) => Promise<import("./const").ServerInfo>;
     configureWorklet: (setting: WorkletSetting) => void;
     startOutputRecording: () => void;
     stopOutputRecording: () => Float32Array;

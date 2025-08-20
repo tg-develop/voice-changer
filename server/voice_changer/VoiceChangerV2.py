@@ -37,6 +37,13 @@ class VoiceChangerV2:
         )
         self._generate_strength()
 
+        # Optional background audio mixer
+        self.audio_mixer = None
+
+    # Mixer wiring
+    def set_audio_mixer(self, mixer):
+        self.audio_mixer = mixer
+
     def initialize(self, vcmodel: VoiceChangerModel):
         self.vcmodel = vcmodel
         self.vcmodel.realloc(self.block_frame, self.extra_frame, self.crossfade_frame, self.sola_search_frame)
@@ -151,7 +158,19 @@ class VoiceChangerV2:
 
         self.sola_buffer[:] = audio[block_size : block_size + self.crossfade_frame]
 
-        return audio[: block_size].detach().cpu().numpy(), vol
+        mixed = audio[: block_size]
+
+        # Mix background audio after VC + SOLA
+        if self.audio_mixer is not None:
+            try:
+                bg = self.audio_mixer.render(block_size, self.settings.outputSampleRate, self.device_manager.device)
+                if isinstance(bg, torch.Tensor):
+                    mixed = mixed + bg.to(mixed.device, dtype=mixed.dtype)
+            except Exception:
+                # If mixer fails, ignore and proceed with VC audio
+                pass
+
+        return mixed.detach().cpu().numpy(), vol
 
     @torch.no_grad()
     def on_request(self, audio_in: AudioInOutFloat) -> tuple[AudioInOutFloat, list[Union[int, float]]]:

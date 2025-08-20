@@ -1,37 +1,24 @@
 import json
-from typing import Union
 from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from fastapi import UploadFile, Form
-
-from restapi.mods.FileUploader import upload_file
+from fastapi import Form
 from voice_changer.VoiceChangerManager import VoiceChangerManager
-
-from const import UPLOAD_DIR
 from voice_changer.utils.LoadModelParams import LoadModelParamFile, LoadModelParams
 import logging
+
 logger = logging.getLogger(__name__)
 
 class MMVC_Rest_Models:
     def __init__(self, voiceChangerManager: VoiceChangerManager):
         self.voiceChangerManager = voiceChangerManager
         self.router = APIRouter()
-        self.router.add_api_route("/upload_file", self.post_upload_file, methods=["POST"])
-        self.router.add_api_route("/load_model", self.post_load_model, methods=["POST"])
+        self.router.add_api_route("/load_model", self.post_load_model, methods=["POST"]) # Get Model after upload
         self.router.add_api_route("/onnx", self.get_onnx, methods=["GET"])
         self.router.add_api_route("/merge_model", self.post_merge_models, methods=["POST"])
-        self.router.add_api_route("/update_model_default", self.post_update_model_default, methods=["POST"])
+        self.router.add_api_route("/update_model_default", self.post_update_model_default, methods=["POST"]) # Save Settings Button
         self.router.add_api_route("/update_model_info", self.post_update_model_info, methods=["POST"])
         self.router.add_api_route("/upload_model_assets", self.post_upload_model_assets, methods=["POST"])
-
-    def post_upload_file(self, file: UploadFile, filename: str = Form(...)):
-        try:
-            res = upload_file(UPLOAD_DIR, file, filename)
-            json_compatible_item_data = jsonable_encoder(res)
-            return JSONResponse(content=json_compatible_item_data)
-        except Exception as e:
-            logger.exception(e)
 
     async def post_load_model(
         self,

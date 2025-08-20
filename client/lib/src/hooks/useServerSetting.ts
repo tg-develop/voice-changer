@@ -36,6 +36,24 @@ export type ModelUploadSettingForServer = Omit<ModelUploadSetting, "files"> & {
     files: ModelFileForServer[];
 };
 
+
+export type BackgroundSoundsFile = {
+    file: File;
+    dir: string;
+};
+
+export type BackgroundSoundsUploadSetting = {
+    file: BackgroundSoundsFile;
+    params: any;
+};
+export type BackgroundSoundsFileForServer = Omit<BackgroundSoundsFile, "file"> & {
+    name: string;
+};
+export type BackgroundSoundsUploadSettingForServer = Omit<BackgroundSoundsUploadSetting, "file"> & {
+    file: BackgroundSoundsFileForServer;
+};
+
+
 type AssetUploadSetting = {
     slot: number;
     name: ModelAssetName;
@@ -50,7 +68,7 @@ export type ServerSettingState = {
     serverSetting: ServerInfo;
     updateServerSettings: (setting: ServerInfo) => Promise<void>;
     reloadServerInfo: () => Promise<any>;
-
+    uploadBackgroundSound: (setting: BackgroundSoundsUploadSetting) => Promise<void>;
     uploadModel: (setting: ModelUploadSetting) => Promise<void>;
     uploadProgress: number;
     isUploading: boolean;
@@ -59,6 +77,8 @@ export type ServerSettingState = {
     mergeModel: (request: MergeModelRequest) => Promise<ServerInfo>;
     updateModelDefault: () => Promise<ServerInfo>;
     updateModelInfo: (slot: number, key: string, val: string) => Promise<ServerInfo>;
+    updateSoundInfo: (slot: string, key: string, val: string) => Promise<ServerInfo>;
+    deleteSound: (soundId: string) => Promise<ServerInfo>;
     uploadAssets: (slot: number, name: ModelAssetName, file: File) => Promise<void>;
 };
 
@@ -154,6 +174,37 @@ export const useServerSetting = (props: UseServerSettingProps): ServerSettingSta
         };
     }, [props.voiceChangerClient]);
 
+    const uploadBackgroundSound = useMemo(() => {
+        return async (setting: BackgroundSoundsUploadSetting) => {
+            if (!props.voiceChangerClient) {
+                return;
+            }
+
+            setUploadProgress(0);
+            setIsUploading(true);
+
+            await _uploadFile2(
+                setting.file.file,
+                (progress: number, _end: boolean) => {
+                    setUploadProgress(progress);
+                },
+                ""
+            );
+
+            const params: BackgroundSoundsUploadSettingForServer = {
+                ...setting,
+                file: { name: setting.file.file.name, dir: setting.file.dir },
+            };
+
+            const loadPromise = props.voiceChangerClient.loadSound(0, JSON.stringify(params));
+            await loadPromise;
+
+            setUploadProgress(0);
+            setIsUploading(false);
+        };
+    }, [props.voiceChangerClient]);
+
+
     const uploadAssets = useMemo(() => {
         return async (slot: number, name: ModelAssetName, file: File) => {
             if (!props.voiceChangerClient) return;
@@ -201,12 +252,25 @@ export const useServerSetting = (props: UseServerSettingProps): ServerSettingSta
         return serverInfo;
     };
 
+    const updateSoundInfo = async (slot: string, key: string, val: string) => {
+        const serverInfo = await props.voiceChangerClient!.updateSoundInfo(slot, key, val);
+        setServerSetting(serverInfo);
+        return serverInfo;
+    };
+    const deleteSound = async (soundId: string) => {
+        const serverInfo = await props.voiceChangerClient!.deleteSound(soundId);
+        setServerSetting(serverInfo);
+        return serverInfo;
+    };
+
     return {
         serverSetting,
         updateServerSettings,
         reloadServerInfo,
-
         uploadModel,
+        uploadBackgroundSound,
+        updateSoundInfo,
+        deleteSound,
         uploadProgress,
         isUploading,
         getOnnx,

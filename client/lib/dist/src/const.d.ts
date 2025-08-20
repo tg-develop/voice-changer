@@ -124,8 +124,25 @@ export declare const ServerSettingKey: {
     readonly modelSlotIndex: "modelSlotIndex";
     readonly inputSampleRate: "inputSampleRate";
     readonly audioEffects: "audioEffects";
+    readonly audioBackgrounds: "audioBackgrounds";
 };
 export type ServerSettingKey = (typeof ServerSettingKey)[keyof typeof ServerSettingKey];
+export type BackgroundTrackMode = 'loop' | 'random';
+export type BackgroundRandomConfig = {
+    minPauseSec: number;
+    maxPauseSec: number;
+};
+export type BackgroundTrack = {
+    id: string;
+    name: string;
+    enabled: boolean;
+    gainDb: number;
+    mode: BackgroundTrackMode;
+    loopPauseSec?: number;
+    random?: BackgroundRandomConfig;
+    filename: string;
+};
+export type BackgroundsConfiguration = BackgroundTrack[];
 export type VoiceChangerServerSetting = {
     passThrough: boolean;
     srcId: number;
@@ -166,6 +183,7 @@ export type VoiceChangerServerSetting = {
     modelSlotIndex: number;
     inputSampleRate: InputSampleRate;
     audioEffects: AudioEffectsConfiguration;
+    audioBackgrounds: BackgroundsConfiguration;
 };
 type ModelSlot = {
     slotIndex: number;

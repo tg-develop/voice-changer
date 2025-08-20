@@ -3,13 +3,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import DragHandle from '../Helpers/DragHandle';
 import { CSS_CLASSES } from '../../styles/constants';
-import { AudioEffect, AudioChannel, AudioEffectsConfiguration } from '@dannadori/voice-changer-client-js';
-import { createEffectFromServerSchema, getAvailableEffectTypesFromServer } from './serverEffectsUtils';
+import { AudioEffect, AudioChannel, AudioEffectsConfiguration, BackgroundSoundsUploadSetting, BackgroundTrack } from '@dannadori/voice-changer-client-js';
+import { createEffectFromServerSchema } from './serverEffectsUtils';
 import EffectsList, { AudioEffectWithIndex as CEffect } from './EffectsList';
 import EffectConfig from './EffectConfig';
 import { useAppState } from '../../context/AppContext';
-import BackgroundConfig, { BackgroundTrack } from './BackgroundConfig';
+import BackgroundConfig from './BackgroundConfig';
 import BackgroundList from './BackgroundList';
+import { useUIContext } from '../../context/UIContext';
 
 // UI type with index for client-side management
 type AudioEffectWithIndex = AudioEffect & { index: number };
@@ -22,34 +23,19 @@ interface AudioEffectsCardProps {
 function AudioEffectsCard({ dndAttributes, dndListeners }: AudioEffectsCardProps): JSX.Element {
   // ---------------- App State ----------------
   const appState = useAppState();
+  const guiState = useUIContext();
   const { serverSetting } = appState;
   
   // ---------------- States ----------------
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [effects, setEffects] = useState<AudioEffectWithIndex[]>([]);
   const [selectedEffectIndex, setSelectedEffectIndex] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   // Background state
   const [bgTracks, setBgTracks] = useState<BackgroundTrack[]>([]);
   const [selectedBgId, setSelectedBgId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'input' | 'output' | 'background'>('output');
 
-  // Load/Save background tracks to localStorage
-  const LS_KEY = 'vc_background_tracks_v1';
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) setBgTracks(parsed);
-      }
-    } catch {}
-  }, []);
-  useEffect(() => {
-    try {
-      localStorage.setItem(LS_KEY, JSON.stringify(bgTracks));
-    } catch {}
-  }, [bgTracks]);
+
 
   // ---------------- Server Sync Functions ----------------
   
@@ -62,66 +48,29 @@ function AudioEffectsCard({ dndAttributes, dndListeners }: AudioEffectsCardProps
       index
     }));
     setEffects(effectsArray);
-  }, [serverSetting?.serverSetting?.audioEffects]);
+
+    // Sync background tracks
+    const serverTracks = serverSetting.serverSetting.audioBackgrounds || [];
+    setBgTracks(serverTracks as any as BackgroundTrack[]);
+
+  }, [serverSetting?.serverSetting?.audioEffects, serverSetting?.serverSetting?.audioBackgrounds]);
 
   const updateServerEffects = useCallback(async (newEffects: AudioEffectWithIndex[]) => {
-    if (!appState || isLoading) return;
-    setIsLoading(true);
     try {
       const effectsConfig: AudioEffectsConfiguration = newEffects.map(effect => {
         const { index, ...effectData } = effect;
         return effectData;
       });
-      const serverUrl = (appState as any).voiceChangerClient?.configurator?.restClient?.serverUrl ||
-                        (serverSetting as any).voiceChangerClient?.configurator?.restClient?.serverUrl ||
-                        window.location.origin;
-      const formData = new FormData();
-      formData.append('key', 'audioEffects');
-      formData.append('val', JSON.stringify(effectsConfig));
-      const response = await fetch(`${serverUrl}/update_settings`, { method: 'POST', body: formData });
-      if (!response.ok) throw new Error(`Server responded with ${response.status}`);
-      await response.json();
-      if (serverSetting?.reloadServerInfo) await serverSetting.reloadServerInfo();
+
+      await appState.serverSetting.updateServerSettings({
+        ...(appState.serverSetting.serverSetting || {}),
+        audioEffects: effectsConfig,
+      });
     } catch (error) {
       console.error('Failed to update server effects:', error);
       await syncWithServer();
-    } finally {
-      setIsLoading(false);
     }
-  }, [appState, serverSetting, isLoading, syncWithServer]);
-
-  const updateServerBackgrounds = useCallback(async (newTracks: BackgroundTrack[]) => {
-    if (!appState || isLoading) return;
-    setIsLoading(true);
-    try {
-      const payload = newTracks.map(t => ({
-        name: t.name,
-        enabled: t.enabled,
-        gainDb: t.gainDb,
-        mode: t.mode,
-        loopPauseSec: t.loopPauseSec ?? 0,
-        random: t.random ? {
-          minPauseSec: t.random.minPauseSec ?? 2,
-          maxPauseSec: t.random.maxPauseSec ?? 5,
-        } : undefined,
-        filename: (t as any).filename || '',
-      }));
-      const serverUrl = (appState as any).voiceChangerClient?.configurator?.restClient?.serverUrl ||
-                        (serverSetting as any).voiceChangerClient?.configurator?.restClient?.serverUrl ||
-                        window.location.origin;
-      const formData = new FormData();
-      formData.append('key', 'audioBackgrounds');
-      formData.append('val', JSON.stringify(payload));
-      const response = await fetch(`${serverUrl}/update_settings`, { method: 'POST', body: formData });
-      if (!response.ok) throw new Error(`Server responded with ${response.status}`);
-      await response.json();
-      if (serverSetting?.reloadServerInfo) await serverSetting.reloadServerInfo();
-    } catch (e) {
-      console.error('Failed to update background tracks:', e);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [appState, serverSetting, isLoading]);
+  }, [appState, syncWithServer]);
 
   // ---------------- Effects ----------------
   
@@ -129,7 +78,7 @@ function AudioEffectsCard({ dndAttributes, dndListeners }: AudioEffectsCardProps
     syncWithServer();
   }, [syncWithServer]);
 
-  // ---------------- Functions ----------------
+  // ---------------- SoundEffects ----------------
 
   const handleEffectAdd = async (effectType: string, channel: AudioChannel) => {
     const newEffect = createEffectFromServerSchema(effectType, channel, serverSetting?.serverSetting?.audioEffectsSchema);
@@ -174,12 +123,6 @@ function AudioEffectsCard({ dndAttributes, dndListeners }: AudioEffectsCardProps
     await updateServerEffects(updatedEffects);
   };
 
-  const handleEffectReorder = async (reorderedEffects: AudioEffectWithIndex[]) => {
-    const reindexedEffects = reorderedEffects.map((effect, index) => ({ ...effect, index }));
-    setEffects(reindexedEffects);
-    await updateServerEffects(reindexedEffects);
-  };
-
   const handleParameterChange = async (effectIndex: number, parameterKey: string, value: number | boolean | string) => {
     const updatedEffects = effects.map((effect, index) => 
       index === effectIndex 
@@ -197,6 +140,48 @@ function AudioEffectsCard({ dndAttributes, dndListeners }: AudioEffectsCardProps
     await updateServerEffects(updatedEffects);
   };
 
+  //-------------- Background Sounds --------------
+  const uploadBackgroundSound = async (file: File) => {
+    const uploadSettingsData: BackgroundSoundsUploadSetting = {
+      file: { file: file, dir: "" },
+      params: {},
+    };
+
+    // Upload main model files (model + optional index file)
+    console.log('Uploading background sound with settings:', uploadSettingsData);
+    await appState.serverSetting.uploadBackgroundSound(uploadSettingsData);
+    console.log('Background sound uploaded successfully.');
+
+    // Notify user of successful upload and refresh server state
+    guiState.showError("Background sound uploaded successfully!", "Confirm");
+    await appState.serverSetting.reloadServerInfo();
+  }
+
+  const updateSoundInfo = async (id: string, key: string, value: any) => {
+    const newList = bgTracks.map((t) =>
+      t.id === id ? { ...t, [key]: value } : t
+    );
+    setBgTracks(newList);
+    const valueToSend = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    serverSetting?.updateSoundInfo(id, key, valueToSend);
+  }
+
+  const enableTrack = async (id: string) => {
+    const track = bgTracks.find(t => t.id === id);
+    if (!track) return;
+    const updated = bgTracks.map(t => (t.id === id ? { ...t, enabled: !t.enabled } : t));
+    setBgTracks(updated);
+    serverSetting.updateSoundInfo(id, 'enabled', String(!track.enabled));
+  }
+
+  const deleteTrack = async (id: string) => {
+    const filtered = bgTracks.filter(t => t.id !== id).map((t, i) => ({ ...t, order: i }));
+    setBgTracks(filtered);
+    if (selectedBgId === id) setSelectedBgId(null);
+    serverSetting.deleteSound(id);
+  }
+    
+
   const selectedEffect = selectedEffectIndex !== null ? effects[selectedEffectIndex] || null : null;
 
   // Count effects by channel and enabled status
@@ -210,7 +195,7 @@ function AudioEffectsCard({ dndAttributes, dndListeners }: AudioEffectsCardProps
   // ---------------- Render ----------------
 
   return (
-    <div className={`p-4 border border-slate-200 dark:border-gray-700 rounded-md shadow-sm bg-white dark:bg-gray-800 transition-all duration-300 flex-1 min-h-0 flex flex-col ${isCollapsed ? 'h-auto' : 'overflow-hidden'} ${isLoading ? 'opacity-75' : ''}`}>
+    <div className={`p-4 border border-slate-200 dark:border-gray-700 rounded-md shadow-sm bg-white dark:bg-gray-800 transition-all duration-300 flex-1 min-h-0 flex flex-col ${isCollapsed ? 'h-auto' : 'overflow-hidden'}`}>
       <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-200 dark:border-gray-700">
         <div className="flex items-center space-x-3">
           <h4 className={CSS_CLASSES.heading}>Audio Effects</h4>
@@ -263,42 +248,9 @@ function AudioEffectsCard({ dndAttributes, dndListeners }: AudioEffectsCardProps
                 tracks={bgTracks}
                 selectedId={selectedBgId}
                 onSelect={setSelectedBgId}
-                onAddFiles={(files) => {
-                  const startOrder = bgTracks.length;
-                  const newTracks: BackgroundTrack[] = [];
-                  Array.from(files).forEach((file, idx) => {
-                    const id = `${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 8)}`;
-                    const url = URL.createObjectURL(file);
-                    newTracks.push({
-                      id,
-                      name: file.name.replace(/\.[^/.]+$/, ''),
-                      fileName: file.name,
-                      url,
-                      enabled: true,
-                      gainDb: -6,
-                      mode: 'loop',
-                      loop: true,
-                      loopPauseSec: 0,
-                      order: startOrder + idx,
-                    });
-                  });
-                  const updated = [...bgTracks, ...newTracks];
-                  setBgTracks(updated);
-                  if (newTracks.length > 0) setSelectedBgId(newTracks[0].id);
-                  updateServerBackgrounds(updated);
-                }}
-                onDelete={(id) => {
-                  const filtered = bgTracks.filter(t => t.id !== id).map((t, i) => ({ ...t, order: i }));
-                  setBgTracks(filtered);
-                  if (selectedBgId === id) setSelectedBgId(null);
-                  updateServerBackgrounds(filtered);
-                }}
-                onToggle={(id) => {
-                  const updated = bgTracks.map(t => (t.id === id ? { ...t, enabled: !t.enabled } : t));
-                  setBgTracks(updated);
-                  updateServerBackgrounds(updated);
-                }}
-                onReorder={(tracks) => { setBgTracks(tracks); updateServerBackgrounds(tracks); }}
+                onAddFiles={(files) => { if (files.length > 0) uploadBackgroundSound(files[0]); }}
+                onDelete={deleteTrack}
+                onToggle={enableTrack}
               />
             ) : (
               <EffectsList
@@ -333,11 +285,7 @@ function AudioEffectsCard({ dndAttributes, dndListeners }: AudioEffectsCardProps
             ) : (
               <BackgroundConfig
                 track={bgTracks.find(t => t.id === selectedBgId) || null}
-                onChange={(updated) => {
-                  const newList = bgTracks.map(t => (t.id === updated.id ? updated : t));
-                  setBgTracks(newList);
-                  updateServerBackgrounds(newList);
-                }}
+                onChange={updateSoundInfo}
               />
             )}
           </div>

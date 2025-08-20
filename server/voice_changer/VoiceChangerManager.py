@@ -11,7 +11,8 @@ from voice_changer.RVC.RVCModelMerger import RVCModelMerger
 from const import STORED_SETTING_FILE, UPLOAD_DIR
 from voice_changer.VoiceChangerSettings import VoiceChangerSettings
 from voice_changer.VoiceChangerV2 import VoiceChangerV2
-from voice_changer.utils.LoadModelParams import LoadModelParamFile, LoadModelParams
+from voice_changer.utils.LoadModelParams import LoadModelParams
+from voice_changer.utils.LoadSoundParams import LoadSoundParams
 from voice_changer.utils.ModelMerger import MergeElement, ModelMergerRequest
 from voice_changer.utils.VoiceChangerModel import AudioInOutFloat
 from settings import get_settings
@@ -22,9 +23,15 @@ from Exceptions import (
 )
 from traceback import format_exc
 from typing import Callable, Any
+from dataclasses import asdict
 
 from voice_changer.RVC.RVCr2 import RVCr2
 from voice_changer.RVC.RVCModelSlotGenerator import RVCModelSlotGenerator  # 起動時にインポートするとパラメータが取れない。
+from restapi.mods.FileUploader import upload_file
+from fastapi import UploadFile
+from const import UPLOAD_DIR
+import os, shutil, json
+from data.SoundSlotManager import SoundSlotManager
 
 logger = logging.getLogger(__name__)
 
@@ -80,13 +87,31 @@ class VoiceChangerManager(ServerAudioCallbacks):
         try:
             from voice_changer.audio_effects.AudioEffectsManager import AudioEffectsManager
             self.audio_effects_manager = AudioEffectsManager()
+            logger.info("Audio Effects Manager Initialized.")
         except Exception as e:
             logger.warning(f"Failed to initialize audio effects manager: {e}")
+
+        # Initialize background audio mixer
+        self.audio_mixer = None
+        try:
+            from voice_changer.audio_mixer.AudioMixer import AudioMixer
+            self.audio_mixer = AudioMixer(device=self.device_manager.device)
+            logger.info("Background Tracks Manager Initialized.")
+        except Exception as e:
+            logger.warning(f"Failed to initialize audio mixer: {e}")
+
+        if self.audio_mixer is not None:
+            self.vc.set_audio_mixer(self.audio_mixer)
 
         logger.info("Initialized.")
 
         # Initialize the voice changer
         self.initialize(self.settings.modelSlotIndex)
+        # Initialize mixer tracks from existing sound slots
+        try:
+            self._refresh_audio_mixer()
+        except Exception as e:
+            logger.warning(f"Failed to initialize audio mixer tracks: {e}")
 
     def store_setting(self):
         with open(STORED_SETTING_FILE, "w") as f:
@@ -169,6 +194,14 @@ class VoiceChangerManager(ServerAudioCallbacks):
             data["audioEffectsSchema"] = {}
             data["audioEffectsProviders"] = {"providers": [], "total_effects": 0}
 
+        # Add audio backgrounds info
+        try:
+            sound_mgr = SoundSlotManager.get_instance(self.params.sound_dir)
+            data["audioBackgrounds"] = [asdict(s) for s in sound_mgr.list()]
+        except Exception as e:
+            logger.warning(f"Failed to load audio backgrounds info: {e}")
+            data["audioBackgrounds"] = []
+
         return data
 
     def initialize(self, val: int):
@@ -191,6 +224,16 @@ class VoiceChangerManager(ServerAudioCallbacks):
             self.vc.initialize(RVCr2(slotInfo, self.settings))
         else:
             logger.error(f"Unknown voice changer model: {slotInfo.voiceChangerType}")
+
+        # Attach audio mixer to the voice processor
+        try:
+            if self.audio_mixer is not None and hasattr(self.vc, 'set_audio_mixer'):
+                self.vc.set_audio_mixer(self.audio_mixer)
+                # Apply initial configuration if present
+                if hasattr(self.settings, 'audioBackgrounds') and self.settings.audioBackgrounds is not None:
+                    self.audio_mixer.set_tracks(self.settings.audioBackgrounds, output_sr=self.settings.outputSampleRate)
+        except Exception as e:
+            logger.warning(f"Failed to attach audio mixer: {e}")
 
     def update_settings(self, key: str, val: Any):
         # Only log audio effects changes at debug level to reduce noise
@@ -236,6 +279,14 @@ class VoiceChangerManager(ServerAudioCallbacks):
             if hasattr(self.vc, 'vcmodel') and self.vc.vcmodel is not None and hasattr(self.vc.vcmodel, 'pipeline') and self.vc.vcmodel.pipeline is not None:
                 self.vc.vcmodel.pipeline.configure_audio_effects(self.settings.to_dict())
                 logger.debug("Audio effects configuration updated")
+        elif key == 'audioBackgrounds':
+            # Configure background audio mixer
+            try:
+                if self.audio_mixer is not None:
+                    self.audio_mixer.set_tracks(self.settings.audioBackgrounds, output_sr=self.settings.outputSampleRate)
+                    logger.info("Audio background tracks updated")
+            except Exception as e:
+                logger.warning(f"Failed to update audioBackgrounds: {e}")
 
         self.server_audio.update_settings(key, val, old_value)
         self.vc.update_settings(key, val, old_value)
@@ -262,6 +313,9 @@ class VoiceChangerManager(ServerAudioCallbacks):
         except Exception as e:
             logger.exception(e)
             return np.zeros(1, dtype=np.float32), 0, [0, 0, 0], ('Exception', format_exc())
+
+
+    # ---------------- Models ----------------
 
     def export2onnx(self):
         return self.vc.export2onnx()
@@ -314,3 +368,95 @@ class VoiceChangerManager(ServerAudioCallbacks):
         # self.vc.upload_model_assets(params)
         self.modelSlotManager.store_model_assets(params)
         return self.get_info()
+
+    # ---------------- Sounds (Background Assets) ----------------
+
+    async def load_sound(self, params: LoadSoundParams):
+        # Delegate creation/move to the SoundSlotManager
+        try:
+            mgr = SoundSlotManager.get_instance(self.params.sound_dir)
+            mgr.create_from_upload(params)
+            # Update mixer with latest tracks
+            self._refresh_audio_mixer()
+        except Exception as e:
+            logger.warning(f"Failed to load sound: {e}")
+        return self.get_info()
+
+    def update_sound_info(self, soundId: str, key: str, val: str):
+        try:
+            # Try to parse the value to its correct type (bool, float, or string)
+            val_parsed = None
+            if key == 'random':
+                try:
+                    val_parsed = json.loads(val)
+                except json.JSONDecodeError:
+                    val_parsed = val  # Fallback if parsing fails
+            elif val.lower() == 'true':
+                val_parsed = True
+            elif val.lower() == 'false':
+                val_parsed = False
+            else:
+                try:
+                    val_parsed = float(val)
+                except ValueError:
+                    val_parsed = val
+
+            config = {key: val_parsed}
+            mgr = SoundSlotManager.get_instance(self.params.sound_dir)
+            mgr.update(soundId, config)
+            self.sound_slot_manager = mgr
+            # Update mixer with latest tracks
+            self._refresh_audio_mixer()
+        except Exception as e:
+            logger.exception(e)
+        return self.get_info()
+
+    def delete_sound(self, soundId: str):
+        try:
+            mgr = SoundSlotManager.get_instance(self.params.sound_dir)
+            mgr.delete(soundId)
+            # Update mixer with latest tracks
+            self._refresh_audio_mixer()
+        except Exception as e:
+            logger.warning(f"Failed to delete sound {soundId}: {e}")
+        return self.get_info()
+
+    # ---------------- Internal: update background mixer ----------------
+    def _refresh_audio_mixer(self):
+        """Sync AudioMixer tracks from SoundSlotManager."""
+        if self.audio_mixer is None:
+            return
+        try:
+            mgr = SoundSlotManager.get_instance(self.params.sound_dir)
+            slots = mgr.list()
+            # Map SoundSlot -> AudioMixer config
+            cfg = []
+            for s in slots:
+                try:
+                    # Files are stored at sound_dir/<id>/(optional dir)/<filename>.
+                    # In our upload flow, dir is "", so path = "<id>/<filename>".
+                    # The mixer resolves this relative to sound_dir.
+                    path = f"{s.id}/{s.filename}" if getattr(s, 'filename', '') else ''
+                    item = {
+                        'id': s.id,
+                        'path': path,
+                        'enabled': bool(getattr(s, 'enabled', False)),
+                        'gainDb': float(getattr(s, 'gainDb', 0.0)),
+                        'mode': getattr(s, 'mode', 'loop') or 'loop',
+                        'loopPauseSec': float(getattr(s, 'loopPauseSec', 0) or 0),
+                    }
+                    rnd = getattr(s, 'random', None)
+                    if rnd is not None:
+                        # random is a dataclass RandomConfig(minPauseSec, maxPauseSec)
+                        item['random'] = {
+                            'minPauseSec': int(getattr(rnd, 'minPauseSec', 3)),
+                            'maxPauseSec': int(getattr(rnd, 'maxPauseSec', 5)),
+                        }
+                    cfg.append(item)
+                except Exception:
+                    # Skip faulty slot
+                    continue
+            out_sr = int(self.settings.outputSampleRate)
+            self.audio_mixer.set_tracks(cfg, output_sr=out_sr)
+        except Exception as e:
+            logger.warning(f"Failed to refresh audio mixer: {e}")

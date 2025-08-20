@@ -1,4 +1,5 @@
 import logging
+import os
 
 from restapi.mods.TrustedOrigin import TrustedOriginMiddleware
 from fastapi import FastAPI, Request, Response, HTTPException
@@ -8,6 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from typing import Callable
 from voice_changer.VoiceChangerManager import VoiceChangerManager
 
+from restapi.MMVC_Rest_Sounds import MMVC_Rest_Sounds
 from restapi.MMVC_Rest_VoiceChanger import MMVC_Rest_VoiceChanger
 from restapi.MMVC_Rest_Models import MMVC_Rest_Models
 from settings import get_settings
@@ -55,11 +57,20 @@ class MMVC_Rest:
                 StaticFiles(directory=settings.model_dir),
                 name="static",
             )
+            app_fastapi.mount(
+                "/sound_dir",
+                StaticFiles(directory=settings.sound_dir),
+                name="static",
+            )
 
             restVoiceChanger = MMVC_Rest_VoiceChanger(voiceChangerManager)
             app_fastapi.include_router(restVoiceChanger.router)
+            
             modelsApi = MMVC_Rest_Models(voiceChangerManager)
             app_fastapi.include_router(modelsApi.router)
+
+            soundsApi = MMVC_Rest_Sounds(voiceChangerManager)
+            app_fastapi.include_router(soundsApi.router)
 
             cls._instance = app_fastapi
             logger.info("Initialized.")

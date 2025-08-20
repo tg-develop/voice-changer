@@ -29,6 +29,20 @@ export type ModelFileForServer = Omit<ModelFile, "file"> & {
 export type ModelUploadSettingForServer = Omit<ModelUploadSetting, "files"> & {
     files: ModelFileForServer[];
 };
+export type BackgroundSoundsFile = {
+    file: File;
+    dir: string;
+};
+export type BackgroundSoundsUploadSetting = {
+    file: BackgroundSoundsFile;
+    params: any;
+};
+export type BackgroundSoundsFileForServer = Omit<BackgroundSoundsFile, "file"> & {
+    name: string;
+};
+export type BackgroundSoundsUploadSettingForServer = Omit<BackgroundSoundsUploadSetting, "file"> & {
+    file: BackgroundSoundsFileForServer;
+};
 export type UseServerSettingProps = {
     voiceChangerClient: VoiceChangerClient | null;
 };
@@ -36,6 +50,7 @@ export type ServerSettingState = {
     serverSetting: ServerInfo;
     updateServerSettings: (setting: ServerInfo) => Promise<void>;
     reloadServerInfo: () => Promise<any>;
+    uploadBackgroundSound: (setting: BackgroundSoundsUploadSetting) => Promise<void>;
     uploadModel: (setting: ModelUploadSetting) => Promise<void>;
     uploadProgress: number;
     isUploading: boolean;
@@ -43,6 +58,8 @@ export type ServerSettingState = {
     mergeModel: (request: MergeModelRequest) => Promise<ServerInfo>;
     updateModelDefault: () => Promise<ServerInfo>;
     updateModelInfo: (slot: number, key: string, val: string) => Promise<ServerInfo>;
+    updateSoundInfo: (slot: string, key: string, val: string) => Promise<ServerInfo>;
+    deleteSound: (soundId: string) => Promise<ServerInfo>;
     uploadAssets: (slot: number, name: ModelAssetName, file: File) => Promise<void>;
 };
 export declare const useServerSetting: (props: UseServerSettingProps) => ServerSettingState;

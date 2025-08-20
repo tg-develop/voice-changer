@@ -3,11 +3,14 @@ from time import time
 from typing import Union
 from msgspec import msgpack
 
-from fastapi import APIRouter, Request, Form
+from fastapi import APIRouter, Request, Form, UploadFile
 from fastapi.responses import Response, PlainTextResponse, JSONResponse
 from fastapi.encoders import jsonable_encoder
 from const import get_edition, get_version
 from voice_changer.VoiceChangerManager import VoiceChangerManager
+from restapi.mods.FileUploader import upload_file
+
+from const import UPLOAD_DIR
 
 import logging
 logger = logging.getLogger(__name__)
@@ -22,15 +25,13 @@ class MMVC_Rest_VoiceChanger:
         self.router.add_api_route("/version", self.version, methods=["GET"])
         self.router.add_api_route("/info", self.get_info, methods=["GET"])
         self.router.add_api_route("/update_settings", self.post_update_settings, methods=["POST"])
-
+        self.router.add_api_route("/upload_file", self.post_upload_file, methods=["POST"])
 
     def edition(self):
         return PlainTextResponse(get_edition())
 
-
     def version(self):
         return PlainTextResponse(get_version())
-
 
     async def test(self, req: Request):
         recv_timestamp = round(time() * 1000)
@@ -96,6 +97,15 @@ class MMVC_Rest_VoiceChanger:
         try:
             info = self.voiceChangerManager.update_settings(key, val)
             json_compatible_item_data = jsonable_encoder(info)
+            return JSONResponse(content=json_compatible_item_data)
+        except Exception as e:
+            logger.exception(e)
+
+    # Uploads a file to the upload_dir
+    def post_upload_file(self, file: UploadFile, filename: str = Form(...)):
+        try:
+            res = upload_file(UPLOAD_DIR, file, filename)
+            json_compatible_item_data = jsonable_encoder(res)
             return JSONResponse(content=json_compatible_item_data)
         except Exception as e:
             logger.exception(e)
