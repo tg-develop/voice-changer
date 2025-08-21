@@ -29,7 +29,7 @@ function ModelSettingsCard({ dndAttributes, dndListeners }: ModelSettingsCardPro
   // Update model state when modelSlotIndex or model_dir changes
   useEffect(() => {
     setModel(appState.serverSetting.serverSetting.modelSlots[appState.serverSetting.serverSetting.modelSlotIndex]);
-  }, [appState.serverSetting?.serverSetting.modelSlotIndex, appState.serverSetting?.serverSetting.modelSlots]);
+  }, [appState.serverSetting?.serverSetting.modelSlotIndex]);
 
   // ---------------- Handler ----------------
 
