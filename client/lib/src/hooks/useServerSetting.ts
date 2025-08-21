@@ -89,7 +89,15 @@ export const useServerSetting = (props: UseServerSettingProps): ServerSettingSta
             // サーバが情報を空で返したとき。Web版対策
             return;
         }
-        _setServerSetting(info as ServerInfo);
+        _setServerSetting((prev) => {
+            if (!prev) return info as ServerInfo;
+            // If modelSlots are structurally identical, preserve previous array reference
+            const prevSlots = prev.modelSlots ?? [];
+            const nextSlots = (info as ServerInfo).modelSlots ?? [];
+            const slotsEqual = JSON.stringify(prevSlots) === JSON.stringify(nextSlots);
+            const stableSlots = slotsEqual ? prevSlots : nextSlots;
+            return { ...(info as ServerInfo), modelSlots: stableSlots } as ServerInfo;
+        });
     };
 
     //////////////
@@ -98,8 +106,11 @@ export const useServerSetting = (props: UseServerSettingProps): ServerSettingSta
     const updateServerSettings = useMemo(() => {
         return async (setting: ServerInfo) => {
             if (!props.voiceChangerClient) return;
-            for (let i = 0; i < Object.values(ServerSettingKey).length; i++) {
-                const k = Object.values(ServerSettingKey)[i] as keyof VoiceChangerServerSetting;
+            let latestRes: ServerInfo | null = null;
+            // Filter enum values to only strings to avoid numeric reverse mappings
+            const stringKeys = (Object.values(ServerSettingKey).filter((v) => typeof v === 'string') as string[]) as (keyof VoiceChangerServerSetting)[];
+            for (let i = 0; i < stringKeys.length; i++) {
+                const k = stringKeys[i] as keyof VoiceChangerServerSetting;
                 const cur_v = serverSetting[k];
                 const new_v = setting[k];
 
@@ -115,8 +126,11 @@ export const useServerSetting = (props: UseServerSettingProps): ServerSettingSta
                         : "" + new_v;
                     
                     const res = await props.voiceChangerClient.updateServerSettings(k, valueToSend);
-                    setServerSetting(res);
+                    latestRes = res as ServerInfo;
                 }
+            }
+            if (latestRes) {
+                setServerSetting(latestRes);
             }
         };
     }, [props.voiceChangerClient, serverSetting]);
@@ -196,7 +210,7 @@ export const useServerSetting = (props: UseServerSettingProps): ServerSettingSta
                 file: { name: setting.file.file.name, dir: setting.file.dir },
             };
 
-            const loadPromise = props.voiceChangerClient.loadSound(0, JSON.stringify(params));
+            const loadPromise = props.voiceChangerClient.loadSound(JSON.stringify(params));
             await loadPromise;
 
             setUploadProgress(0);

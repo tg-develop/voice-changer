@@ -250,11 +250,10 @@ export class ServerRestClient {
     };
 
     //-------------- Background Sounds --------------
-    loadSound = async (slot: number, params: string = "{}") => {
+    loadSound = async (params: string = "{}") => {
         const url = this.serverUrl + "/load_sound";
         const info = new Promise<ServerInfo>(async (resolve) => {
             const formData = new FormData();
-            formData.append("slot", "" + slot);
             formData.append("params", params);
 
             const request = new Request(url, {

@@ -196,6 +196,18 @@ export class VoiceChangerClient {
     }
 
     start = async () => {
+        // Before starting capture, sync client chunking with server settings
+        try {
+            const info = await this.configurator.getSettings();
+            const current = this.vcInNode.getSettings();
+            if (info && typeof info.serverReadChunkSize === 'number' && current.inputChunkNum !== info.serverReadChunkSize) {
+                this.updateWorkletNodeSetting({ ...current, inputChunkNum: info.serverReadChunkSize });
+            }
+        } catch (e) {
+            // Non-fatal: fall back to current settings if server not reachable
+            console.warn('[VoiceChangerClient] Failed to sync chunk size before start:', e);
+        }
+
         await this.vcInNode.start();
         this._isVoiceChanging = true;
     };
@@ -226,8 +238,19 @@ export class VoiceChangerClient {
                 }
             }
         }
-        this.vcInNode.updateSetting({ ...this.vcInNode.getSettings(), serverUrl: url });
+        // Update server URL in worklet and REST client
+        const cur = this.vcInNode.getSettings();
+        this.vcInNode.updateSetting({ ...cur, serverUrl: url });
         this.configurator = new ServerConfigurator(url);
+
+        // Opportunistically sync inputChunkNum with server immediately
+        this.configurator.getSettings().then((info) => {
+            try {
+                if (info && typeof info.serverReadChunkSize === 'number' && cur.inputChunkNum !== info.serverReadChunkSize) {
+                    this.updateWorkletNodeSetting({ ...cur, serverUrl: url, inputChunkNum: info.serverReadChunkSize });
+                }
+            } catch { /* noop */ }
+        }).catch(() => {/* ignore */});
     };
 
     updateClientSetting = async (setting: VoiceChangerClientSetting) => {
@@ -323,8 +346,8 @@ export class VoiceChangerClient {
     };
 
     //-------------- Background Sounds --------------
-    loadSound = (slot: number, params: string) => {
-        return this.configurator.loadSound(slot, params);
+    loadSound = (params: string) => {
+        return this.configurator.loadSound(params);
     };
     updateSoundInfo = (slot: string, key: string, val: string) => {
         return this.configurator.updateSoundInfo(slot, key, val);

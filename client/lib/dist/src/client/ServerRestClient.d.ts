@@ -9,13 +9,13 @@ export declare class ServerRestClient {
     uploadFile: (buf: ArrayBuffer, filename: string, onprogress: (progress: number, end: boolean) => void) => Promise<number>;
     concatUploadedFile: (filename: string, chunkNum: number) => Promise<void>;
     loadModel: (slot: number, isHalf: boolean, params?: string) => Promise<ServerInfo>;
-    loadSound: (slot: number, params?: string) => Promise<ServerInfo>;
     uploadAssets: (params: string) => Promise<ServerInfo>;
     getModelType: () => Promise<ServerInfo>;
     export2onnx: () => Promise<OnnxExporterInfo>;
     mergeModel: (req: MergeModelRequest) => Promise<ServerInfo>;
     updateModelDefault: () => Promise<ServerInfo>;
     updateModelInfo: (slot: number, key: string, val: string) => Promise<ServerInfo>;
+    loadSound: (params?: string) => Promise<ServerInfo>;
     updateSoundInfo: (soundId: string, key: string, val: string) => Promise<ServerInfo>;
     deleteSound: (soundId: string) => Promise<ServerInfo>;
     postVoice: (timestamp: number, buffer: ArrayBuffer) => Promise<any>;

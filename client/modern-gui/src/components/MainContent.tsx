@@ -55,11 +55,7 @@ function MainContent() {
           if (newIndex % 2 === 1) {
             newIndex = Math.min(newIndex + 1, items.length);
           }
-        } else {
-          // If placing normal card where a wide card would break the layout
-          const draggedCard = active.id as string;
-          const targetCard = over.id as string;
-          
+        } else {         
           // Check if there's a wide card that would be affected
           const reorderedItems = arrayMove(items, oldIndex, newIndex);
           

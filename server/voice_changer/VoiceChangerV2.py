@@ -136,27 +136,64 @@ class VoiceChangerV2:
             # In case there's an actual silence - send full block with zeros
             return np.zeros(block_size, dtype=np.float32), vol
 
-        # SOLA algorithm from https://github.com/yxlllc/DDSP-SVC, https://github.com/liujing04/Retrieval-based-Voice-Conversion-WebUI
-        conv_input = audio[
-            None, None, : self.crossfade_frame + self.sola_search_frame
-        ]
-        cor_nom = F.conv1d(conv_input, self.sola_buffer[None, None, :])
-        cor_den = torch.sqrt(
-            F.conv1d(
-                conv_input ** 2,
-                torch.ones(1, 1, self.crossfade_frame, device=self.device_manager.device),
-            )
-            + 1e-8
+        # Local snapshot to avoid race on attribute changes mid-processing
+        cf = int(self.crossfade_frame)
+        ss = int(self.sola_search_frame)
+
+        # If crossfade size is invalid, skip SOLA/crossfade and return block
+        if cf <= 0:
+            mixed = audio[: block_size]
+            return mixed.detach().cpu().numpy(), vol
+
+        # Ensure SOLA buffers/windows match current config and device
+        need_realloc = (
+            self.sola_buffer is None
+            or self.sola_buffer.numel() != cf
+            or self.sola_buffer.device != audio.device
+            or self.fade_in_window.numel() != cf
+            or self.fade_in_window.device != audio.device
         )
-        sola_offset = torch.argmax(cor_nom[0, 0] / cor_den[0, 0])
+        if need_realloc:
+            # Regenerate fade windows and buffer on correct device/size
+            self._generate_strength()
+
+        # Guard: if model output is too short for convolution, fall back to no-shift
+        if audio.shape[0] <= cf:
+            sola_offset = 0
+        else:
+            # SOLA algorithm from https://github.com/yxlllc/DDSP-SVC, https://github.com/liujing04/Retrieval-based-Voice-Conversion-WebUI
+            end = min(audio.shape[0], cf + ss)
+            conv_input = audio[None, None, : end]
+            # Only perform convolution when kernel and input lengths are valid
+            if end <= cf or self.sola_buffer.numel() == 0:
+                sola_offset = 0
+            else:
+                cor_nom = F.conv1d(conv_input, self.sola_buffer[None, None, :])
+                cor_den = torch.sqrt(
+                    F.conv1d(
+                        conv_input ** 2,
+                        torch.ones(1, 1, cf, device=self.device_manager.device),
+                    )
+                    + 1e-8
+                )
+                sola_offset = torch.argmax(cor_nom[0, 0] / cor_den[0, 0])
 
         audio = audio[sola_offset:]
-        audio[: self.crossfade_frame] *= self.fade_in_window
-        audio[: self.crossfade_frame] += (
-            self.sola_buffer * self.fade_out_window
-        )
 
-        self.sola_buffer[:] = audio[block_size : block_size + self.crossfade_frame]
+        # Crossfade with previous tail; handle short buffers safely
+        head = min(cf, audio.shape[0], self.fade_in_window.numel(), self.sola_buffer.numel())
+        if head > 0:
+            audio[: head] *= self.fade_in_window[: head]
+            audio[: head] += self.sola_buffer[: head] * self.fade_out_window[: head]
+
+        # Update SOLA buffer with the next tail, padding if needed
+        src = audio[block_size : block_size + cf]
+        if src.numel() != cf:
+            padded = torch.zeros(cf, device=audio.device, dtype=audio.dtype)
+            if src.numel() > 0:
+                padded[: src.numel()] = src
+            src = padded
+        self.sola_buffer.copy_(src)
 
         mixed = audio[: block_size]
 

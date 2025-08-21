@@ -41,8 +41,8 @@ export class ServerConfigurator {
     };
 
     //-------------- Background Sounds --------------
-    loadSound = async (slot: number, params: string = "{}") => {
-        return this.restClient.loadSound(slot, params);
+    loadSound = async (params: string = "{}") => {
+        return this.restClient.loadSound(params);
     };
 
     updateSoundInfo = async (slot: string, key: string, val: string) => {
