@@ -75,6 +75,22 @@ class DeviceManager(object):
         self.fp16_available = self.is_fp16_available()
         logger.info(f'Switched to {metadata["name"]} ({device}). FP16 support: {self.fp16_available}')
 
+        # Enable TF32 on supported NVIDIA GPUs (Ampere/Hopper or newer)
+        try:
+            if self.device.type == 'cuda':
+                major, _ = torch.cuda.get_device_capability(self.device)
+                if major >= 8:
+                    # Allow TensorFloat-32 for float32 matmul and cuDNN conv
+                    torch.backends.cuda.matmul.allow_tf32 = True
+                    if hasattr(torch.backends, 'cudnn'):
+                        torch.backends.cudnn.allow_tf32 = True
+                    # Use highest matmul precision (lets PyTorch pick TF32 where applicable)
+                    if hasattr(torch, 'set_float32_matmul_precision'):
+                        torch.set_float32_matmul_precision('high')
+                    logger.info('Enabled TF32 (TensorFloat-32) for CUDA matmul/conv on this GPU.')
+        except Exception as e:
+            logger.debug(f'Unable to configure TF32: {e}')
+
     def use_fp16(self):
         return self.fp16_available and not self.force_fp32
 
