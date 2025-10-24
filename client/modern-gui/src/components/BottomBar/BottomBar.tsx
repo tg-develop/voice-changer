@@ -5,7 +5,7 @@ import { faSun, faMoon, faPlay, faStop, faVolumeUp, faVolumeMute } from '@fortaw
 import { AppContextValue, useAppState } from '../../context/AppContext';
 import { useUIContext } from '../../context/UIContext';
 import MergeLabModal from './Modals/Merge/MergeLabModal';
-import AdvancedSettingsModal from './Modals/AdvancedSettingsModal';
+import AdvancedSettingsModal from './Modals/AdvancedSettings/AdvancedSettingsModal';
 import ClientInfoModal from './Modals/ClientInfoModal';
 import ServerInfoModal from './Modals/ServerInfoModal';
 import { CSS_CLASSES } from '../../styles/constants';
@@ -128,6 +128,7 @@ function BottomBar(): JSX.Element {
   return (
     <>
       <MergeLabModal
+        appState={appState}
         guiState={uiContext}
         showMerge={showMerge}
         setShowMerge={setShowMerge}
