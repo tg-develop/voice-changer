@@ -33,24 +33,98 @@ class PitchExtractorManager(Protocol):
             return cls.pitch_extractor
 
         logger.info(f'Loading pitch extractor {pitch_extractor}')
+        
+        # Map of pitch extractors to their implementations
+        PITCH_EXTRACTOR_MAP = {
+            'crepe_tiny': {
+                'class': CrepePitchExtractor,
+                'path': cls.params.crepe_tiny,
+                'args': ['crepe_tiny', cls.params.crepe_tiny]
+            },
+            'crepe_full': {
+                'class': CrepePitchExtractor,
+                'path': cls.params.crepe_full,
+                'args': ['crepe_full', cls.params.crepe_full]
+            },
+            'crepe_tiny_onnx': {
+                'class': CrepeOnnxPitchExtractor,
+                'path': cls.params.crepe_onnx_tiny,
+                'args': ['crepe_tiny_onnx', cls.params.crepe_onnx_tiny]
+            },
+            'crepe_full_onnx': {
+                'class': CrepeOnnxPitchExtractor,
+                'path': cls.params.crepe_onnx_full,
+                'args': ['crepe_full_onnx', cls.params.crepe_onnx_full]
+            },
+            'rmvpe': {
+                'class': RMVPEPitchExtractor,
+                'path': cls.params.rmvpe,
+                'args': [cls.params.rmvpe]
+            },
+            'rmvpe_onnx': {
+                'class': RMVPEOnnxPitchExtractor,
+                'path': cls.params.rmvpe_onnx,
+                'args': [cls.params.rmvpe_onnx]
+            },
+            'fcpe': {
+                'class': FcpePitchExtractor,
+                'path': cls.params.fcpe,
+                'args': [cls.params.fcpe]
+            },
+            'fcpe_onnx': {
+                'class': FcpeOnnxPitchExtractor,
+                'path': cls.params.fcpe_onnx,
+                'args': [cls.params.fcpe_onnx]
+            },
+        }
+        
         try:
-            PITCH_EXTRACTOR_MAP = {
-                'crepe_tiny': lambda cls: CrepePitchExtractor('crepe_tiny', cls.params.crepe_tiny),
-                'crepe_full': lambda cls: CrepePitchExtractor('crepe_full', cls.params.crepe_full),
-                'crepe_tiny_onnx': lambda cls: CrepeOnnxPitchExtractor('crepe_tiny_onnx', cls.params.crepe_onnx_tiny),
-                'crepe_full_onnx': lambda cls: CrepeOnnxPitchExtractor('crepe_full_onnx', cls.params.crepe_onnx_full),
-                'rmvpe': lambda cls: RMVPEPitchExtractor(cls.params.rmvpe),
-                'rmvpe_onnx': lambda cls: RMVPEOnnxPitchExtractor(cls.params.rmvpe_onnx),
-                'fcpe': lambda cls: FcpePitchExtractor(cls.params.fcpe),
-                'fcpe_onnx': lambda cls: FcpeOnnxPitchExtractor(cls.params.fcpe_onnx),
-            }
-            extractor = PITCH_EXTRACTOR_MAP.get(pitch_extractor)
-            if extractor:
-                return extractor(cls)
-            else:
-                logger.warning(f"PitchExtractor not found {pitch_extractor}. Fallback to rmvpe_onnx")
+            # Check if the requested extractor exists
+            extractor_info = PITCH_EXTRACTOR_MAP.get(pitch_extractor)
+            if not extractor_info:
+                logger.warning(f"PitchExtractor {pitch_extractor} not found. Falling back to rmvpe_onnx")
                 return RMVPEOnnxPitchExtractor(cls.params.rmvpe_onnx)
-        except RuntimeError as e:
-            logger.error(f'Failed to load {pitch_extractor}. Fallback to rmvpe_onnx.')
-            logger.exception(e)
-            return RMVPEOnnxPitchExtractor(cls.params.rmvpe_onnx)
+            
+            # Check if the model file exists
+            import os
+            if not os.path.exists(extractor_info['path']):
+                logger.warning(f"Model file not found for {pitch_extractor} at {extractor_info['path']}")
+                
+                # If this is a non-ONNX FCPE model and the ONNX version exists, suggest using that
+                if pitch_extractor == 'fcpe' and os.path.exists(cls.params.fcpe_onnx):
+                    logger.info("Falling back to FCPE ONNX version")
+                    return FcpeOnnxPitchExtractor(cls.params.fcpe_onnx)
+                
+                # If FCPE is not available, fall back to RMVPE ONNX
+                if pitch_extractor.startswith('fcpe'):
+                    logger.warning("Falling back to RMVPE ONNX")
+                    return RMVPEOnnxPitchExtractor(cls.params.rmvpe_onnx)
+                
+                # For other models, just use the fallback
+                return RMVPEOnnxPitchExtractor(cls.params.rmvpe_onnx)
+            
+            # If we got here, the file exists, try to load it
+            extractor_class = extractor_info['class']
+            return extractor_class(*extractor_info['args'])
+            
+        except Exception as e:
+            logger.error(f'Failed to load {pitch_extractor}. Error: {str(e)}')
+            logger.exception('PitchExtractor loading error')
+            
+            # Fallback to RMVPE ONNX if available
+            if os.path.exists(cls.params.rmvpe_onnx):
+                logger.warning('Falling back to RMVPE ONNX')
+                return RMVPEOnnxPitchExtractor(cls.params.rmvpe_onnx)
+            
+            # If RMVPE ONNX is not available, try any available extractor
+            for name, info in PITCH_EXTRACTOR_MAP.items():
+                if name != pitch_extractor and os.path.exists(info['path']):
+                    try:
+                        logger.warning(f'Falling back to {name}')
+                        return info['class'](*info['args'])
+                    except Exception as e2:
+                        logger.error(f'Failed to load fallback extractor {name}: {str(e2)}')
+                        continue
+            
+            # If we get here, no extractor could be loaded
+            raise RuntimeError(f'Failed to load any pitch extractor. Original error: {str(e)}')

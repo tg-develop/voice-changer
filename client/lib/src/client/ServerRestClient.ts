@@ -298,6 +298,39 @@ export class ServerRestClient {
         return info;
     };
 
+    //-------------- Pretrained Models --------------
+    downloadPretrained = async (model_key: string) => {
+        const url = this.serverUrl + "/download_pretrain";
+        const info = new Promise<ServerInfo>(async (resolve) => {
+            const formData = new FormData();
+            formData.append("model_key", model_key);
+
+            const request = new Request(url, {
+                method: "POST",
+                body: formData,
+            });
+            const res = (await (await fetch(request)).json()) as ServerInfo;
+            resolve(res);
+        });
+        return info;
+    };
+    
+    deletePretrained = async (model_key: string) => {
+        const url = this.serverUrl + "/delete_pretrain";
+        const info = new Promise<ServerInfo>(async (resolve) => {
+            const formData = new FormData();
+            formData.append("model_key", model_key);
+
+            const request = new Request(url, {
+                method: "POST",
+                body: formData,
+            });
+            const res = (await (await fetch(request)).json()) as ServerInfo;
+            resolve(res);
+        });
+        return info;
+    };
+
     // VoiceChangerWorkletNodeから呼び出される
     //// Restで音声変換
     postVoice = async (timestamp: number, buffer: ArrayBuffer) => {

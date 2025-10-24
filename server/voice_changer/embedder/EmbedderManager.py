@@ -28,7 +28,10 @@ class EmbedderManager:
         logger.info(f'Loading embedder {embedder_type}')
 
         if embedder_type == "spin_base":
-            file = cls.params.spin_onnx
+            file = cls.params.spin_base_onnx
+            return OnnxEmbedder().load_model(file)
+        elif embedder_type == "spin_v2":
+            file = cls.params.spin_v2_onnx
             return OnnxEmbedder().load_model(file)
         elif embedder_type not in ["hubert_base", "contentvec"]:
             raise RuntimeError(f'Unsupported embedder type: {embedder_type}')

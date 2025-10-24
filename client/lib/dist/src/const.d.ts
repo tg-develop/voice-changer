@@ -125,6 +125,8 @@ export declare const ServerSettingKey: {
     readonly inputSampleRate: "inputSampleRate";
     readonly audioEffects: "audioEffects";
     readonly audioBackgrounds: "audioBackgrounds";
+    readonly embedders: "embedders";
+    readonly pitchExtractors: "pitchExtractors";
 };
 export type ServerSettingKey = (typeof ServerSettingKey)[keyof typeof ServerSettingKey];
 export type BackgroundTrackMode = 'loop' | 'random';
@@ -184,7 +186,20 @@ export type VoiceChangerServerSetting = {
     inputSampleRate: InputSampleRate;
     audioEffects: AudioEffectsConfiguration;
     audioBackgrounds: BackgroundsConfiguration;
+    embedders: ModelInfoDict;
+    pitchExtractors: ModelInfoDict;
 };
+export interface ModelInfo {
+    name: string;
+    type: string;
+    mandatory: boolean;
+    downloaded: boolean;
+}
+export type ModelInfoDict = {
+    [key: string]: ModelInfo;
+};
+export declare const embedders: ModelInfoDict;
+export declare const pitchExtractors: ModelInfoDict;
 type ModelSlot = {
     slotIndex: number;
     voiceChangerType: VoiceChangerType;
@@ -208,6 +223,8 @@ export type RVCModelSlot = ModelSlot & {
     defaultFormantShift: number;
     modelType: RVCModelType;
     modelTypeOnnx: string;
+    embedder: string;
+    version: string;
     embChannels: number;
     f0: boolean;
     samplingRate: number;

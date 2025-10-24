@@ -49,6 +49,8 @@ export declare class VoiceChangerClient {
     loadSound: (params: string) => Promise<import("./const").ServerInfo>;
     updateSoundInfo: (slot: string, key: string, val: string) => Promise<import("./const").ServerInfo>;
     deleteSound: (slot: string) => Promise<import("./const").ServerInfo>;
+    downloadPretrained: (model_key: string) => Promise<import("./const").ServerInfo>;
+    deletePretrained: (model_key: string) => Promise<import("./const").ServerInfo>;
     configureWorklet: (setting: WorkletSetting) => void;
     startOutputRecording: () => void;
     stopOutputRecording: () => Float32Array;

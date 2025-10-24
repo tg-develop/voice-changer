@@ -162,6 +162,9 @@ export const ServerSettingKey = {
     inputSampleRate: "inputSampleRate",
     audioEffects: "audioEffects",
     audioBackgrounds: "audioBackgrounds",
+    
+    embedders: "embedders",
+    pitchExtractors: "pitchExtractors",
 } as const;
 export type ServerSettingKey = (typeof ServerSettingKey)[keyof typeof ServerSettingKey];
 
@@ -232,7 +235,22 @@ export type VoiceChangerServerSetting = {
     inputSampleRate: InputSampleRate;
     audioEffects: AudioEffectsConfiguration;
     audioBackgrounds: BackgroundsConfiguration;
+    embedders: ModelInfoDict;
+    pitchExtractors: ModelInfoDict;
 };
+
+export interface ModelInfo {
+    name: string;
+    type: string;
+    mandatory: boolean;
+    downloaded: boolean;
+}
+
+// Dictionary with string keys and ModelInfo values
+export type ModelInfoDict = { [key: string]: ModelInfo };
+
+export const embedders: ModelInfoDict = {};
+export const pitchExtractors: ModelInfoDict = {};
 
 type ModelSlot = {
     slotIndex: number;
@@ -256,7 +274,8 @@ export type RVCModelSlot = ModelSlot & {
     defaultFormantShift: number;
     modelType: RVCModelType;
     modelTypeOnnx: string;
-
+    embedder: string;
+    version: string;
     embChannels: number;
     f0: boolean;
     samplingRate: number;
@@ -384,6 +403,8 @@ export const DefaultServerSetting: ServerInfo = {
         providers: [],
         total_effects: 0,
     },
+    embedders: {},
+    pitchExtractors: {},
 };
 
 ///////////////////////
