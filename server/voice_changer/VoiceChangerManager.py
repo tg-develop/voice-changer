@@ -65,6 +65,10 @@ class VoiceChangerManager(ServerAudioCallbacks):
             self.settings.set_properties(settings)
         except:
             pass
+            
+        # Set the VoiceChangerSettings instance in ModelManager
+        from downloader.ModelManager import set_voice_changer_settings
+        set_voice_changer_settings(self.settings)
 
         self.device_manager = DeviceManager.get_instance()
         self.devices = self.device_manager.list_devices()

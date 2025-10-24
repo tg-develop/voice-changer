@@ -80,6 +80,10 @@ export type ServerSettingState = {
     updateSoundInfo: (slot: string, key: string, val: string) => Promise<ServerInfo>;
     deleteSound: (soundId: string) => Promise<ServerInfo>;
     uploadAssets: (slot: number, name: ModelAssetName, file: File) => Promise<void>;
+
+    //Pretrained
+    downloadPretrained: (model_key: string) => Promise<ServerInfo>;
+    deletePretrained: (model_key: string) => Promise<ServerInfo>;
 };
 
 export const useServerSetting = (props: UseServerSettingProps): ServerSettingState => {
@@ -276,6 +280,16 @@ export const useServerSetting = (props: UseServerSettingProps): ServerSettingSta
         setServerSetting(serverInfo);
         return serverInfo;
     };
+    const downloadPretrained = async (model_key: string) => {
+        const serverInfo = await props.voiceChangerClient!.downloadPretrained(model_key);
+        setServerSetting(serverInfo);
+        return serverInfo;
+    };
+    const deletePretrained = async (model_key: string) => {
+        const serverInfo = await props.voiceChangerClient!.deletePretrained(model_key);
+        setServerSetting(serverInfo);
+        return serverInfo;
+    };
 
     return {
         serverSetting,
@@ -292,5 +306,7 @@ export const useServerSetting = (props: UseServerSettingProps): ServerSettingSta
         updateModelDefault,
         updateModelInfo,
         uploadAssets,
+        downloadPretrained,
+        deletePretrained,
     };
 };

@@ -2,12 +2,14 @@ import { JSX } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilter } from '@fortawesome/free-solid-svg-icons';
 import { CSS_CLASSES } from '../../../../styles/constants';
+import { ModelInfoDict } from '@dannadori/voice-changer-client-js';
 
 interface MergeFilterProps {
+  embedders: ModelInfoDict;
   sampleRate: number;
   setSampleRate: (sampleRate: number) => void;
-  embedder: string;
-  setEmbedder: (embedder: string) => void;
+  selectedEmbedder: string;
+  setSelectedEmbedder: (embedder: string) => void;
   searchText: string;
   setSearchText: (searchText: string) => void;
   onFilterChange: () => void;
@@ -16,8 +18,9 @@ interface MergeFilterProps {
 function MergeFilter({
   sampleRate,
   setSampleRate,
-  embedder,
-  setEmbedder,
+  selectedEmbedder,
+  embedders,
+  setSelectedEmbedder,
   searchText,
   setSearchText,
   onFilterChange
@@ -36,7 +39,7 @@ function MergeFilter({
 
   // Handle embedder change
   const handleEmbedderChange = (newEmbedder: string) => {
-    setEmbedder(newEmbedder);
+    setSelectedEmbedder(newEmbedder);
     onFilterChange();
   };
 
@@ -83,12 +86,20 @@ function MergeFilter({
           <div>
             <label className={CSS_CLASSES.label}>Embedder:</label>
             <select
-              value={embedder}
+              value={selectedEmbedder}
               onChange={(e) => handleEmbedderChange(e.target.value)}
               className={CSS_CLASSES.select}
+              disabled={Object.keys(embedders).length === 0}
             >
-              <option value="hubert_base">Hubert_Base / Contentvec</option>
-              <option value="spin_base">SPIN</option>
+              {Object.keys(embedders).length === 0 ? (
+                <option value="">No embedders available</option>
+              ) : (
+                Object.entries(embedders).map(([key, embedderInfo]) => (
+                  <option key={key} value={key}>
+                    {embedderInfo.name}
+                  </option>
+                ))
+              )}
             </select>
           </div>
         </div>

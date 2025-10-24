@@ -72,4 +72,12 @@ export class ServerConfigurator {
     updateModelInfo = async (slot: number, key: string, val: string) => {
         return this.restClient.updateModelInfo(slot, key, val);
     };
+
+    //-------------- Pretrained Models --------------
+    downloadPretrained = async (model_key: string) => {
+        return this.restClient.downloadPretrained(model_key);
+    };
+    deletePretrained = async (model_key: string) => {
+        return this.restClient.deletePretrained(model_key);
+    };
 }

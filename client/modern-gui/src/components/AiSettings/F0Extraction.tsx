@@ -10,11 +10,7 @@ interface F0ExtractionProps {
     appGuiSettingState: AppGuiSettingState;
 }
 
-// List of available F0 Detectors
-const f0Detectors = [
-    'crepe_full_onnx', 'crepe_tiny_onnx', 'crepe_full', 'crepe_tiny',
-    'rmvpe', 'rmvpe_onnx', 'fcpe', 'fcpe_onnx'
-]
+// Use pitchExtractors from server settings instead of hardcoded list
 
 function F0Extraction({ appState, uiState, appGuiSettingState }: F0ExtractionProps) {
     // ---------------- Handlers ----------------
@@ -33,25 +29,28 @@ function F0Extraction({ appState, uiState, appGuiSettingState }: F0ExtractionPro
 
     // Generate F0 Detectors Options for Select
     const generateF0DetOptions = () => {
-        // DirectML can only use ONNX models
+        const pitchExtractors = appState.serverSetting.serverSetting.pitchExtractors || {};
+        
+        // Get all available extractors and filter for downloaded ones
+        let extractors = Object.entries(pitchExtractors)
+            .filter(([_, extractor]) => extractor.downloaded === true);
+        
+        // Filter for DirectML - only include ONNX models
         if (appGuiSettingState.serverInfo.edition.indexOf("DirectML") >= 0) {
-            const extractors = f0Detectors.filter(extractor => extractor.includes('_onnx'));
-            return Object.values(extractors).map((x) => {
-                return (
-                    <option key={x} value={x}>
-                        {x}
-                    </option>
-                );
-            });
-        } else {
-            return Object.values(f0Detectors).map((x) => {
-                return (
-                    <option key={x} value={x}>
-                        {x}
-                    </option>
-                );
-            });
+            extractors = extractors.filter(([key]) => key.includes('_onnx'));
         }
+        
+        // If no downloaded extractors are available
+        if (extractors.length === 0) {
+            return <option value="">No downloaded pitch extractors available</option>;
+        }
+        
+        // Map to options
+        return extractors.map(([key, extractor]) => (
+            <option key={key} value={key}>
+                {extractor.name}
+            </option>
+        ));
     };
 
     // ---------------- Render ----------------

@@ -18,4 +18,6 @@ export declare class ServerConfigurator {
     mergeModel: (req: MergeModelRequest) => Promise<import("../const").ServerInfo>;
     updateModelDefault: () => Promise<import("../const").ServerInfo>;
     updateModelInfo: (slot: number, key: string, val: string) => Promise<import("../const").ServerInfo>;
+    downloadPretrained: (model_key: string) => Promise<import("../const").ServerInfo>;
+    deletePretrained: (model_key: string) => Promise<import("../const").ServerInfo>;
 }

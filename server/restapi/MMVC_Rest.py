@@ -12,11 +12,11 @@ from voice_changer.VoiceChangerManager import VoiceChangerManager
 from restapi.MMVC_Rest_Sounds import MMVC_Rest_Sounds
 from restapi.MMVC_Rest_VoiceChanger import MMVC_Rest_VoiceChanger
 from restapi.MMVC_Rest_Models import MMVC_Rest_Models
+from restapi.MMVC_Rest_PretrainDownloader import MMVC_Rest_PretrainDownloader
 from settings import get_settings
 from const import TMP_DIR
 
 logger = logging.getLogger(__name__)
-
 
 class ValidationErrorLoggingRoute(APIRoute):
     def get_route_handler(self) -> Callable:
@@ -32,7 +32,6 @@ class ValidationErrorLoggingRoute(APIRoute):
                 raise HTTPException(status_code=422, detail=detail)
 
         return custom_route_handler
-
 
 class MMVC_Rest:
     _instance = None
@@ -71,6 +70,9 @@ class MMVC_Rest:
 
             soundsApi = MMVC_Rest_Sounds(voiceChangerManager)
             app_fastapi.include_router(soundsApi.router)
+
+            pretrainDownloader = MMVC_Rest_PretrainDownloader()
+            app_fastapi.include_router(pretrainDownloader.router)
 
             cls._instance = app_fastapi
             logger.info("Initialized.")

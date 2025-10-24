@@ -1,14 +1,14 @@
 import { JSX, useEffect, useState, ChangeEvent } from 'react';
 import GenericModal from '../../Modals/GenericModal';
 import { CSS_CLASSES } from '../../../styles/constants';
-import { RVCModelSlot } from '@dannadori/voice-changer-client-js';
+import { RVCModelSlot, ModelInfo } from '@dannadori/voice-changer-client-js';
 import { useAppState } from '../../../context/AppContext';
 import { useUIContext } from '../../../context/UIContext';
 
 type EditFormState = {
   modelName: string;
   thumbnailFile: File | null;
-  embedder: 'hubert_base' | 'spin_base';
+  embedder: string;
 };
 
 interface EditModelModalProps {
@@ -27,7 +27,7 @@ function EditModelModal({ model, showModal, setShowEdit, modelDir, icon }: EditM
   const [form, setForm] = useState<EditFormState>({
     modelName: model.name || '',
     thumbnailFile: null,
-    embedder: (model as any).embedder || 'hubert_base'
+    embedder: (model as any).embedder || (Object.values(appState.serverSetting.serverSetting.embedders || {})[0]?.name || '')
   });
 
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
@@ -109,7 +109,7 @@ function EditModelModal({ model, showModal, setShowEdit, modelDir, icon }: EditM
     }
 
     await appState.serverSetting.reloadServerInfo();
-    guiState.showError('Model erfolgreich aktualisiert.', 'Confirm');
+    guiState.showError('Model updated successfully.', 'Confirm');
     setShowEdit(false);
   };
 
@@ -157,16 +157,27 @@ function EditModelModal({ model, showModal, setShowEdit, modelDir, icon }: EditM
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="editEmbedderType" className={CSS_CLASSES.label}>Embedder Type:</label>
+            <label htmlFor="editEmbedder" className={CSS_CLASSES.label}>Embedder:</label>
             <select
-              id="editEmbedderType"
+              id="editEmbedder"
               value={form.embedder}
-              onChange={(e) => setForm({ ...form, embedder: e.target.value as 'hubert_base' | 'spin_base' })}
+              onChange={(e) => setForm({ ...form, embedder: e.target.value })}
               className={CSS_CLASSES.select}
               disabled={appState.serverSetting.isUploading}
             >
-              <option value="hubert_base">Hubert_Base / Contentvec (Default)</option>
-              <option value="spin_base">SPIN</option>
+              {Object.entries(appState.serverSetting.serverSetting.embedders || {})
+                .filter(([_, embedder]) => embedder.downloaded === true)
+                .length === 0 ? (
+                <option value="">No downloaded embedders available</option>
+              ) : (
+                Object.entries(appState.serverSetting.serverSetting.embedders || {})
+                  .filter(([_, embedder]) => embedder.downloaded === true)
+                  .map(([key, embedder]) => (
+                    <option key={key} value={key}>
+                      {embedder.name}
+                    </option>
+                  ))
+              )}
             </select>
           </div>
         </div>

@@ -61,5 +61,7 @@ export type ServerSettingState = {
     updateSoundInfo: (slot: string, key: string, val: string) => Promise<ServerInfo>;
     deleteSound: (soundId: string) => Promise<ServerInfo>;
     uploadAssets: (slot: number, name: ModelAssetName, file: File) => Promise<void>;
+    downloadPretrained: (model_key: string) => Promise<ServerInfo>;
+    deletePretrained: (model_key: string) => Promise<ServerInfo>;
 };
 export declare const useServerSetting: (props: UseServerSettingProps) => ServerSettingState;

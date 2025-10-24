@@ -5,7 +5,6 @@ from starlette.datastructures import Headers
 from starlette.responses import PlainTextResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-
 class TrustedOriginMiddleware:
     def __init__(
         self,

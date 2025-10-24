@@ -1,6 +1,6 @@
 # from const import PitchExtractorType
-from typing import NamedTuple
-
+import os
+from typing import NamedTuple, Dict, Any
 import logging
 logger = logging.getLogger(__name__)
 
@@ -410,3 +410,15 @@ class VoiceChangerSettings:
             import json
             effects = json.loads(effects)
         self._audioEffects = effects if effects else {}
+
+    @property
+    def pitchExtractors(self) -> Dict[str, Dict[str, Any]]:
+        """Return pitch extractors with their information and download status."""
+        from downloader.ModelManager import ModelManager
+        return ModelManager.get_pitch_extractors()
+    
+    @property
+    def embedders(self) -> Dict[str, Dict[str, Any]]:
+        """Return embedders with their information and download status."""
+        from downloader.ModelManager import ModelManager
+        return ModelManager.get_embedders()

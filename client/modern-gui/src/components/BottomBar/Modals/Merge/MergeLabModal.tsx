@@ -1,12 +1,11 @@
 import { useState, JSX } from 'react';
-import { ModelFileKind, ModelUploadSetting, RVCModelSlot, VoiceChangerType } from '@dannadori/voice-changer-client-js';
+import { ClientState, ModelFileKind, ModelUploadSetting, RVCModelSlot, VoiceChangerType } from '@dannadori/voice-changer-client-js';
 import { CSS_CLASSES } from '../../../../styles/constants';
 import GenericModal from '../../../Modals/GenericModal';
 import { UIContextType } from '../../../../context/UIContext';
 import MergeFilter from './MergeFilter';
 import MergeModelList from './MergeModelList';
 import MergeConfiguration from './MergeConfiguration';
-import { useAppState } from '../../../../context/AppContext';
 
 interface ModelMergeInfo {
   slot: RVCModelSlot;
@@ -14,18 +13,17 @@ interface ModelMergeInfo {
 }
 
 interface MergeLabModalProps {
+  appState: ClientState;
   guiState: UIContextType;
   showMerge: boolean;
   setShowMerge: (showMerge: boolean) => void;
 }
 
-function MergeLabModal({ guiState, showMerge, setShowMerge }: MergeLabModalProps): JSX.Element {
+function MergeLabModal({ appState, guiState, showMerge, setShowMerge }: MergeLabModalProps): JSX.Element {
   // ---------------- States ----------------
 
-  const appState = useAppState();
-
   const [sampleRate, setSampleRate] = useState<number>(40000);
-  const [embedder, setEmbedder] = useState<string>('hubert_base');
+  const [selectedEmbedder, setSelectedEmbedder] = useState<string>('hubert_base');
   const [searchText, setSearchText] = useState<string>('');
   const [selectedModels, setSelectedModels] = useState<ModelMergeInfo[]>([]);
 
@@ -45,7 +43,7 @@ function MergeLabModal({ guiState, showMerge, setShowMerge }: MergeLabModalProps
 
       if (slot.samplingRate && slot.samplingRate !== sampleRate) return false;
 
-      if (slot.embedder && slot.embedder !== embedder) return false;
+      if (slot.embedder && slot.embedder !== selectedEmbedder) return false;
 
       if (searchText && !slot.name.toLowerCase().includes(searchText.toLowerCase())) return false;
 
@@ -99,8 +97,8 @@ function MergeLabModal({ guiState, showMerge, setShowMerge }: MergeLabModalProps
   const handleClose = () => {
     setShowMerge(false);
     setSelectedModels([]);
+    setSelectedEmbedder('hubert_base');
     setSampleRate(40000);
-    setEmbedder('hubert_base');
     setSearchText('');
     setDownloadModel(true);
     setSaveToMergeSlot(false);
@@ -168,7 +166,7 @@ function MergeLabModal({ guiState, showMerge, setShowMerge }: MergeLabModalProps
             isSampleMode: false,
             sampleId: null,
             params: {},
-            embedder: embedder
+            embedder: selectedEmbedder
           };
 
           await appState.serverSetting.uploadModel(uploadSettingsData);
@@ -210,10 +208,11 @@ function MergeLabModal({ guiState, showMerge, setShowMerge }: MergeLabModalProps
     >
       <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
         <MergeFilter
+          embedders={appState.serverSetting.serverSetting.embedders}
           sampleRate={sampleRate}
           setSampleRate={setSampleRate}
-          embedder={embedder}
-          setEmbedder={setEmbedder}
+          selectedEmbedder={selectedEmbedder}
+          setSelectedEmbedder={setSelectedEmbedder}
           searchText={searchText}
           setSearchText={setSearchText}
           onFilterChange={handleFilterChange}

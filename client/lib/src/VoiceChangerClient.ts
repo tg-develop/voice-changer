@@ -356,6 +356,14 @@ export class VoiceChangerClient {
         return this.configurator.deleteSound(slot);
     };
 
+    //-------------- Pretrained Models --------------
+    downloadPretrained = (model_key: string) => {
+        return this.configurator.downloadPretrained(model_key);
+    };
+    deletePretrained = (model_key: string) => {
+        return this.configurator.deletePretrained(model_key);
+    };
+
     //##  Worklet ##//
     configureWorklet = (setting: WorkletSetting) => {
         this.vcInNode.configure(setting);

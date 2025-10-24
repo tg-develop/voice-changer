@@ -1,5 +1,5 @@
 import { useState, ChangeEvent, useEffect } from 'react';
-import { ClientState, ModelFileKind, ModelUploadSetting, RVCModelSlot } from '@dannadori/voice-changer-client-js';
+import { ClientState, ModelFileKind, ModelUploadSetting, RVCModelSlot, ModelInfo } from '@dannadori/voice-changer-client-js';
 import { CSS_CLASSES } from '../../../styles/constants';
 import GenericModal from '../../Modals/GenericModal';
 import { UIContextType } from '../../../context/UIContext';
@@ -19,7 +19,17 @@ interface UploadModelModalProps {
 
 function UploadModelModal({ appState, guiState, showUpload, setShowUpload }: UploadModelModalProps) {
   // ---------------- Component State ----------------
-  const [uploadSettings, setUploadSettings] = useState<UploadFinalForm>({ modelName: '', thumbnailFile: null, voiceChangerType: 'RVC', slot: 0, isSampleMode: false, sampleId: null, files: [], params: {}, embedder: 'hubert_base' });
+  const [uploadSettings, setUploadSettings] = useState<UploadFinalForm>({ 
+    modelName: '', 
+    thumbnailFile: null, 
+    voiceChangerType: 'RVC', 
+    slot: 0, 
+    isSampleMode: false, 
+    sampleId: null, 
+    files: [], 
+    params: {}, 
+    embedder: appState.serverSetting.serverSetting.embedders[0]?.name || '' 
+  });
   const [autoSelectModel, setAutoSelectModel] = useState<boolean>(false);
 
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
@@ -280,12 +290,23 @@ function UploadModelModal({ appState, guiState, showUpload, setShowUpload }: Upl
               <select
                 id="embedderType"
                 value={uploadSettings.embedder}
-                onChange={(e) => setUploadSettings({ ...uploadSettings, embedder: e.target.value as 'hubert_base' | 'spin_base' })}
+                onChange={(e) => setUploadSettings({ ...uploadSettings, embedder: e.target.value })}
                 className={CSS_CLASSES.select}
                 disabled={appState.serverSetting.isUploading}
               >
-                <option value="hubert_base">Hubert_Base / Contentvec (Default)</option>
-                <option value="spin_base">SPIN</option>
+                {Object.entries(appState.serverSetting.serverSetting.embedders || {})
+                  .filter(([_, embedder]) => embedder.downloaded === true)
+                  .length === 0 ? (
+                  <option value="">No downloaded embedders available</option>
+                ) : (
+                  Object.entries(appState.serverSetting.serverSetting.embedders || {})
+                    .filter(([_, embedder]) => embedder.downloaded === true)
+                    .map(([key, embedder]) => (
+                    <option key={key} value={key}>
+                      {embedder.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
           </div>
