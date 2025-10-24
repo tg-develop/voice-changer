@@ -18,7 +18,6 @@ from const import TMP_DIR
 
 logger = logging.getLogger(__name__)
 
-
 class ValidationErrorLoggingRoute(APIRoute):
     def get_route_handler(self) -> Callable:
         original_route_handler = super().get_route_handler()
@@ -33,7 +32,6 @@ class ValidationErrorLoggingRoute(APIRoute):
                 raise HTTPException(status_code=422, detail=detail)
 
         return custom_route_handler
-
 
 class MMVC_Rest:
     _instance = None
