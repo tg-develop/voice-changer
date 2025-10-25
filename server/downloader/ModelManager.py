@@ -65,9 +65,18 @@ class ModelManager:
             
         Returns:
             Dictionary with model information containing only required fields.
+            For DirectML edition, only includes mandatory ONNX models.
         """
+        from settings import get_settings
+        settings = get_settings()
+        is_directml = settings.edition.lower() == 'directml'
+        
         result = {}
         for model_id, model in models.items():
+            # In DirectML mode, only include mandatory ONNX models
+            if is_directml and not model['type'] == 'onnx':
+                continue
+                
             result[model_id] = {
                 'name': model['name'],
                 'type': model['type'],

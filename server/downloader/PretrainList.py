@@ -84,7 +84,7 @@ embedders = {
         "saveTo": "pretrain/embedder/spin_base.onnx",
         "hash": "d2da4abf1eaae250e87d128f399f891b",
         "type": "onnx",
-        "mandatory": True,
+        "mandatory": False,
     },
     "spin_v2": {
         "name": "Spin V2",

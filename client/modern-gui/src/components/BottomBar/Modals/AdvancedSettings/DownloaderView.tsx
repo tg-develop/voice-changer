@@ -1,4 +1,4 @@
-import { JSX, useState, useEffect } from 'react';
+import { JSX, useState, useEffect, useCallback } from 'react';
 import { useAppState } from '../../../../context/AppContext';
 import { useUIContext } from '../../../../context/UIContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -9,42 +9,33 @@ interface DownloaderViewProps {
   onDownloadStateChange?: (isDownloading: boolean) => void;
 }
 
-function DownloaderView({ onDownloadStateChange }: DownloaderViewProps): JSX.Element {
+const DownloaderView = (props: DownloaderViewProps) => {
   const appState = useAppState();
   const uiState = useUIContext();
-  
+  const { onDownloadStateChange } = props;
+
   const [loadingItems, setLoadingItems] = useState<Record<string, 'download' | 'delete' | null>>({});
   const [isAnyDownloading, setIsAnyDownloading] = useState(false);
-  
-  // Notify parent component about download state changes
-  const updateDownloadState = (downloading: boolean) => {
-    setIsAnyDownloading(downloading);
+  const [embedders, setEmbedders] = useState<ModelInfoDict>(appState.serverSetting.serverSetting.embedders || {});
+  const [pitchExtractors, setPitchExtractors] = useState<ModelInfoDict>(appState.serverSetting.serverSetting.pitchExtractors || {});
+
+  // Update local state when server settings change
+  useEffect(() => {
+    const serverSetting = appState.serverSetting.serverSetting;
+    setEmbedders(serverSetting.embedders || {});
+    setPitchExtractors(serverSetting.pitchExtractors || {});
+  }, [appState.serverSetting.serverSetting]);
+
+  // Track download state changes and notify parent
+  useEffect(() => {
     if (onDownloadStateChange) {
-      onDownloadStateChange(downloading);
+      onDownloadStateChange(isAnyDownloading);
     }
-  };
+  }, [isAnyDownloading, onDownloadStateChange]);
 
-  // Safely get embedders and pitch extractors from server settings with type assertion
-  const serverSetting = appState.serverSetting.serverSetting as any;
-  
-  // Filter models based on DirectML backend
-  const filterModels = (models: ModelInfoDict): ModelInfoDict => {
-    const serverInfo = (appState.serverSetting as any).serverInfo;
-    if (serverInfo?.edition?.includes("DirectML")) {
-      const filtered: ModelInfoDict = {};
-      Object.entries(models).forEach(([key, value]) => {
-        if (key.includes('_onnx')) {
-          filtered[key] = value;
-        }
-      });
-      return filtered;
-    }
-    return models;
-  };
-
-  // Get and filter models
-  const embedders: ModelInfoDict = filterModels(serverSetting.embedders || {});
-  const pitchExtractors: ModelInfoDict = filterModels(serverSetting.pitchExtractors || {});
+  const updateDownloadingState = useCallback((downloading: boolean) => {
+    setIsAnyDownloading(downloading);
+  }, []);
 
   const handleModelAction = async (
     type: 'embedder' | 'pitchExtractor', 
@@ -63,7 +54,7 @@ function DownloaderView({ onDownloadStateChange }: DownloaderViewProps): JSX.Ele
     
     try {
       if (action === 'download') {
-        updateDownloadState(true);
+        updateDownloadingState(true);
       }
       setLoadingItems(prev => ({ ...prev, [id]: action }));
       
@@ -96,7 +87,7 @@ function DownloaderView({ onDownloadStateChange }: DownloaderViewProps): JSX.Ele
         // Check if there are any downloads still in progress
         const anyDownloadsLeft = Object.values(newState).some(v => v === 'download');
         if (!anyDownloadsLeft) {
-          updateDownloadState(false);
+          updateDownloadingState(false);
         }
         return newState;
       });
