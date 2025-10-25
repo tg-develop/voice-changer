@@ -4,9 +4,13 @@ import { CSS_CLASSES } from '../../../styles/constants';
 import GenericModal from '../../Modals/GenericModal';
 import { UIContextType } from '../../../context/UIContext';
 
-export interface UploadFinalForm extends ModelUploadSetting {
+export interface UploadFinalForm {
   modelName: string
   thumbnailFile: File | null
+  voiceChangerType: string
+  slot: number
+  files: { kind: ModelFileKind; file: File; dir: string }[]
+  params: any
   embedder: string
 }
 
@@ -24,8 +28,6 @@ function UploadModelModal({ appState, guiState, showUpload, setShowUpload }: Upl
     thumbnailFile: null, 
     voiceChangerType: 'RVC', 
     slot: 0, 
-    isSampleMode: false, 
-    sampleId: null, 
     files: [], 
     params: {}, 
     embedder: appState.serverSetting.serverSetting.embedders[0]?.name || '' 
@@ -55,13 +57,18 @@ function UploadModelModal({ appState, guiState, showUpload, setShowUpload }: Upl
 
   // ---------------- File Upload Handlers ----------------
 
-  // Process main model file selection (.pth, .safetensors, .onnx)
+  // Process main model file selection (.pth, .safetensors, .onnx, .zip)
   const handleModelFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
+      const isZip = file.name.toLowerCase().endsWith('.zip');
+      
       const newFile = { kind: "rvcModel" as ModelFileKind, file: file, dir: "" };
 
-      const updatedFiles = uploadSettings.files.filter(f => f.kind !== "rvcModel");
+      // If it's a zip file, remove any existing index file
+      const updatedFiles = uploadSettings.files.filter(f => 
+        f.kind !== "rvcModel" && (!isZip || f.kind !== "rvcIndex")
+      );
       updatedFiles.push(newFile);
 
       setUploadSettings({
@@ -124,7 +131,18 @@ function UploadModelModal({ appState, guiState, showUpload, setShowUpload }: Upl
   const handleUploadCloseModal = () => {
     if (!appState.serverSetting.isUploading) {
       setShowUpload(false);
-      setUploadSettings({ modelName: '', thumbnailFile: null, voiceChangerType: 'RVC', slot: 0, isSampleMode: false, sampleId: null, files: [], params: {}, embedder: 'hubert_base' });
+      setUploadSettings({ 
+        modelName: '', 
+        thumbnailFile: null, 
+        voiceChangerType: 'RVC', 
+        slot: 0, 
+        files: [], 
+        params: {}, 
+        embedder: appState.serverSetting.serverSetting.embedders[0]?.name || '' 
+      });
+      setAutoSelectModel(false);
+      setThumbnailPreview(null);  // Reset thumbnail preview
+      setIsThumbnailExpanded(false);  // Collapse thumbnail preview
     }
   };
 
@@ -175,45 +193,53 @@ function UploadModelModal({ appState, guiState, showUpload, setShowUpload }: Upl
         filesForUpload.push({ kind: "rvcIndex" as ModelFileKind, file: renameWithExt(indexEntry.file, "added_" + baseName), dir: "" });
       }
 
-      const uploadSettingsData: ModelUploadSetting & { embedder: string } = {
+      const uploadSettingsData: ModelUploadSetting = {
         voiceChangerType: "RVC",
         slot: emptySlotIndex,
         files: filesForUpload,
-        isSampleMode: false,
-        sampleId: null,
         params: {},
         embedder: uploadSettings.embedder
-      };
+      }
 
       // Upload main model files (model + optional index file)
       console.log('Uploading model with settings:', uploadSettingsData);
-      await appState.serverSetting.uploadModel(uploadSettingsData);
-      console.log('Model uploaded successfully.');
+      const serverInfo = await appState.serverSetting.uploadModel(uploadSettingsData);
+      
+      // Verify that the model was actually uploaded by checking if the slot has a model file
+      const uploadedModel = serverInfo.modelSlots[emptySlotIndex];
+      const hasModelFile = uploadedModel && 'modelFile' in uploadedModel && uploadedModel.modelFile;
+      
+      if (hasModelFile) {
+        console.log('Model uploaded successfully.');
 
-      // Upload thumbnail image as separate asset if provided
-      if (uploadSettings.thumbnailFile) {
-        console.log(`Uploading icon to slot ${emptySlotIndex}...`);
-        const thumb = uploadSettings.thumbnailFile;
-        const dotPos = thumb.name.lastIndexOf('.');
-        const extOnly = dotPos >= 0 ? thumb.name.substring(dotPos + 1) : '';
-        const thumbName = extOnly ? `thumbnail.${extOnly}` : 'thumbnail';
-        const renamedThumb = new File([thumb], thumbName, { type: thumb.type, lastModified: thumb.lastModified });
-        await appState.serverSetting.uploadAssets(emptySlotIndex, "iconFile", renamedThumb);
-        console.log('Icon uploaded.');
-      }
+        // Upload thumbnail image as separate asset if provided
+        if (uploadSettings.thumbnailFile) {
+          console.log(`Uploading icon to slot ${emptySlotIndex}...`);
+          const thumb = uploadSettings.thumbnailFile;
+          const dotPos = thumb.name.lastIndexOf('.');
+          const extOnly = dotPos >= 0 ? thumb.name.substring(dotPos + 1) : '';
+          const thumbName = extOnly ? `thumbnail.${extOnly}` : 'thumbnail';
+          const renamedThumb = new File([thumb], thumbName, { type: thumb.type, lastModified: thumb.lastModified });
+          await appState.serverSetting.uploadAssets(emptySlotIndex, "iconFile", renamedThumb);
+          console.log('Icon uploaded.');
+        }
 
-      // Notify user of successful upload and refresh server state
-      guiState.showError("Model uploaded successfully!", "Confirm");
-      await appState.serverSetting.reloadServerInfo();
+        // Notify user of successful upload
+        guiState.showError("Model uploaded successfully!", "Confirm");
 
-      // Automatically switch to the newly uploaded model if requested
-      if (autoSelectModel) {
-        guiState.startLoading("Swapping to model: " + uploadSettings.modelName);
-        await appState.serverSetting.updateServerSettings({
-          ...appState.serverSetting.serverSetting,
-          modelSlotIndex: emptySlotIndex
-        });
-        guiState.stopLoading();
+        // Automatically switch to the newly uploaded model if requested
+        if (autoSelectModel) {
+          guiState.startLoading("Swapping to model: " + uploadSettings.modelName);
+          await appState.serverSetting.updateServerSettings({
+            ...appState.serverSetting.serverSetting,
+            modelSlotIndex: emptySlotIndex
+          });
+          guiState.stopLoading();
+        }
+      } else {
+        console.error('Model upload failed - no model file found in slot after upload');
+        guiState.showError("Failed to upload model. The model file was not properly saved.", "Error");
+        return; // Exit early if model upload failed
       }
 
       handleUploadCloseModal();
@@ -249,11 +275,11 @@ function UploadModelModal({ appState, guiState, showUpload, setShowUpload }: Upl
       <div className="space-y-4 py-2 max-h-[70vh] overflow-y-auto pr-2">
         {/* Main model file input - Required for upload */}
         <div>
-          <label htmlFor="modelFile" className={CSS_CLASSES.label}>Model File (.pth, .safetensors, .onnx):</label>
+          <label htmlFor="modelFile" className={CSS_CLASSES.label}>Model File (.pth, .safetensors, .onnx, .zip):</label>
           <input
             type="file"
             id="modelFile"
-            accept=".pth,.safetensors,.onnx"
+            accept=".pth,.safetensors,.onnx,.zip"
             onChange={handleModelFileChange}
             className={CSS_CLASSES.fileInput}
             disabled={appState.serverSetting.isUploading}
@@ -316,13 +342,13 @@ function UploadModelModal({ appState, guiState, showUpload, setShowUpload }: Upl
         <div>
           <label htmlFor="indexFile" className={CSS_CLASSES.label}>Index File (.index) (Optional):</label>
           <input
-            type="file"
-            id="indexFile"
-            accept=".index"
-            onChange={handleIndexFileChange}
-            className={CSS_CLASSES.fileInput}
-            disabled={appState.serverSetting.isUploading}
-          />
+              type="file"
+              id="indexFile"
+              accept=".index"
+              onChange={handleIndexFileChange}
+              className={CSS_CLASSES.fileInput}
+              disabled={appState.serverSetting.isUploading}
+            />
         </div>
 
         {/* Optional thumbnail image with live preview */}
@@ -400,21 +426,18 @@ function UploadModelModal({ appState, guiState, showUpload, setShowUpload }: Upl
             )}
           </div>
         )}
-        {/* Auto-select option for immediate model activation after upload */}
-        <div className="space-y-2">
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="autoSelectModel"
-              checked={autoSelectModel}
-              onChange={(e) => setAutoSelectModel(e.target.checked)}
-              className={CSS_CLASSES.checkbox}
-              disabled={appState.serverSetting.isUploading}
-            />
-            <label htmlFor="autoSelectModel" className={CSS_CLASSES.checkboxLabel}>
-              Select model after upload
-            </label>
-          </div>
+        {/* Auto-select model after upload */}
+        <div className="flex items-center">
+          <input
+            id="auto-select"
+            type="checkbox"
+            className={CSS_CLASSES.checkbox}
+            checked={autoSelectModel}
+            onChange={(e) => setAutoSelectModel(e.target.checked)}
+          />
+          <label htmlFor="auto-select" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+            Select model after upload
+          </label>
         </div>
       </div>
     </GenericModal>

@@ -65,7 +65,7 @@ function ModelSlot(props: ModelSlotProps) {
             className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1 md:p-0"
             title="Edit Model"
           >
-            <FontAwesomeIcon icon={faPen} className="h-4 w-4 md:h-3 md:w-3" />
+            <FontAwesomeIcon icon={faPen} className="h-4 w-4 md:h-3 md:w-3 p-2" />
           </button>
           {/* Delete button - Opens confirmation modal */}
           <button
@@ -73,7 +73,7 @@ function ModelSlot(props: ModelSlotProps) {
             className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 md:p-0"
             title="Delete Model"
           >
-            <FontAwesomeIcon icon={faTrash} className="h-4 w-4 md:h-3 md:w-3" />
+            <FontAwesomeIcon icon={faTrash} className="h-4 w-4 md:h-3 md:w-3 p-2" />
           </button>
         </div>
       </li>

@@ -31,12 +31,10 @@ function DeleteModelModal({ model, showModal, setShowDelete, modelDir }: DeleteM
       voiceChangerType: "RVC",
       slot: model.slotIndex,
       files: [],
-      isSampleMode: false,
-      sampleId: null,
       params: {},
       embedder: "hubert_base"
     };
-    appState.serverSetting.uploadModel(settings);
+    appState.serverSetting.deleteModel(model.slotIndex);
 
     if (appState.serverSetting.serverSetting.modelSlotIndex === model.slotIndex) {
       guiState.startLoading();
