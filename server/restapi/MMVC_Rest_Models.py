@@ -19,6 +19,7 @@ class MMVC_Rest_Models:
         self.router.add_api_route("/update_model_default", self.post_update_model_default, methods=["POST"]) # Save Settings Button
         self.router.add_api_route("/update_model_info", self.post_update_model_info, methods=["POST"])
         self.router.add_api_route("/upload_model_assets", self.post_upload_model_assets, methods=["POST"])
+        self.router.add_api_route("/delete_model", self.delete_model, methods=["POST"])
 
     async def post_load_model(
         self,
@@ -33,7 +34,13 @@ class MMVC_Rest_Models:
             loadModelparams.files = [LoadModelParamFile(**x) for x in paramDict["files"]]
             # logger.info(f"paramDict", loadModelparams)
 
-            info = await self.voiceChangerManager.load_model(loadModelparams)
+            result = await self.voiceChangerManager.load_model(loadModelparams)
+            if not result:
+                return JSONResponse(
+                    status_code=400,
+                    content={"status": "error", "message": "Failed to load model."}
+                )
+            info = self.voiceChangerManager.get_info()
             json_compatible_item_data = jsonable_encoder(info)
             return JSONResponse(content=json_compatible_item_data)
         except Exception as e:
@@ -75,6 +82,14 @@ class MMVC_Rest_Models:
     def post_upload_model_assets(self, params: str = Form(...)):
         try:
             info = self.voiceChangerManager.upload_model_assets(params)
+            json_compatible_item_data = jsonable_encoder(info)
+            return JSONResponse(content=json_compatible_item_data)
+        except Exception as e:
+            logger.exception(e)
+
+    def delete_model(self, slot: int = Form(...)):
+        try:
+            info = self.voiceChangerManager.delete_model(slot)
             json_compatible_item_data = jsonable_encoder(info)
             return JSONResponse(content=json_compatible_item_data)
         except Exception as e:

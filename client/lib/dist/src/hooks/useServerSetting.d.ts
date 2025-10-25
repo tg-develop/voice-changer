@@ -17,9 +17,8 @@ export type ModelFile = {
 export type ModelUploadSetting = {
     voiceChangerType: VoiceChangerType;
     slot: number;
-    isSampleMode: boolean;
-    sampleId: string | null;
     files: ModelFile[];
+    embedder: string;
     params: any;
 };
 export type ModelFileForServer = Omit<ModelFile, "file"> & {
@@ -51,7 +50,8 @@ export type ServerSettingState = {
     updateServerSettings: (setting: ServerInfo) => Promise<void>;
     reloadServerInfo: () => Promise<any>;
     uploadBackgroundSound: (setting: BackgroundSoundsUploadSetting) => Promise<void>;
-    uploadModel: (setting: ModelUploadSetting) => Promise<void>;
+    uploadModel: (setting: ModelUploadSetting) => Promise<ServerInfo>;
+    deleteModel: (slot: number) => Promise<void>;
     uploadProgress: number;
     isUploading: boolean;
     getOnnx: () => Promise<OnnxExporterInfo>;

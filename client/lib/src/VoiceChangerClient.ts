@@ -325,10 +325,17 @@ export class VoiceChangerClient {
     updateModelInfo = async (slot: number, key: string, val: string) => {
         return this.configurator.updateModelInfo(slot, key, val);
     };
+    loadModel = (slot: number, isHalf: boolean, params: string) => {
+        return this.configurator.loadModel(slot, isHalf, params);
+    };
+    deleteModel = async (slot: number) => {
+        return this.configurator.deleteModel(slot);
+    };
 
     updateServerSettings = (key: ServerSettingKey, val: string) => {
         return this.configurator.updateSettings(key, val);
     };
+    
     uploadFile = (buf: ArrayBuffer, filename: string, onprogress: (progress: number, end: boolean) => void) => {
         return this.configurator.uploadFile(buf, filename, onprogress);
     };
@@ -337,9 +344,6 @@ export class VoiceChangerClient {
     };
     concatUploadedFile = (filename: string, chunkNum: number) => {
         return this.configurator.concatUploadedFile(filename, chunkNum);
-    };
-    loadModel = (slot: number, isHalf: boolean, params: string) => {
-        return this.configurator.loadModel(slot, isHalf, params);
     };
     uploadAssets = (params: string) => {
         return this.configurator.uploadAssets(params);

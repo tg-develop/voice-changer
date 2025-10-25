@@ -9,6 +9,7 @@ export declare class ServerConfigurator {
     uploadFile: (buf: ArrayBuffer, filename: string, onprogress: (progress: number, end: boolean) => void) => Promise<number>;
     concatUploadedFile: (filename: string, chunkNum: number) => Promise<void>;
     loadModel: (slot: number, isHalf: boolean, params?: string) => Promise<import("../const").ServerInfo>;
+    deleteModel: (slot: number) => Promise<import("../const").ServerInfo>;
     uploadAssets: (params: string) => Promise<import("../const").ServerInfo>;
     loadSound: (params?: string) => Promise<import("../const").ServerInfo>;
     updateSoundInfo: (slot: string, key: string, val: string) => Promise<import("../const").ServerInfo>;

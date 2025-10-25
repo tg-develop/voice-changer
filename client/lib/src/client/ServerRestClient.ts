@@ -160,6 +160,22 @@ export class ServerRestClient {
         return info;
     };
 
+    deleteModel = async (slot: number) => {
+        const url = this.serverUrl + "/delete_model";
+        const info = new Promise<ServerInfo>(async (resolve) => {
+            const formData = new FormData();
+            formData.append("slot", "" + slot);
+
+            const request = new Request(url, {
+                method: "POST",
+                body: formData,
+            });
+            const res = (await (await fetch(request)).json()) as ServerInfo;
+            resolve(res);
+        });
+        return info;
+    };
+
     uploadAssets = async (params: string) => {
         const url = this.serverUrl + "/upload_model_assets";
         const info = new Promise<ServerInfo>(async (resolve) => {

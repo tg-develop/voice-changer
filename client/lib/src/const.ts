@@ -299,7 +299,6 @@ export type ServerInfo = VoiceChangerServerSetting & {
     modelSlots: ModelSlotUnion[];
     serverAudioInputDevices: ServerAudioDevice[];
     serverAudioOutputDevices: ServerAudioDevice[];
-    sampleModels: RVCSampleModel[];
     gpus: {
         id: number;
         name: string;
@@ -311,27 +310,6 @@ export type ServerInfo = VoiceChangerServerSetting & {
     };
     audioEffectsSchema: AudioEffectsSchema;
     audioEffectsProviders: AudioEffectsProvidersResponse;
-};
-
-export type SampleModel = {
-    id: string;
-    voiceChangerType: VoiceChangerType;
-    lang: string;
-    tag: string[];
-    name: string;
-    modelUrl: string;
-    termsOfUseUrl: string;
-    icon: string;
-    credit: string;
-    description: string;
-    sampleRate: number;
-    modelType: string;
-    f0: boolean;
-};
-
-export type RVCSampleModel = SampleModel & {
-    indexUrl: string;
-    featureUrl: string;
 };
 
 export const DefaultServerSetting: ServerInfo = {
@@ -385,7 +363,6 @@ export const DefaultServerSetting: ServerInfo = {
     modelSlotIndex: 0,
     audioEffects: [],
     audioBackgrounds: [],
-    sampleModels: [],
     gpus: [],
 
     //

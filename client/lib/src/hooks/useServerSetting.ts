@@ -22,10 +22,8 @@ export type ModelFile = {
 export type ModelUploadSetting = {
     voiceChangerType: VoiceChangerType;
     slot: number;
-    isSampleMode: boolean;
-    sampleId: string | null;
-
     files: ModelFile[];
+    embedder: string
     params: any;
 };
 export type ModelFileForServer = Omit<ModelFile, "file"> & {
@@ -69,7 +67,8 @@ export type ServerSettingState = {
     updateServerSettings: (setting: ServerInfo) => Promise<void>;
     reloadServerInfo: () => Promise<any>;
     uploadBackgroundSound: (setting: BackgroundSoundsUploadSetting) => Promise<void>;
-    uploadModel: (setting: ModelUploadSetting) => Promise<void>;
+    uploadModel: (setting: ModelUploadSetting) => Promise<ServerInfo>;
+    deleteModel: (slot: number) => Promise<void>;
     uploadProgress: number;
     isUploading: boolean;
 
@@ -155,39 +154,55 @@ export const useServerSetting = (props: UseServerSettingProps): ServerSettingSta
 
     // 新しいアップローダ
     const uploadModel = useMemo(() => {
-        return async (setting: ModelUploadSetting) => {
+        return async (setting: ModelUploadSetting): Promise<ServerInfo> => {
             if (!props.voiceChangerClient) {
-                return;
+                throw new Error('Voice changer client not initialized');
             }
 
             setUploadProgress(0);
             setIsUploading(true);
 
-            if (setting.isSampleMode == false) {
-                const progRate = 1 / setting.files.length;
-                for (let i = 0; i < setting.files.length; i++) {
-                    const progOffset = 100 * i * progRate;
-                    await _uploadFile2(
-                        setting.files[i].file,
-                        (progress: number, _end: boolean) => {
-                            setUploadProgress(progress * progRate + progOffset);
-                        },
-                        setting.files[i].dir
-                    );
-                }
+            const progRate = 1 / setting.files.length;
+            for (let i = 0; i < setting.files.length; i++) {
+                const progOffset = 100 * i * progRate;
+                await _uploadFile2(
+                    setting.files[i].file,
+                    (progress: number, _end: boolean) => {
+                        setUploadProgress(progress * progRate + progOffset);
+                    },
+                    setting.files[i].dir
+                );
             }
             const params: ModelUploadSettingForServer = {
-                ...setting,
-                files: setting.files.map((f) => {
-                    return { name: f.file.name, kind: f.kind, dir: f.dir };
-                }),
+                voiceChangerType: setting.voiceChangerType,
+                slot: setting.slot,
+                params: setting.params,
+                embedder: setting.embedder,
+                files: setting.files.map((f) => ({
+                    name: f.file.name,
+                    kind: f.kind,
+                    dir: f.dir
+                }))
             };
 
-            const loadPromise = props.voiceChangerClient.loadModel(0, false, JSON.stringify(params));
-            await loadPromise;
+            await props.voiceChangerClient.loadModel(0, false, JSON.stringify(params));
 
             setUploadProgress(0);
             setIsUploading(false);
+            const serverInfo = await reloadServerInfo();
+            if (!serverInfo) {
+                throw new Error('Failed to reload server info after model upload');
+            }
+            return serverInfo;
+        };
+    }, [props.voiceChangerClient]);
+
+    const deleteModel = useMemo(() => {
+        return async (slot: number) => {
+            if (!props.voiceChangerClient) {
+                return;
+            }
+            await props.voiceChangerClient.deleteModel(slot);
             reloadServerInfo();
         };
     }, [props.voiceChangerClient]);
@@ -308,5 +323,6 @@ export const useServerSetting = (props: UseServerSettingProps): ServerSettingSta
         uploadAssets,
         downloadPretrained,
         deletePretrained,
+        deleteModel,
     };
 };

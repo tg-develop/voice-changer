@@ -36,6 +36,10 @@ export class ServerConfigurator {
         return this.restClient.loadModel(slot, isHalf, params);
     };
 
+    deleteModel = async (slot: number) => {
+        return this.restClient.deleteModel(slot);
+    };
+
     uploadAssets = async (params: string) => {
         return this.restClient.uploadAssets(params);
     };

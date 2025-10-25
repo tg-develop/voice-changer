@@ -151,9 +151,13 @@ class VoiceChangerManager(ServerAudioCallbacks):
         # メタデータ作成(各VCで定義)
         if params.voiceChangerType == "RVC":
             slotInfo = RVCModelSlotGenerator.load_model(params)
+            if slotInfo is None:
+                logger.info("Failed to load model, skipping save")
+                return False
             self.modelSlotManager.save_model_slot(params.slot, slotInfo)
 
         logger.info(f"params, {params}")
+        return True
 
     def get_info(self):
         data = self.settings.to_dict()
@@ -356,9 +360,25 @@ class VoiceChangerManager(ServerAudioCallbacks):
         return self.get_info()
 
     def upload_model_assets(self, params: str):
-        # self.vc.upload_model_assets(params)
-        self.modelSlotManager.store_model_assets(params)
+        params_dict = json.loads(params)
+        self.modelSlotManager.store_model_assets(params_dict)
         return self.get_info()
+
+    def delete_model(self, slot: int) -> dict:
+        try:
+            slot_dir = os.path.join(self.params.model_dir, str(slot))
+            if os.path.exists(slot_dir):
+                logger.info(f"Deleting model slot {slot} from {slot_dir}")
+                shutil.rmtree(slot_dir)
+                logger.info(f"Successfully deleted model slot {slot}")
+                return self.get_info()
+            else:
+                logger.warning(f"Attempted to delete non-existent model slot {slot}")
+                return self.get_info()
+        except Exception as e:
+            error_msg = f"Error deleting model slot {slot}: {str(e)}"
+            logger.error(error_msg)
+            return self.get_info()
 
     # ---------------- Sounds (Background Assets) ----------------
 

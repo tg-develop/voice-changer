@@ -40,11 +40,12 @@ export declare class VoiceChangerClient {
     mergeModel: (req: MergeModelRequest) => Promise<import("./const").ServerInfo>;
     updateModelDefault: () => Promise<import("./const").ServerInfo>;
     updateModelInfo: (slot: number, key: string, val: string) => Promise<import("./const").ServerInfo>;
+    loadModel: (slot: number, isHalf: boolean, params: string) => Promise<import("./const").ServerInfo>;
+    deleteModel: (slot: number) => Promise<import("./const").ServerInfo>;
     updateServerSettings: (key: ServerSettingKey, val: string) => Promise<import("./const").ServerInfo>;
     uploadFile: (buf: ArrayBuffer, filename: string, onprogress: (progress: number, end: boolean) => void) => Promise<number>;
     uploadFile2: (dir: string, file: File, onprogress: (progress: number, end: boolean) => void) => Promise<unknown>;
     concatUploadedFile: (filename: string, chunkNum: number) => Promise<void>;
-    loadModel: (slot: number, isHalf: boolean, params: string) => Promise<import("./const").ServerInfo>;
     uploadAssets: (params: string) => Promise<import("./const").ServerInfo>;
     loadSound: (params: string) => Promise<import("./const").ServerInfo>;
     updateSoundInfo: (slot: string, key: string, val: string) => Promise<import("./const").ServerInfo>;

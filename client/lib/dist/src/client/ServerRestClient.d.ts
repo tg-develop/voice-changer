@@ -9,6 +9,7 @@ export declare class ServerRestClient {
     uploadFile: (buf: ArrayBuffer, filename: string, onprogress: (progress: number, end: boolean) => void) => Promise<number>;
     concatUploadedFile: (filename: string, chunkNum: number) => Promise<void>;
     loadModel: (slot: number, isHalf: boolean, params?: string) => Promise<ServerInfo>;
+    deleteModel: (slot: number) => Promise<ServerInfo>;
     uploadAssets: (params: string) => Promise<ServerInfo>;
     getModelType: () => Promise<ServerInfo>;
     export2onnx: () => Promise<OnnxExporterInfo>;
