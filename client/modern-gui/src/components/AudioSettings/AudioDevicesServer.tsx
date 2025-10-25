@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { CSS_CLASSES } from '../../styles/constants';
 import { useAppState } from '../../context/AppContext';
 import { useState } from 'react';
-import { ServerAudioDevice } from '@dannadori/voice-changer-client-js/dist/const';
+import { ServerAudioDevice } from '@dannadori/voice-changer-client-js/const';
 import { useUIContext } from '../../context/UIContext';
 
 function AudioDevicesServer() {

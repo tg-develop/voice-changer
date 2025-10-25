@@ -231,7 +231,7 @@ export type RVCModelSlot = ModelSlot & {
     deprecated: boolean;
 };
 export type ModelSlotUnion = RVCModelSlot;
-type ServerAudioDevice = {
+export type ServerAudioDevice = {
     index: number;
     name: string;
     hostAPI: string;

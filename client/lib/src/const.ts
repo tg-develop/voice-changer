@@ -284,7 +284,7 @@ export type RVCModelSlot = ModelSlot & {
 
 export type ModelSlotUnion = RVCModelSlot;
 
-type ServerAudioDevice = {
+export type ServerAudioDevice = {
     index: number;
     name: string;
     hostAPI: string;

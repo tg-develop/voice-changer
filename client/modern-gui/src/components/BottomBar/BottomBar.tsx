@@ -90,13 +90,13 @@ function BottomBar(): JSX.Element {
     // Server Mode
     else {
       // Check if server audio input is selected
-      if (appState.serverSetting.serverSetting.serverInputDeviceId == -1) {
+      if (!appState.serverSetting.serverSetting.serverAudioInputDevices.find(device => device.index === appState.serverSetting.serverSetting.serverInputDeviceId)) {
         uiContext.showError('Select an audio input device.', "Warning")
         return
       }
 
       // Check if server audio output is selected
-      if (appState.serverSetting.serverSetting.serverOutputDeviceId == -1) {
+      if (!appState.serverSetting.serverSetting.serverAudioInputDevices.find(device => device.index === appState.serverSetting.serverSetting.serverOutputDeviceId)) {
         uiContext.showError('Select an audio output device.', "Warning")
         return
       }
