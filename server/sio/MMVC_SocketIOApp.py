@@ -1,6 +1,6 @@
 import socketio
 import logging
-from mods.origins import compute_local_origins, normalize_origins
+from restapi.mods.Origins import compute_local_origins, normalize_origins
 
 from settings import get_settings
 from sio.MMVC_SocketIOServer import MMVC_SocketIOServer

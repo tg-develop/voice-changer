@@ -17,9 +17,7 @@ import logging
 from utils.strtobool import strtobool
 from datetime import datetime
 import argparse
-from downloader.WeightDownloader import downloadWeight
-from downloader.SampleDownloader import downloadInitialSamples
-from mods.ssl import create_self_signed_cert
+from restapi.mods.Certificate import create_self_signed_cert
 from webbrowser import open_new_tab
 from settings import get_settings
 
@@ -85,17 +83,7 @@ async def main(args):
 
     logger.info(f"Python: {sys.version}")
     logger.info(f"Voice changer version: {get_version()} {get_edition()}")
-    # ダウンロード(Weight)
 
-    await downloadWeight(settings)
-
-    try:
-        await downloadInitialSamples(settings.sample_mode, settings.model_dir)
-    except Exception as e:
-        logger.error(f"Failed to download samples.")
-        logger.exception(e)
-
-    # FIXME: Need to refactor samples download logic
     os.makedirs(settings.model_dir, exist_ok=True)
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     os.makedirs(TMP_DIR, exist_ok=True)

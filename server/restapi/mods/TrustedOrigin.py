@@ -1,6 +1,6 @@
 from typing import Optional, Sequence
 
-from mods.origins import compute_local_origins, normalize_origins
+from restapi.mods.Origins import compute_local_origins, normalize_origins
 from starlette.datastructures import Headers
 from starlette.responses import PlainTextResponse
 from starlette.types import ASGIApp, Receive, Scope, Send

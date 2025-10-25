@@ -1,6 +1,6 @@
 from typing import Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from const import get_edition, RVCSampleMode, DOTENV_FILE
+from const import get_edition, DOTENV_FILE
 from functools import lru_cache
 
 class ServerSettings(BaseSettings):
@@ -9,7 +9,6 @@ class ServerSettings(BaseSettings):
     model_dir: str = 'model_dir'
     sound_dir: str = 'sound_dir'
     content_vec_500_onnx_on: bool = True
-    sample_mode: RVCSampleMode = ''
     host: str = '127.0.0.1'
     port: int = 18888
     allowed_origins: Literal['*'] | list[str] = []

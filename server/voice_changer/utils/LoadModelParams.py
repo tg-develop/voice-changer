@@ -20,8 +20,6 @@ class LoadModelParamFile:
 class LoadModelParams:
     voiceChangerType: VoiceChangerType
     slot: int
-    isSampleMode: bool
-    sampleId: str
     files: list[LoadModelParamFile]
     params: dict
     embedder: str | None = None

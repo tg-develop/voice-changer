@@ -3,7 +3,6 @@ import os
 import sys
 import shutil
 import numpy as np
-from downloader.SampleDownloader import downloadSample, getSampleInfos
 import logging
 from voice_changer.Local.ServerAudio import ServerAudio, ServerAudioCallbacks
 from voice_changer.ModelSlotManager import ModelSlotManager
@@ -128,16 +127,6 @@ class VoiceChangerManager(ServerAudioCallbacks):
         return cls._instance
 
     async def load_model(self, params: LoadModelParams):
-        if params.isSampleMode:
-            # サンプルダウンロード
-            logger.info(f"Sample download.... {params}")
-            await downloadSample(self.params.sample_mode, params.sampleId, self.params.model_dir, params.slot, params.params)
-            self.modelSlotManager.getAllSlotInfo(reload=True)
-            info = {"status": "OK"}
-            return info
-
-        # アップローダ
-        # ファイルをslotにコピー
         slotDir = os.path.join(
             self.params.model_dir,
             str(params.slot),
@@ -170,10 +159,8 @@ class VoiceChangerManager(ServerAudioCallbacks):
         data = self.settings.to_dict()
         data["gpus"] = self.devices
         data["modelSlots"] = self.modelSlotManager.getAllSlotInfo(reload=True)
-        data["sampleModels"] = getSampleInfos(self.params.sample_mode)
         data["python"] = sys.version
         data["voiceChangerParams"] = self.params
-
         data["status"] = "OK"
 
         info = self.server_audio.get_info()

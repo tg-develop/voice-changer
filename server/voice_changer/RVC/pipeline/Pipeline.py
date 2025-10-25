@@ -16,7 +16,7 @@ from torchaudio import transforms as tat
 from voice_changer.common.deviceManager.DeviceManager import DeviceManager
 import logging
 
-from voice_changer.RVC.consts import HUBERT_SAMPLE_RATE, WINDOW_SIZE
+from const import HUBERT_SAMPLE_RATE, WINDOW_SIZE
 from voice_changer.common.TorchUtils import circular_write
 from voice_changer.embedder.Embedder import Embedder
 from voice_changer.RVC.inferencer.Inferencer import Inferencer

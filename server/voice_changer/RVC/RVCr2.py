@@ -11,7 +11,7 @@ from voice_changer.utils.VoiceChangerModel import (
     AudioInOutFloat,
     VoiceChangerModel,
 )
-from voice_changer.RVC.consts import HUBERT_SAMPLE_RATE, WINDOW_SIZE
+from const import HUBERT_SAMPLE_RATE, WINDOW_SIZE
 from voice_changer.RVC.onnx_exporter.export2onnx import export2onnx
 from voice_changer.pitch_extractor.PitchExtractorManager import PitchExtractorManager
 from voice_changer.RVC.pipeline.PipelineGenerator import createPipeline
