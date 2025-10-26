@@ -10,6 +10,7 @@ from voice_changer.pitch_extractor.FcpeOnnxPitchExtractor import FcpeOnnxPitchEx
 from downloader.PretrainList import pitch_extractors
 from settings import ServerSettings, get_settings
 import logging
+import os
 logger = logging.getLogger(__name__)
 
 class PitchExtractorManager(Protocol):
@@ -78,9 +79,7 @@ class PitchExtractorManager(Protocol):
                 'args': [pitch_extractors['fcpe_onnx']['saveTo']]
             },
         }
-        
-        import os
-        
+                
         # Check if the requested extractor exists and has a valid model file
         extractor_info = PITCH_EXTRACTOR_MAP.get(pitch_extractor)
         if extractor_info and os.path.exists(extractor_info['path']):
