@@ -85,6 +85,57 @@ class ModelManager:
             }
         return result
     
+    @classmethod
+    async def check_and_download_mandatory_models(cls) -> None:
+        """Check for missing mandatory models and download them if needed.
+        
+        For DirectML edition, only checks and downloads mandatory ONNX models.
+        """
+        from .Downloader import download
+        from settings import get_settings
+        
+        settings = get_settings()
+        is_directml = settings.edition.lower() == 'directml'
+        all_models = {**pitch_extractors, **embedders}
+        
+        # Filter models based on edition and mandatory status
+        models_to_check = {
+            model_id: model for model_id, model in all_models.items()
+            if model['mandatory'] and (not is_directml or model['type'] == 'onnx')
+        }
+        
+        # Check which models need to be downloaded
+        missing_models = []
+        for model_id, model in models_to_check.items():
+            if not os.path.exists(model['saveTo']):
+                missing_models.append((model_id, model))
+        
+        if not missing_models:
+            logger.info("All mandatory models are already downloaded.")
+            return
+        
+        logger.info(f"Found {len(missing_models)} missing mandatory models. Starting download...")
+        
+        # Download missing models
+        for model_id, model in missing_models:
+            try:
+                logger.info(f"Downloading mandatory model: {model['name']}")
+                # Create directory if it doesn't exist
+                os.makedirs(os.path.dirname(model['saveTo']), exist_ok=True)
+                
+                # Call the download function with the required parameters
+                await download({
+                    'url': model['url'],
+                    'saveTo': model['saveTo'],
+                    'hash': model.get('hash'),
+                    'show_progress': True
+                })
+                logger.info(f"Successfully downloaded {model['name']}")
+            except Exception as e:
+                logger.error(f"Failed to download mandatory model {model_id}: {str(e)}")
+                # Don't raise here to allow the application to continue
+                # The model will be checked again when it's actually needed
+    
     @staticmethod
     def _get_model_dict(model_key: str) -> tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
         """Get the model dictionary and model info by its key.

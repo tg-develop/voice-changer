@@ -9,6 +9,7 @@ os.chdir(ROOT_PATH)
 import sys
 import uvicorn
 import asyncio
+from downloader.ModelManager import ModelManager
 
 import threading
 import socket
@@ -60,6 +61,14 @@ def wait_for_server(proto: str, launch_browser: bool):
         open_new_tab(f'{proto}://127.0.0.1:{settings.port}')
 
 async def runServer(host: str, port: int, launch_browser: bool = False, log_level: str = 'error', key_path: str | None = None, cert_path: str | None = None):
+    # Check and download mandatory models
+    try:
+        logger.info("Checking for mandatory models...")
+        await ModelManager.check_and_download_mandatory_models()
+    except Exception as e:
+        logger.error(f"Error checking/downloading mandatory models: {str(e)}")
+        # Continue startup even if model download fails
+        # The application will handle missing models when they're actually needed
     check_port(port)
 
     config = uvicorn.Config(
