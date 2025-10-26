@@ -10,7 +10,7 @@ faiss-cpu==1.11.0
 
 onnx==1.16.0
 onnxscript==0.2.6
-onnxsim==0.4.36
+onnxslim==0.1.72
 onnxruntime-rocm @ https://repo.radeon.com/rocm/manylinux/rocm-rel-6.4/onnxruntime_rocm-1.21.0-cp310-cp310-linux_x86_64.whl
 torchcrepe==0.0.24
 torchfcpe==0.0.4

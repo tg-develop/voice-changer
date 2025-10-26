@@ -1,5 +1,5 @@
 # Based on https://github.com/yxlllc/RMVPE/blob/main/export.py
-from onnxsim import simplify
+import onnxslim
 import onnx
 import torch
 from io import BytesIO
@@ -73,8 +73,8 @@ def convert(pt_model: torch.nn.Module, input_names: list[str], inputs: tuple[tor
             input_names=input_names,
             output_names=output_names,
         )
-        model, _ = simplify(onnx.load_model_from_string(io.getvalue()))
-    return model
+        onnx_model = onnxslim.simplify(onnx.load_model_from_string(io.getvalue()))
+    return onnx_model
 
 if __name__ == '__main__':
     dev = torch.device('cpu')

@@ -59,22 +59,35 @@ class TextEncoder(nn.Module):
         lengths: torch.Tensor,
         skip_head: Optional[int] = None,
     ):
+        # Clamp pitch values to valid range to prevent index out of bounds
+        if pitch is not None and hasattr(self, 'emb_pitch'):
+            max_pitch_idx = self.emb_pitch.num_embeddings - 1
+            pitch = torch.clamp(pitch, 0, max_pitch_idx)
+        
         if pitch is None:
             x = self.emb_phone(phone)
         else:
-            x = self.emb_phone(phone) + self.emb_pitch(pitch)
+            phone_emb = self.emb_phone(phone)
+            pitch_emb = self.emb_pitch(pitch)
+            x = phone_emb + pitch_emb
+            
         x = x * self.sqrt_hidden_channels  # [b, t, h]
         x = self.lrelu(x)
         x = torch.transpose(x, 1, -1)  # [b, h, t]
+        
         x_mask = torch.unsqueeze(commons.sequence_mask(lengths, x.size(2)), 1).to(
             x.dtype
         )
+        
         x = self.encoder(x * x_mask, x_mask)
-        x = x[:, :, skip_head:]
-        x_mask = x_mask[:, :, skip_head:]
+        
+        if skip_head is not None:
+            x = x[:, :, skip_head:]
+            x_mask = x_mask[:, :, skip_head:]
+            
         stats = self.proj(x) * x_mask
-
         m, logs = torch.split(stats, self.out_channels, dim=1)
+        
         return m, logs, x_mask
 
 

@@ -51,6 +51,8 @@ class MMVC_Namespace(socketio.AsyncNamespace):
             await self.emit("error", [error_code, error_message], to=sid)
         else:
             ping = recv_timestamp - ts
+            out_audio = np.nan_to_num(out_audio)  # Convert NaNs and infs to numbers
+            out_audio = np.clip(out_audio, -1.0, 1.0)  # Ensure values are within valid range
             out_audio = (out_audio * 32767).astype(np.int16).tobytes()
             send_timestamp = round(time() * 1000)
             await self.emit("response", [send_timestamp, out_audio, ping, vol, perf], to=sid)
