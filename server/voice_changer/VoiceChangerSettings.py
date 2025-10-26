@@ -417,8 +417,18 @@ class VoiceChangerSettings:
         from downloader.ModelManager import ModelManager
         return ModelManager.get_pitch_extractors()
     
+    @pitchExtractors.setter
+    def pitchExtractors(self, value):
+        # This is a no-op setter to prevent errors when client tries to set this read-only property
+        pass
+    
     @property
     def embedders(self) -> Dict[str, Dict[str, Any]]:
         """Return embedders with their information and download status."""
         from downloader.ModelManager import ModelManager
         return ModelManager.get_embedders()
+    
+    @embedders.setter
+    def embedders(self, value):
+        # This is a no-op setter to prevent errors when client tries to set this read-only property
+        pass

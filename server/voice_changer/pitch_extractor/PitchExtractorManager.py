@@ -79,54 +79,20 @@ class PitchExtractorManager(Protocol):
             },
         }
         
-        try:
-            # Check if the requested extractor exists
-            extractor_info = PITCH_EXTRACTOR_MAP.get(pitch_extractor)
-            if not extractor_info:
-                logger.warning(f"PitchExtractor {pitch_extractor} not found. Falling back to rmvpe_onnx")
-                return RMVPEOnnxPitchExtractor(cls.params.rmvpe_onnx)
-            
-            # Check if the model file exists
-            import os
-            if not os.path.exists(extractor_info['path']):
-                logger.warning(f"Model file not found for {pitch_extractor} at {extractor_info['path']}")
-                
-                # If this is a non-ONNX FCPE model and the ONNX version exists, suggest using that
-                if pitch_extractor == 'fcpe' and os.path.exists(pitch_extractors['fcpe_onnx']['saveTo']):
-                    logger.info("Falling back to FCPE ONNX version")
-                    return FcpeOnnxPitchExtractor(pitch_extractors['fcpe_onnx']['saveTo'])
-                
-                # If FCPE is not available, fall back to RMVPE ONNX
-                if pitch_extractor.startswith('fcpe'):
-                    logger.warning("Falling back to RMVPE ONNX")
-                    return RMVPEOnnxPitchExtractor(pitch_extractors['rmvpe_onnx']['saveTo'])
-                    return RMVPEOnnxPitchExtractor(cls.params.rmvpe_onnx)
-                
-                # For other models, just use the fallback
-                return RMVPEOnnxPitchExtractor(cls.params.rmvpe_onnx)
-            
-            # If we got here, the file exists, try to load it
-            extractor_class = extractor_info['class']
-            return extractor_class(*extractor_info['args'])
-            
-        except Exception as e:
-            logger.error(f'Failed to load {pitch_extractor}. Error: {str(e)}')
-            logger.exception('PitchExtractor loading error')
-            
-            # Fallback to RMVPE ONNX if available
-            if os.path.exists(cls.params.rmvpe_onnx):
-                logger.warning('Falling back to RMVPE ONNX')
-                return RMVPEOnnxPitchExtractor(cls.params.rmvpe_onnx)
-            
-            # If RMVPE ONNX is not available, try any available extractor
-            for name, info in PITCH_EXTRACTOR_MAP.items():
-                if name != pitch_extractor and os.path.exists(info['path']):
-                    try:
-                        logger.warning(f'Falling back to {name}')
-                        return info['class'](*info['args'])
-                    except Exception as e2:
-                        logger.error(f'Failed to load fallback extractor {name}: {str(e2)}')
-                        continue
-            
-            # If we get here, no extractor could be loaded
-            raise RuntimeError(f'Failed to load any pitch extractor. Original error: {str(e)}')
+        import os
+        
+        # Check if the requested extractor exists and has a valid model file
+        extractor_info = PITCH_EXTRACTOR_MAP.get(pitch_extractor)
+        if extractor_info and os.path.exists(extractor_info['path']):
+            try:
+                return extractor_info['class'](*extractor_info['args'])
+            except Exception as e:
+                logger.warning(f"Failed to load {pitch_extractor}: {str(e)}")
+        elif extractor_info:
+            logger.warning(f"Model file not found for {pitch_extractor} at {extractor_info['path']}")
+        else:
+            logger.warning(f"PitchExtractor {pitch_extractor} not found")
+        
+        # Fall back to RMVPE ONNX
+        logger.warning("Falling back to RMVPE ONNX")
+        return RMVPEOnnxPitchExtractor(pitch_extractors['rmvpe_onnx']['saveTo'])
