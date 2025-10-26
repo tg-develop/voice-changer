@@ -11,6 +11,9 @@ class ServerSettings(BaseSettings):
     content_vec_500_onnx_on: bool = True
     host: str = '127.0.0.1'
     port: int = 18888
+    ssl_enabled: bool = False
+    ssl_certfile: str | None = None
+    ssl_keyfile: str | None = None
     allowed_origins: Literal['*'] | list[str] = []
     edition: str = get_edition()
 

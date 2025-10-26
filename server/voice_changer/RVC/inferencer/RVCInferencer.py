@@ -4,7 +4,7 @@ from const import EnumInferenceTypes
 from safetensors import safe_open
 from voice_changer.common.deviceManager.DeviceManager import DeviceManager
 from voice_changer.RVC.inferencer.Inferencer import Inferencer
-from .rvc_models.infer_pack.models import SynthesizerTrnMs256NSFsid
+from voice_changer.RVC.inferencer.rvc_models.infer_pack.models import SynthesizerTrnMs256NSFsid
 from voice_changer.common.SafetensorsUtils import load_model
 
 

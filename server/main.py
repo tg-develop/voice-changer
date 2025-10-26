@@ -1,148 +1,122 @@
 import os
+import sys
 import multiprocessing as mp
-# NOTE: This is required to avoid recursive process call bug for macOS
-mp.freeze_support()
-from const import SSL_KEY_DIR, ROOT_PATH, UPLOAD_DIR, TMP_DIR, LOG_FILE, get_version, get_edition
+
+from const import ROOT_PATH, UPLOAD_DIR, TMP_DIR, LOG_FILE, get_version, get_edition
+
+import asyncio
+import logging
+import argparse
+from datetime import datetime
+from Exceptions import setup_event_loop
+
+from downloader.ModelManager import ModelManager
+from settings import get_settings
+from webserver.server import WebServer
+
+# Add the project root to the Python path
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, PROJECT_ROOT)
+
 # NOTE: This is required to fix current working directory on macOS
 os.chdir(ROOT_PATH)
 
-import sys
-import uvicorn
-import asyncio
-from downloader.ModelManager import ModelManager
+# NOTE: This is required to avoid recursive process call bug for macOS
+mp.freeze_support()
 
-import threading
-import socket
-import time
-import logging
-from utils.strtobool import strtobool
-from datetime import datetime
-import argparse
-from restapi.mods.Certificate import create_self_signed_cert
-from webbrowser import open_new_tab
-from settings import get_settings
-
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.INFO)
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)-15s %(levelname)-8s [%(module)s] %(message)s",
-    handlers=[logging.FileHandler(LOG_FILE), stream_handler]
-)
-logger = logging.getLogger(__name__)
+# Initialize settings and logger at module level
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
-def setupArgParser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--log-level", type=str, default="error", help="Log level info|critical|error.")
-    parser.add_argument("--https", type=strtobool, default=False, help="use https")
-    parser.add_argument("--https-key", type=str, default="ssl.key", help="path for the key of https")
-    parser.add_argument("--https-cert", type=str, default="ssl.cert", help="path for the cert of https")
-    parser.add_argument("--https-self-signed", type=strtobool, default=True, help="generate self-signed certificate")
+def setup_logging(log_level: str = 'info'):
+    """Configure logging for the application."""
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(log_level.upper())
 
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)-15s %(levelname)-8s [%(module)s] %(message)s",
+        handlers=[logging.FileHandler(LOG_FILE), stream_handler]
+    )
+    return logging.getLogger(__name__)
+
+def setup_arg_parser():
+    """Set up and return the argument parser."""
+    parser = argparse.ArgumentParser(description="Run the voice changer server.")
+    parser.add_argument(
+        "--log-level", 
+        type=str, 
+        default="info", 
+        choices=["debug", "info", "warning", "error", "critical"],
+        help="Set the logging level"
+    )
+    parser.add_argument(
+        "--launch-browser",
+        action="store_true",
+        help="Open the web interface in the default browser on startup"
+    )
     return parser
 
-def check_port(port) -> int:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.bind(("127.0.0.1", port))
-
-def wait_for_server(proto: str, launch_browser: bool):
-    while True:
-        time.sleep(1)
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            result = sock.connect_ex(('127.0.0.1', settings.port))
-        if result == 0:
-            break
-    logger.info('-' * 8)
-    logger.info(f"The server is listening on {proto}://{settings.host}:{settings.port}/")
-    logger.info('-' * 8)
-    if launch_browser:
-        open_new_tab(f'{proto}://127.0.0.1:{settings.port}')
-
-async def runServer(host: str, port: int, launch_browser: bool = False, log_level: str = 'error', key_path: str | None = None, cert_path: str | None = None):
-    # Check and download mandatory models
-    try:
-        logger.info("Checking for mandatory models...")
-        await ModelManager.check_and_download_mandatory_models()
-    except Exception as e:
-        logger.error(f"Error checking/downloading mandatory models: {str(e)}")
-        # Continue startup even if model download fails
-        # The application will handle missing models when they're actually needed
-    check_port(port)
-
-    config = uvicorn.Config(
-        "app:socketio",
-        host=host,
-        port=port,
-        reload=False,
-        ssl_keyfile=key_path,
-        ssl_certfile=cert_path,
-        log_level=log_level
-    )
-    server = uvicorn.Server(config)
-
-    proto = 'https' if key_path and cert_path else 'http'
-    threading.Thread(target=wait_for_server, daemon=True, args=(proto, launch_browser)).start()
-
-    await server.serve()
-
-async def main(args):
-    logger.debug(args)
-
+async def main():
+    """Main entry point for the application."""
+    parser = setup_arg_parser()
+    args = parser.parse_args()
+    
+    # Setup logging
+    global logger
+    logger = setup_logging(args.log_level)
+    
     logger.info(f"Python: {sys.version}")
     logger.info(f"Voice changer version: {get_version()} {get_edition()}")
-
+    
+    # Create necessary directories
     os.makedirs(settings.model_dir, exist_ok=True)
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     os.makedirs(TMP_DIR, exist_ok=True)
-
-    # HTTPS key/cert作成
-    if args.https and args.https_self_signed:
-        # HTTPS(おれおれ証明書生成)
-        os.makedirs(SSL_KEY_DIR, exist_ok=True)
-        key_base_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        keyname = f"{key_base_name}.key"
-        certname = f"{key_base_name}.cert"
-        create_self_signed_cert(
-            certname,
-            keyname,
-            certargs={
-                "Country": "JP",
-                "State": "Tokyo",
-                "City": "Chuo-ku",
-                "Organization": "F",
-                "Org. Unit": "F",
-            },
-            cert_dir=SSL_KEY_DIR,
-        )
-        key_path = os.path.join(SSL_KEY_DIR, keyname)
-        cert_path = os.path.join(SSL_KEY_DIR, certname)
-        logger.info(f"protocol: HTTPS(self-signed), key:{key_path}, cert:{cert_path}")
-
-    elif args.https and not args.https_self_signed:
-        # HTTPS
-        key_path = args.https_key
-        cert_path = args.https_cert
-        logger.info(f"protocol: HTTPS, key:{key_path}, cert:{cert_path}")
-    else:
-        # HTTP
-        logger.info("protocol: HTTP")
-
-    # サーバ起動
-    if args.https:
-        # HTTPS サーバ起動
-        await runServer(settings.host, settings.port, args.launch_browser, args.log_level, key_path, cert_path)
-    else:
-        await runServer(settings.host, settings.port, args.launch_browser, args.log_level)
+    
+    logger.info(f"Server settings: {settings}")
+    
+    # Initialize and start the web server
+    server = WebServer(
+        host=settings.host,
+        port=settings.port,
+        log_level=args.log_level
+    )
+    
+    # Check for mandatory models
+    logger.info("Checking for mandatory models...")
+    await ModelManager.check_and_download_mandatory_models()
+    
+    # Start the server
+    await server.start(
+        launch_browser=args.launch_browser,
+        ssl_keyfile=settings.ssl_keyfile,
+        ssl_certfile=settings.ssl_certfile,
+        ssl_self_signed=settings.ssl_enabled and not (settings.ssl_keyfile and settings.ssl_certfile)
+    )
 
 
 if __name__ == "__main__":
-    parser = setupArgParser()
-    args, _ = parser.parse_known_args()
-    args.launch_browser = False
-
     try:
-        asyncio.run(main(args))
+        # Initialize settings and logger at the module level
+        settings = get_settings()
+        logger = setup_logging('info')
+        
+        # Set up event loop with connection reset handling
+        loop = setup_event_loop()
+        
+        # Run the application
+        loop.run_until_complete(main())
+        
     except KeyboardInterrupt:
-        pass
+        print("\nShutting down...")
+    except Exception as e:
+        if 'logger' in globals():
+            logger.exception("An error occurred while running the server")
+        else:
+            print(f"Critical error: {str(e)}")
+        raise e
+    finally:
+        # Clean up the event loop
+        if 'loop' in locals():
+            loop.close()

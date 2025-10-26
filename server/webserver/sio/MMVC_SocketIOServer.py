@@ -1,9 +1,9 @@
 import socketio
 
 from typing import Literal
-from sio.MMVC_Namespace import MMVC_Namespace
+from webserver.sio.MMVC_Namespace import MMVC_Namespace
 from voice_changer.VoiceChangerManager import VoiceChangerManager
-from .serializers.msgspec import MsgPackPacket
+from webserver.sio.serializers.msgspec import MsgPackPacket
 
 class MMVC_SocketIOServer:
     _instance: socketio.AsyncServer | None = None

@@ -15,8 +15,8 @@ os.environ['CUDNN_PATH'] = ''
 os.environ['OMP_WAIT_POLICY'] = 'PASSIVE'
 
 from voice_changer.VoiceChangerManager import VoiceChangerManager
-from sio.MMVC_SocketIOApp import MMVC_SocketIOApp
-from restapi.MMVC_Rest import MMVC_Rest
+from webserver.sio.MMVC_SocketIOApp import MMVC_SocketIOApp
+from webserver.restapi.MMVC_Rest import MMVC_Rest
 
 voice_changer_manager = VoiceChangerManager()
 fastapi = MMVC_Rest.get_instance(voice_changer_manager)

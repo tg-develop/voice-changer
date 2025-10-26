@@ -1,7 +1,7 @@
 import logging
 import os
 
-from restapi.mods.TrustedOrigin import TrustedOriginMiddleware
+from webserver.restapi.mods.TrustedOrigin import TrustedOriginMiddleware
 from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
@@ -9,10 +9,10 @@ from fastapi.exceptions import RequestValidationError
 from typing import Callable
 from voice_changer.VoiceChangerManager import VoiceChangerManager
 
-from restapi.MMVC_Rest_Sounds import MMVC_Rest_Sounds
-from restapi.MMVC_Rest_VoiceChanger import MMVC_Rest_VoiceChanger
-from restapi.MMVC_Rest_Models import MMVC_Rest_Models
-from restapi.MMVC_Rest_PretrainDownloader import MMVC_Rest_PretrainDownloader
+from webserver.restapi.MMVC_Rest_Sounds import MMVC_Rest_Sounds
+from webserver.restapi.MMVC_Rest_VoiceChanger import MMVC_Rest_VoiceChanger
+from webserver.restapi.MMVC_Rest_Models import MMVC_Rest_Models
+from webserver.restapi.MMVC_Rest_PretrainDownloader import MMVC_Rest_PretrainDownloader
 from settings import get_settings
 from const import TMP_DIR
 

@@ -8,7 +8,7 @@ from fastapi.responses import Response, PlainTextResponse, JSONResponse
 from fastapi.encoders import jsonable_encoder
 from const import get_edition, get_version
 from voice_changer.VoiceChangerManager import VoiceChangerManager
-from restapi.mods.FileUploader import upload_file
+from webserver.restapi.mods.FileUploader import upload_file
 
 from const import UPLOAD_DIR
 

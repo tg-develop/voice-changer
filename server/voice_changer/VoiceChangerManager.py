@@ -26,7 +26,7 @@ from dataclasses import asdict
 
 from voice_changer.RVC.RVCr2 import RVCr2
 from voice_changer.RVC.RVCModelSlotGenerator import RVCModelSlotGenerator  # 起動時にインポートするとパラメータが取れない。
-from restapi.mods.FileUploader import upload_file
+from webserver.restapi.mods.FileUploader import upload_file
 from fastapi import UploadFile
 from const import UPLOAD_DIR
 import os, shutil, json

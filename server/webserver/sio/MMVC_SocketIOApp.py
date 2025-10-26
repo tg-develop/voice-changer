@@ -1,9 +1,9 @@
 import socketio
 import logging
-from restapi.mods.Origins import compute_local_origins, normalize_origins
+from webserver.restapi.mods.Origins import compute_local_origins, normalize_origins
 
 from settings import get_settings
-from sio.MMVC_SocketIOServer import MMVC_SocketIOServer
+from webserver.sio.MMVC_SocketIOServer import MMVC_SocketIOServer
 from voice_changer.VoiceChangerManager import VoiceChangerManager
 from const import FRONTEND_DIR
 
