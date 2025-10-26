@@ -96,7 +96,7 @@ function BottomBar(): JSX.Element {
       }
 
       // Check if server audio output is selected
-      if (!appState.serverSetting.serverSetting.serverAudioInputDevices.find(device => device.index === appState.serverSetting.serverSetting.serverOutputDeviceId)) {
+      if (!appState.serverSetting.serverSetting.serverAudioOutputDevices.find(device => device.index === appState.serverSetting.serverSetting.serverOutputDeviceId)) {
         uiContext.showError('Select an audio output device.', "Warning")
         return
       }
