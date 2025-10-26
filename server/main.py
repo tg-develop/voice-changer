@@ -7,6 +7,8 @@ from const import ROOT_PATH, UPLOAD_DIR, TMP_DIR, LOG_FILE, get_version, get_edi
 import asyncio
 import logging
 import argparse
+import signal
+import asyncio
 from datetime import datetime
 from Exceptions import setup_event_loop
 
@@ -96,7 +98,31 @@ async def main():
     )
 
 
+async def shutdown(signal, loop, server=None):
+    """Cleanup tasks tied to the service's shutdown."""
+    signal_name = signal.name if hasattr(signal, 'name') else str(signal)
+    logger.info(f"Received exit signal {signal_name}...")
+    
+    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+    [task.cancel() for task in tasks]
+    
+    logger.info(f"Cancelling {len(tasks)} outstanding tasks")
+    await asyncio.gather(*tasks, return_exceptions=True)
+    
+    if server:
+        await server.shutdown()
+        
+    loop.stop()
+
+def handle_exception(loop, context):
+    """Handle uncaught exceptions in the event loop."""
+    msg = context.get("exception", context["message"])
+    logger.error(f"Caught exception: {msg}")
+    logger.error("Shutting down...")
+    asyncio.create_task(shutdown(signal.SIGTERM, loop))
+
 if __name__ == "__main__":
+    server = None
     try:
         # Initialize settings and logger at the module level
         settings = get_settings()
@@ -105,11 +131,31 @@ if __name__ == "__main__":
         # Set up event loop with connection reset handling
         loop = setup_event_loop()
         
-        # Run the application
-        loop.run_until_complete(main())
+        # Set up signal handlers (Windows-compatible)
+        if os.name == 'nt':  # Windows
+            signals = [signal.SIGINT, signal.SIGTERM]
+            # On Windows, only these signals are available
+            for sig in signals:
+                signal.signal(sig, lambda s, _: asyncio.create_task(shutdown(s, loop, server)))
+        else:  # Unix
+            signals = [signal.SIGHUP, signal.SIGTERM, signal.SIGINT]
+            for sig in signals:
+                loop.add_signal_handler(
+                    sig,
+                    lambda s=sig: asyncio.create_task(shutdown(s, loop, server))
+                )
+        
+        # Set exception handler
+        loop.set_exception_handler(handle_exception)
+        
+        # Run the application with a timeout
+        server = loop.run_until_complete(main())
+        
+        # Keep the application running until interrupted
+        loop.run_forever()
         
     except KeyboardInterrupt:
-        print("\nShutting down...")
+        logger.info("\nShutdown requested. Cleaning up...")
     except Exception as e:
         if 'logger' in globals():
             logger.exception("An error occurred while running the server")
@@ -119,4 +165,8 @@ if __name__ == "__main__":
     finally:
         # Clean up the event loop
         if 'loop' in locals():
+            tasks = asyncio.all_tasks(loop)
+            if tasks:
+                loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
             loop.close()
+            logger.info("Shutdown complete")
